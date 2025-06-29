@@ -116,7 +116,20 @@ export default function FAQ() {
               href="https://twitter.com/AspireLinkOrg"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center border-2 border-primary-custom text-primary-custom hover:bg-primary-custom hover:text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
+              className="inline-flex items-center justify-center border-2 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
+              style={{
+                borderColor: '#2E86AB',
+                color: '#2E86AB',
+                backgroundColor: 'transparent'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#2E86AB';
+                e.currentTarget.style.color = '#ffffff';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#2E86AB';
+              }}
             >
               Follow Us
             </a>

@@ -248,7 +248,20 @@ export default function ForStudents() {
             <Link href="/faq">
               <Button
                 variant="outline"
-                className="border-2 border-primary-custom text-primary-custom hover:bg-primary-custom hover:text-white px-8 py-4 rounded-lg font-semibold text-lg"
+                className="border-2 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
+                style={{
+                  borderColor: '#2E86AB',
+                  color: '#2E86AB',
+                  backgroundColor: 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#2E86AB';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#2E86AB';
+                }}
               >
                 Learn More
               </Button>

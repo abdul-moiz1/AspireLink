@@ -286,7 +286,20 @@ export default function ForMentors() {
             <Link href="/faq">
               <Button
                 variant="outline"
-                className="border-2 border-white text-white hover:bg-white hover:text-secondary-custom px-8 py-4 rounded-lg font-semibold text-lg"
+                className="border-2 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
+                style={{
+                  borderColor: '#ffffff',
+                  color: '#ffffff',
+                  backgroundColor: 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#ffffff';
+                  e.currentTarget.style.color = '#A23B72';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
               >
                 Learn More
               </Button>
