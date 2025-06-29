@@ -37,10 +37,10 @@ export default function Contact() {
                       Email Us
                     </h3>
                     <a
-                      href="mailto:contact@aspirelink.com"
+                      href="mailto:contact@aspirelink.org"
                       className="text-primary-custom hover:text-secondary-custom transition-colors duration-200"
                     >
-                      contact@aspirelink.com
+                      contact@aspirelink.org
                     </a>
                   </div>
                 </div>
@@ -96,10 +96,10 @@ export default function Contact() {
                             Send your student applications, mentor applications, or general inquiries directly to our team:
                           </p>
                           <a
-                            href="mailto:contact@aspirelink.com"
+                            href="mailto:contact@aspirelink.org"
                             className="text-primary-custom hover:text-secondary-custom transition-colors duration-200 font-medium text-lg"
                           >
-                            contact@aspirelink.com
+                            contact@aspirelink.org
                           </a>
                         </div>
                       </div>
