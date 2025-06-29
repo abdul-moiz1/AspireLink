@@ -76,8 +76,8 @@ export default function Home() {
             </div>
             <div className="relative">
               <img
-                src="https://images.unsplash.com/photo-1556761175-b413da4baf72?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&h=700"
-                alt="Diverse team of professionals collaborating in modern office with laptops and colorful sticky notes"
+                src="https://images.unsplash.com/photo-1515187029135-18ee286d815b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&h=700"
+                alt="Professional mentor meeting with young students in modern conference room, intergenerational mentorship discussion"
                 className="rounded-2xl shadow-2xl w-full h-auto"
               />
               <Card className="absolute -bottom-6 -left-6 w-64 shadow-lg">

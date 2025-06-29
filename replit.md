@@ -122,7 +122,7 @@ Changelog:
 - June 29, 2025. Added navigation functionality to application buttons: "Apply Now", "Start Application", "Become a Mentor", and "Apply to Mentor" buttons now direct users to Contact page for program inquiries
 - June 29, 2025. Updated About page statistics to show accurate program features (4-month duration, 100% free, 1:1 matching, 24/7 support) instead of unverified performance metrics
 - June 29, 2025. Removed contact form from Contact page, simplified to show only direct contact information (info@aspirelink.org and LinkedIn @AspireLinkOrg) with clean professional layout
-- June 29, 2025. Updated Home page hero image to more professional and vibrant collaborative team photo showing diverse professionals working together in modern office setting
+- June 29, 2025. Updated Home page hero image to show professional mentorship meeting with students and mentors together in clean conference room setting
 - June 29, 2025. Integrated custom AspireLink logo (handshake design) into navigation header and updated favicon, added SEO meta tags with proper title and description
 - June 29, 2025. Added professional student collaboration image to For Students page with accurate founding cohort messaging instead of false success statistics
 
