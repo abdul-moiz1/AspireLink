@@ -46,33 +46,33 @@ export default function About() {
                 <Card className="shadow-md">
                   <CardContent className="p-6 text-center">
                     <div className="text-3xl font-bold text-primary-custom mb-2">
-                      500+
+                      4
                     </div>
-                    <div style={{color: '#2F3E46'}}>Successful matches</div>
+                    <div style={{color: '#2F3E46'}}>Month program</div>
                   </CardContent>
                 </Card>
                 <Card className="shadow-md">
                   <CardContent className="p-6 text-center">
                     <div className="text-3xl font-bold text-secondary-custom mb-2">
-                      50+
+                      100%
                     </div>
-                    <div style={{color: '#2F3E46'}}>Industry partners</div>
+                    <div style={{color: '#2F3E46'}}>Free to participate</div>
                   </CardContent>
                 </Card>
                 <Card className="shadow-md">
                   <CardContent className="p-6 text-center">
                     <div className="text-3xl font-bold text-accent-custom mb-2">
-                      95%
+                      1:1
                     </div>
-                    <div style={{color: '#2F3E46'}}>Completion rate</div>
+                    <div style={{color: '#2F3E46'}}>Mentor matching</div>
                   </CardContent>
                 </Card>
                 <Card className="shadow-md">
                   <CardContent className="p-6 text-center">
                     <div className="text-3xl font-bold text-green-600 mb-2">
-                      4.9
+                      24/7
                     </div>
-                    <div style={{color: '#2F3E46'}}>Average rating</div>
+                    <div style={{color: '#2F3E46'}}>Support available</div>
                   </CardContent>
                 </Card>
               </div>

@@ -120,6 +120,7 @@ Changelog:
 - June 29, 2025. Added gradient hero backgrounds to About page (blue #2E86AB to #1e5b7a) and Contact page (magenta #A23B72 to #7d2d5a) with white text for complete visual consistency across all pages
 - June 29, 2025. Made each page hero banner unique: About page updated to purple gradient (#6366f1 to #4338ca), Contact page changed to green gradient (#10b981 to #047857) ensuring all six pages have distinct color schemes
 - June 29, 2025. Added navigation functionality to application buttons: "Apply Now", "Start Application", "Become a Mentor", and "Apply to Mentor" buttons now direct users to Contact page for program inquiries
+- June 29, 2025. Updated About page statistics to show accurate program features (4-month duration, 100% free, 1:1 matching, 24/7 support) instead of unverified performance metrics
 
 ## User Preferences
 
