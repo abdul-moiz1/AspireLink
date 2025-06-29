@@ -19,7 +19,7 @@ export default function ForStudents() {
           <h1 className="font-inter font-bold text-4xl md:text-5xl mb-6">
             For Students
           </h1>
-          <p className="text-xl leading-relaxed opacity-90">
+          <p className="text-xl leading-relaxed text-blue-100">
             Accelerate your career with personalized mentorship from industry
             leaders
           </p>
@@ -32,25 +32,25 @@ export default function ForStudents() {
           <div className="grid lg:grid-cols-3 gap-8 mb-16">
             <Card className="bg-gradient-to-br from-primary-custom to-blue-700 text-white shadow-xl">
               <CardContent className="p-8">
-                <GraduationCap className="w-12 h-12 mb-6 opacity-80" />
-                <h3 className="font-inter font-semibold text-2xl mb-4">
+                <GraduationCap className="w-12 h-12 mb-6 text-white" />
+                <h3 className="font-inter font-semibold text-2xl mb-4 text-white">
                   Eligibility
                 </h3>
-                <ul className="space-y-3 text-blue-100">
+                <ul className="space-y-3 text-white">
                   <li className="flex items-start">
-                    <CheckCircle className="mr-3 mt-1 w-4 h-4 text-blue-200 flex-shrink-0" />
+                    <CheckCircle className="mr-3 mt-1 w-4 h-4 text-white flex-shrink-0" />
                     Current undergraduate or graduate student
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="mr-3 mt-1 w-4 h-4 text-blue-200 flex-shrink-0" />
+                    <CheckCircle className="mr-3 mt-1 w-4 h-4 text-white flex-shrink-0" />
                     Faculty or peer nomination required
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="mr-3 mt-1 w-4 h-4 text-blue-200 flex-shrink-0" />
+                    <CheckCircle className="mr-3 mt-1 w-4 h-4 text-white flex-shrink-0" />
                     Commitment to 4-month program
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="mr-3 mt-1 w-4 h-4 text-blue-200 flex-shrink-0" />
+                    <CheckCircle className="mr-3 mt-1 w-4 h-4 text-white flex-shrink-0" />
                     Clear career goals and objectives
                   </li>
                 </ul>
@@ -59,25 +59,25 @@ export default function ForStudents() {
 
             <Card className="bg-gradient-to-br from-secondary-custom to-pink-700 text-white shadow-xl">
               <CardContent className="p-8">
-                <Rocket className="w-12 h-12 mb-6 opacity-80" />
-                <h3 className="font-inter font-semibold text-2xl mb-4">
+                <Rocket className="w-12 h-12 mb-6 text-white" />
+                <h3 className="font-inter font-semibold text-2xl mb-4 text-white">
                   Benefits
                 </h3>
-                <ul className="space-y-3 text-pink-100">
+                <ul className="space-y-3 text-white">
                   <li className="flex items-start">
-                    <Star className="mr-3 mt-1 w-4 h-4 text-pink-200 flex-shrink-0" />
+                    <Star className="mr-3 mt-1 w-4 h-4 text-white flex-shrink-0" />
                     1-on-1 monthly mentorship sessions
                   </li>
                   <li className="flex items-start">
-                    <Star className="mr-3 mt-1 w-4 h-4 text-pink-200 flex-shrink-0" />
+                    <Star className="mr-3 mt-1 w-4 h-4 text-white flex-shrink-0" />
                     Industry insights and networking
                   </li>
                   <li className="flex items-start">
-                    <Star className="mr-3 mt-1 w-4 h-4 text-pink-200 flex-shrink-0" />
+                    <Star className="mr-3 mt-1 w-4 h-4 text-white flex-shrink-0" />
                     Career guidance and goal setting
                   </li>
                   <li className="flex items-start">
-                    <Star className="mr-3 mt-1 w-4 h-4 text-pink-200 flex-shrink-0" />
+                    <Star className="mr-3 mt-1 w-4 h-4 text-white flex-shrink-0" />
                     Professional development resources
                   </li>
                 </ul>
@@ -86,25 +86,25 @@ export default function ForStudents() {
 
             <Card className="bg-gradient-to-br from-accent-custom to-orange-700 text-white shadow-xl">
               <CardContent className="p-8">
-                <Calendar className="w-12 h-12 mb-6 opacity-80" />
-                <h3 className="font-inter font-semibold text-2xl mb-4">
+                <Calendar className="w-12 h-12 mb-6 text-white" />
+                <h3 className="font-inter font-semibold text-2xl mb-4 text-white">
                   Timeline
                 </h3>
-                <ul className="space-y-3 text-orange-100">
+                <ul className="space-y-3 text-white">
                   <li className="flex items-start">
-                    <Clock className="mr-3 mt-1 w-4 h-4 text-orange-200 flex-shrink-0" />
+                    <Clock className="mr-3 mt-1 w-4 h-4 text-white flex-shrink-0" />
                     Application & nomination period
                   </li>
                   <li className="flex items-start">
-                    <Clock className="mr-3 mt-1 w-4 h-4 text-orange-200 flex-shrink-0" />
+                    <Clock className="mr-3 mt-1 w-4 h-4 text-white flex-shrink-0" />
                     Matching process (2 weeks)
                   </li>
                   <li className="flex items-start">
-                    <Clock className="mr-3 mt-1 w-4 h-4 text-orange-200 flex-shrink-0" />
+                    <Clock className="mr-3 mt-1 w-4 h-4 text-white flex-shrink-0" />
                     4-month mentorship program
                   </li>
                   <li className="flex items-start">
-                    <Clock className="mr-3 mt-1 w-4 h-4 text-orange-200 flex-shrink-0" />
+                    <Clock className="mr-3 mt-1 w-4 h-4 text-white flex-shrink-0" />
                     Recognition and networking event
                   </li>
                 </ul>

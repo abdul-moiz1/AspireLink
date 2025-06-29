@@ -40,7 +40,7 @@ export default function Home() {
                 <Link href="/mentors">
                   <Button
                     variant="outline"
-                    className="border-2 border-primary-custom text-primary-custom hover:bg-primary-custom hover:text-white px-8 py-4 rounded-lg font-semibold text-lg"
+                    className="border-2 border-primary-custom text-primary-custom hover:bg-primary-custom hover:text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
                   >
                     Become a Mentor
                   </Button>
@@ -53,18 +53,18 @@ export default function Home() {
                 </div>
                 <div className="flex items-center">
                   <Users className="text-primary-custom mr-2 w-4 h-4" />
-                  <span>500+ Matches</span>
+                  <span>4-Month Program</span>
                 </div>
                 <div className="flex items-center">
                   <Star className="text-accent-custom mr-2 w-4 h-4" />
-                  <span>4.9/5 Rating</span>
+                  <span>Expert Mentors</span>
                 </div>
               </div>
             </div>
             <div className="relative">
               <img
-                src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600"
-                alt="Professional mentorship meeting in modern office setting"
+                src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600"
+                alt="Professional business meeting with diverse team discussing growth strategies"
                 className="rounded-2xl shadow-2xl w-full h-auto"
               />
               <Card className="absolute -bottom-6 -left-6 w-64 shadow-lg">
@@ -164,98 +164,60 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Program Features */}
       <section className="py-24 bg-light-custom">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="font-inter font-bold text-3xl md:text-4xl text-charcoal-custom mb-6">
-              Success Stories
+              Why Choose AspireLink?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Hear from students and mentors who have transformed their careers
-              through AspireLink
+              Our platform offers unique features designed to maximize your mentorship experience
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <Card className="card-hover">
-              <CardContent className="p-8">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-primary-custom to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                    S
-                  </div>
-                  <div className="ml-4">
-                    <h4 className="font-semibold text-charcoal-custom">
-                      Sarah Chen
-                    </h4>
-                    <p className="text-sm text-gray-500">
-                      Computer Science Student
-                    </p>
-                  </div>
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 bg-primary-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Heart className="text-primary-custom w-8 h-8" />
                 </div>
-                <div className="text-accent-custom mb-4 flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-current" />
-                  ))}
-                </div>
-                <p className="text-gray-700 italic">
-                  "My mentor helped me land my dream internship at a top tech
-                  company. The monthly sessions gave me confidence and practical
-                  skills I never learned in class."
+                <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
+                  Personalized Matching
+                </h3>
+                <p className="text-gray-700">
+                  AI-powered system connects you with mentors based on your career goals, 
+                  interests, and personality for the perfect fit.
                 </p>
               </CardContent>
             </Card>
 
             <Card className="card-hover">
-              <CardContent className="p-8">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-secondary-custom to-pink-600 rounded-full flex items-center justify-center text-white font-semibold">
-                    M
-                  </div>
-                  <div className="ml-4">
-                    <h4 className="font-semibold text-charcoal-custom">
-                      Marcus Johnson
-                    </h4>
-                    <p className="text-sm text-gray-500">
-                      Marketing Professional
-                    </p>
-                  </div>
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 bg-secondary-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Lightbulb className="text-secondary-custom w-8 h-8" />
                 </div>
-                <div className="text-accent-custom mb-4 flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-current" />
-                  ))}
-                </div>
-                <p className="text-gray-700 italic">
-                  "Mentoring through AspireLink has been incredibly rewarding.
-                  Seeing my mentee grow and succeed reminds me why I love what I
-                  do."
+                <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
+                  Structured Program
+                </h3>
+                <p className="text-gray-700">
+                  Four-month guided journey with clear milestones, goal tracking, 
+                  and resources to maximize your growth.
                 </p>
               </CardContent>
             </Card>
 
             <Card className="card-hover">
-              <CardContent className="p-8">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-accent-custom to-orange-600 rounded-full flex items-center justify-center text-white font-semibold">
-                    A
-                  </div>
-                  <div className="ml-4">
-                    <h4 className="font-semibold text-charcoal-custom">
-                      Aisha Patel
-                    </h4>
-                    <p className="text-sm text-gray-500">Business Student</p>
-                  </div>
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 bg-accent-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Network className="text-accent-custom w-8 h-8" />
                 </div>
-                <div className="text-accent-custom mb-4 flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-current" />
-                  ))}
-                </div>
-                <p className="text-gray-700 italic">
-                  "The networking opportunities and industry insights I gained
-                  were invaluable. AspireLink opened doors I didn't even know
-                  existed."
+                <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
+                  Industry Networks
+                </h3>
+                <p className="text-gray-700">
+                  Access to exclusive professional networks and connections 
+                  that extend beyond the mentorship program.
                 </p>
               </CardContent>
             </Card>
@@ -282,7 +244,7 @@ export default function Home() {
             <Link href="/mentors">
               <Button
                 variant="outline"
-                className="border-2 border-white text-white hover:bg-white hover:text-primary-custom px-8 py-4 rounded-lg font-semibold text-lg"
+                className="border-2 border-white text-white hover:bg-white hover:text-primary-custom px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
               >
                 Become a Mentor
               </Button>
