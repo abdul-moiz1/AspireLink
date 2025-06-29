@@ -14,6 +14,7 @@ import {
   Network,
 } from "lucide-react";
 import { Link } from "wouter";
+import brandedImagePath from "@assets/AspireLink-300-1_1751236725408.png";
 
 export default function Home() {
   return (
@@ -76,9 +77,9 @@ export default function Home() {
             </div>
             <div className="relative">
               <img
-                src="https://images.unsplash.com/photo-1515187029135-18ee286d815b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&h=700"
-                alt="Professional mentor meeting with young students in modern conference room, intergenerational mentorship discussion"
-                className="rounded-2xl shadow-2xl w-full h-auto"
+                src={brandedImagePath}
+                alt="AspireLink logo with handshake figures on graduation cap - Connecting ambition with experience"
+                className="rounded-2xl shadow-2xl w-full h-auto bg-white p-8"
               />
               <Card className="absolute -bottom-6 -left-6 w-64 shadow-lg">
                 <CardContent className="p-6">
