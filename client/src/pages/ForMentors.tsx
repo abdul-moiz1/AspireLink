@@ -7,12 +7,12 @@ export default function ForMentors() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="py-24 bg-gradient-to-br from-secondary-custom to-pink-700 text-white">
+      <section className="py-24" style={{background: 'linear-gradient(135deg, #A23B72 0%, #7d2d5a 100%)'}}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-inter font-bold text-4xl md:text-5xl mb-6">
+          <h1 className="font-inter font-bold text-4xl md:text-5xl mb-6" style={{color: '#ffffff'}}>
             For Mentors
           </h1>
-          <p className="text-xl leading-relaxed opacity-90">
+          <p className="text-xl leading-relaxed" style={{color: '#ffffff'}}>
             Make a lasting impact on the next generation while growing your own
             professional network
           </p>
@@ -27,7 +27,7 @@ export default function ForMentors() {
               <h2 className="font-inter font-bold text-3xl md:text-4xl text-charcoal-custom mb-6">
                 Why Become a Mentor?
               </h2>
-              <p className="text-lg text-gray-700 mb-8 leading-relaxed">
+              <p className="text-lg mb-8 leading-relaxed" style={{color: '#2F3E46'}}>
                 Make a lasting impact on the next generation of professionals
                 while gaining fresh perspectives and expanding your network.
               </p>
@@ -41,7 +41,7 @@ export default function ForMentors() {
                     <h3 className="font-semibold text-charcoal-custom mb-2">
                       Give Back to Community
                     </h3>
-                    <p className="text-gray-600">
+                    <p style={{color: '#2F3E46'}}>
                       Share your expertise and help shape future leaders in your
                       industry
                     </p>
@@ -56,7 +56,7 @@ export default function ForMentors() {
                     <h3 className="font-semibold text-charcoal-custom mb-2">
                       Gain Fresh Perspectives
                     </h3>
-                    <p className="text-gray-600">
+                    <p style={{color: '#2F3E46'}}>
                       Learn from eager students and stay current with emerging
                       trends
                     </p>
@@ -71,7 +71,7 @@ export default function ForMentors() {
                     <h3 className="font-semibold text-charcoal-custom mb-2">
                       Expand Your Network
                     </h3>
-                    <p className="text-gray-600">
+                    <p style={{color: '#2F3E46'}}>
                       Connect with other professionals and potential future
                       colleagues
                     </p>

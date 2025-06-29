@@ -27,7 +27,7 @@ export default function Home() {
                 Connect. Learn.{" "}
                 <span className="text-primary-custom">Aspire.</span>
               </h1>
-              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+              <p className="text-xl mb-8 leading-relaxed" style={{color: '#2F3E46'}}>
                 Join AspireLink's free mentorship program connecting students
                 with experienced professionals through 4-month academic cohorts.
               </p>
@@ -59,7 +59,7 @@ export default function Home() {
                   </Button>
                 </Link>
               </div>
-              <div className="mt-8 flex items-center justify-center lg:justify-start space-x-6 text-sm text-gray-500">
+              <div className="mt-8 flex items-center justify-center lg:justify-start space-x-6 text-sm" style={{color: '#2F3E46'}}>
                 <div className="flex items-center">
                   <CheckCircle className="text-green-500 mr-2 w-4 h-4" />
                   <span>100% Free</span>
@@ -107,7 +107,7 @@ export default function Home() {
             <h2 className="font-inter font-bold text-3xl md:text-4xl text-charcoal-custom mb-6">
               How AspireLink Works
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl max-w-3xl mx-auto" style={{color: '#2F3E46'}}>
               Our structured 4-month program guides you through every step of
               professional mentorship
             </p>
@@ -122,7 +122,7 @@ export default function Home() {
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   1. Nomination
                 </h3>
-                <p className="text-gray-600">
+                <p style={{color: '#2F3E46'}}>
                   Students apply and get nominated by faculty or peers for the
                   program
                 </p>
@@ -137,7 +137,7 @@ export default function Home() {
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   2. Matching
                 </h3>
-                <p className="text-gray-600">
+                <p style={{color: '#2F3E46'}}>
                   AI-powered matching connects students with compatible mentors
                   based on goals and industry
                 </p>
@@ -152,7 +152,7 @@ export default function Home() {
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   3. Sessions
                 </h3>
-                <p className="text-gray-600">
+                <p style={{color: '#2F3E46'}}>
                   Monthly virtual meetings with structured guidance and goal
                   tracking
                 </p>
@@ -167,7 +167,7 @@ export default function Home() {
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   4. Recognition
                 </h3>
-                <p className="text-gray-600">
+                <p style={{color: '#2F3E46'}}>
                   Celebrate achievements and build lasting professional
                   relationships
                 </p>
@@ -184,7 +184,7 @@ export default function Home() {
             <h2 className="font-inter font-bold text-3xl md:text-4xl text-charcoal-custom mb-6">
               Why Choose AspireLink?
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl max-w-3xl mx-auto" style={{color: '#2F3E46'}}>
               Our platform offers unique features designed to maximize your mentorship experience
             </p>
           </div>
@@ -198,7 +198,7 @@ export default function Home() {
                 <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
                   Personalized Matching
                 </h3>
-                <p className="text-gray-700">
+                <p style={{color: '#2F3E46'}}>
                   AI-powered system connects you with mentors based on your career goals, 
                   interests, and personality for the perfect fit.
                 </p>
@@ -213,7 +213,7 @@ export default function Home() {
                 <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
                   Structured Program
                 </h3>
-                <p className="text-gray-700">
+                <p style={{color: '#2F3E46'}}>
                   Four-month guided journey with clear milestones, goal tracking, 
                   and resources to maximize your growth.
                 </p>
@@ -228,7 +228,7 @@ export default function Home() {
                 <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
                   Industry Networks
                 </h3>
-                <p className="text-gray-700">
+                <p style={{color: '#2F3E46'}}>
                   Access to exclusive professional networks and connections 
                   that extend beyond the mentorship program.
                 </p>

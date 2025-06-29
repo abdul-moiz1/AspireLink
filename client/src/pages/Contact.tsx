@@ -62,7 +62,7 @@ export default function Contact() {
           <h1 className="font-inter font-bold text-4xl md:text-5xl text-charcoal-custom mb-6">
             Get in Touch
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl" style={{color: '#2F3E46'}}>
             Have questions about AspireLink? We're here to help you start your
             mentorship journey.
           </p>

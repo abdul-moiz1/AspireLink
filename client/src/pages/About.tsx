@@ -9,7 +9,7 @@ export default function About() {
           <h1 className="font-inter font-bold text-4xl md:text-5xl text-charcoal-custom mb-6">
             About AspireLink
           </h1>
-          <p className="text-xl text-gray-600 leading-relaxed">
+          <p className="text-xl leading-relaxed" style={{color: '#2F3E46'}}>
             Bridging the gap between academic learning and professional success
             through meaningful mentorship connections.
           </p>
@@ -31,12 +31,12 @@ export default function About() {
               <h2 className="font-inter font-bold text-3xl md:text-4xl text-charcoal-custom mb-6">
                 Our Mission
               </h2>
-              <p className="text-lg text-gray-700 mb-6 leading-relaxed">
+              <p className="text-lg mb-6 leading-relaxed" style={{color: '#2F3E46'}}>
                 AspireLink bridges the gap between academic learning and
                 professional success by connecting motivated students with
                 experienced industry mentors.
               </p>
-              <p className="text-lg text-gray-700 mb-8 leading-relaxed">
+              <p className="text-lg mb-8 leading-relaxed" style={{color: '#2F3E46'}}>
                 We believe that mentorship is the key to unlocking potential and
                 accelerating career growth. Our platform creates meaningful
                 connections that last beyond the 4-month program.
@@ -48,7 +48,7 @@ export default function About() {
                     <div className="text-3xl font-bold text-primary-custom mb-2">
                       500+
                     </div>
-                    <div className="text-gray-600">Successful matches</div>
+                    <div style={{color: '#2F3E46'}}>Successful matches</div>
                   </CardContent>
                 </Card>
                 <Card className="shadow-md">
@@ -56,7 +56,7 @@ export default function About() {
                     <div className="text-3xl font-bold text-secondary-custom mb-2">
                       50+
                     </div>
-                    <div className="text-gray-600">Industry partners</div>
+                    <div style={{color: '#2F3E46'}}>Industry partners</div>
                   </CardContent>
                 </Card>
                 <Card className="shadow-md">
@@ -64,7 +64,7 @@ export default function About() {
                     <div className="text-3xl font-bold text-accent-custom mb-2">
                       95%
                     </div>
-                    <div className="text-gray-600">Completion rate</div>
+                    <div style={{color: '#2F3E46'}}>Completion rate</div>
                   </CardContent>
                 </Card>
                 <Card className="shadow-md">
@@ -72,7 +72,7 @@ export default function About() {
                     <div className="text-3xl font-bold text-green-600 mb-2">
                       4.9
                     </div>
-                    <div className="text-gray-600">Average rating</div>
+                    <div style={{color: '#2F3E46'}}>Average rating</div>
                   </CardContent>
                 </Card>
               </div>
@@ -87,7 +87,7 @@ export default function About() {
           <h2 className="font-inter font-bold text-3xl md:text-4xl text-charcoal-custom mb-8">
             Our Vision
           </h2>
-          <p className="text-lg text-gray-700 mb-8 leading-relaxed">
+          <p className="text-lg mb-8 leading-relaxed" style={{color: '#2F3E46'}}>
             To create a world where every student has access to meaningful
             mentorship that accelerates their professional growth and personal
             development. We envision a global community where knowledge, wisdom,

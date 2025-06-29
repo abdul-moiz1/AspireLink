@@ -67,7 +67,7 @@ export default function FAQ() {
           <h1 className="font-inter font-bold text-4xl md:text-5xl text-charcoal-custom mb-6">
             Frequently Asked Questions
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl" style={{color: '#2F3E46'}}>
             Everything you need to know about AspireLink
           </p>
         </div>
@@ -86,7 +86,7 @@ export default function FAQ() {
                 <AccordionTrigger className="text-left font-semibold text-charcoal-custom hover:text-primary-custom">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-gray-700 pb-4">
+                <AccordionContent className="pb-4" style={{color: '#2F3E46'}}>
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
