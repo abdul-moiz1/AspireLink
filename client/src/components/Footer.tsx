@@ -13,7 +13,7 @@ export default function Footer() {
               </div>
               <span className="font-inter font-bold text-xl">AspireLink</span>
             </div>
-            <p className="text-gray-100 mb-6">
+            <p className="text-white mb-6">
               Connecting students with experienced professionals through
               meaningful mentorship relationships.
             </p>
@@ -49,7 +49,7 @@ export default function Footer() {
 
           <div>
             <h3 className="font-inter font-semibold text-lg mb-6">Program</h3>
-            <ul className="space-y-3 text-gray-100">
+            <ul className="space-y-3 text-white">
               <li>
                 <Link
                   href="/about"
@@ -87,7 +87,7 @@ export default function Footer() {
 
           <div>
             <h3 className="font-inter font-semibold text-lg mb-6">Support</h3>
-            <ul className="space-y-3 text-gray-100">
+            <ul className="space-y-3 text-white">
               <li>
                 <Link
                   href="/faq"
@@ -125,7 +125,7 @@ export default function Footer() {
 
           <div>
             <h3 className="font-inter font-semibold text-lg mb-6">Legal</h3>
-            <ul className="space-y-3 text-gray-100">
+            <ul className="space-y-3 text-white">
               <li>
                 <a
                   href="#"
@@ -162,7 +162,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-700 pt-8 text-center text-gray-100">
+        <div className="border-t border-gray-700 pt-8 text-center text-white">
           <p>
             &copy; 2024 AspireLink. All rights reserved.
           </p>
