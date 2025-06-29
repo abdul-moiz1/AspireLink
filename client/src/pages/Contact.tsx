@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Mail, Twitter, Clock, MapPin, Phone } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import emailjs from '@emailjs/browser';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -14,9 +15,10 @@ export default function Contact() {
     subject: "",
     message: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Simple form validation
@@ -28,21 +30,46 @@ export default function Contact() {
       return;
     }
 
-    // Here you would typically send the form data to your backend
-    console.log("Form submitted:", formData);
-    
-    toast({
-      title: "Message sent successfully!",
-      description: "We'll get back to you within 24 hours.",
-    });
+    setIsSubmitting(true);
 
-    // Reset form
-    setFormData({
-      name: "",
-      email: "",
-      subject: "",
-      message: "",
-    });
+    try {
+      // EmailJS configuration - these need to be set up in EmailJS dashboard
+      const serviceId = 'service_aspirelink'; // You'll need to create this
+      const templateId = 'template_contact'; // You'll need to create this
+      const publicKey = 'YOUR_PUBLIC_KEY'; // You'll need to get this from EmailJS
+
+      const templateParams = {
+        from_name: formData.name,
+        from_email: formData.email,
+        subject: formData.subject || 'Contact Form Submission',
+        message: formData.message,
+        to_email: 'contact@aspirelink.com',
+      };
+
+      await emailjs.send(serviceId, templateId, templateParams, publicKey);
+      
+      toast({
+        title: "Message sent successfully!",
+        description: "We'll get back to you within 24 hours.",
+      });
+
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        subject: "",
+        message: "",
+      });
+    } catch (error) {
+      console.error('EmailJS error:', error);
+      toast({
+        title: "Failed to send message",
+        description: "Please try again or contact us directly at contact@aspirelink.com",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (
@@ -214,9 +241,10 @@ export default function Contact() {
 
                     <Button
                       type="submit"
-                      className="w-full bg-primary-custom hover:bg-primary-dark text-white py-3 font-semibold"
+                      disabled={isSubmitting}
+                      className="w-full bg-primary-custom hover:bg-primary-dark disabled:opacity-50 text-white py-3 font-semibold"
                     >
-                      Send Message
+                      {isSubmitting ? "Sending..." : "Send Message"}
                     </Button>
                   </form>
                 </CardContent>
