@@ -117,6 +117,7 @@ Changelog:
 - June 29, 2025. Fixed UI/UX issues: improved button hover states, updated hero image to professional business meeting, enhanced For Students page readability with white text on colored backgrounds, replaced testimonials with program features, improved footer text contrast using inline styles with white color, fixed "Become a Mentor" button hover text disappearing issue using JavaScript event handlers
 - June 29, 2025. Comprehensive text contrast improvements: replaced all gray text with high-contrast charcoal color (#2F3E46) across all pages, fixed "Learn More" buttons on For Students and For Mentors pages with proper contrast using inline styles and event handlers, corrected "Follow Us" button on FAQ page for optimal visibility
 - June 29, 2025. Enhanced FAQ page with orange gradient hero background (#F18F01 to #c47301) and white text for visual consistency with other pages
+- June 29, 2025. Added gradient hero backgrounds to About page (blue #2E86AB to #1e5b7a) and Contact page (magenta #A23B72 to #7d2d5a) with white text for complete visual consistency across all pages
 
 ## User Preferences
 

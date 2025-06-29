@@ -57,12 +57,12 @@ export default function Contact() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="py-24 bg-light-custom">
+      <section className="py-24" style={{background: 'linear-gradient(135deg, #A23B72 0%, #7d2d5a 100%)'}}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-inter font-bold text-4xl md:text-5xl text-charcoal-custom mb-6">
+          <h1 className="font-inter font-bold text-4xl md:text-5xl mb-6" style={{color: '#ffffff'}}>
             Get in Touch
           </h1>
-          <p className="text-xl" style={{color: '#2F3E46'}}>
+          <p className="text-xl" style={{color: '#ffffff'}}>
             Have questions about AspireLink? We're here to help you start your
             mentorship journey.
           </p>
