@@ -23,7 +23,7 @@ export default function Home() {
       <section className="hero-gradient py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="text-center lg:text-left">
+            <div className="text-center lg:text-left bg-white bg-opacity-90 p-8 rounded-2xl shadow-lg">
               <h1 className="font-inter font-bold text-4xl md:text-5xl lg:text-6xl text-charcoal-custom leading-tight mb-6">
                 Connect. Learn.{" "}
                 <span className="text-primary-custom">Aspire.</span>
