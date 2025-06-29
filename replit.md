@@ -114,7 +114,7 @@ AspireLink is a full-stack web application that connects students with experienc
 
 Changelog:
 - June 29, 2025. Initial setup
-- June 29, 2025. Fixed UI/UX issues: improved button hover states, updated hero image to professional business meeting, enhanced For Students page readability with white text on colored backgrounds, replaced testimonials with program features, improved footer text contrast from gray-300/400 to gray-200
+- June 29, 2025. Fixed UI/UX issues: improved button hover states, updated hero image to professional business meeting, enhanced For Students page readability with white text on colored backgrounds, replaced testimonials with program features, improved footer text contrast using inline styles with white color, fixed "Become a Mentor" button hover text disappearing issue using JavaScript event handlers
 
 ## User Preferences
 

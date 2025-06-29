@@ -40,7 +40,20 @@ export default function Home() {
                 <Link href="/mentors">
                   <Button
                     variant="outline"
-                    className="border-2 border-primary-custom text-primary-custom hover:bg-primary-custom hover:text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
+                    className="border-2 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
+                    style={{
+                      borderColor: '#2E86AB',
+                      color: '#2E86AB',
+                      backgroundColor: 'transparent'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#2E86AB';
+                      e.currentTarget.style.color = '#ffffff';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = '#2E86AB';
+                    }}
                   >
                     Become a Mentor
                   </Button>
@@ -244,7 +257,20 @@ export default function Home() {
             <Link href="/mentors">
               <Button
                 variant="outline"
-                className="border-2 border-white text-white hover:bg-white hover:text-primary-custom px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
+                className="border-2 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
+                style={{
+                  borderColor: '#ffffff',
+                  color: '#ffffff',
+                  backgroundColor: 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#ffffff';
+                  e.currentTarget.style.color = '#2E86AB';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
               >
                 Become a Mentor
               </Button>
