@@ -186,6 +186,40 @@ export default function ForStudents() {
         </div>
       </section>
 
+      {/* Student Success Image */}
+      <section className="py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="font-inter font-bold text-3xl md:text-4xl text-charcoal-custom mb-6">
+                Join Thousands of Successful Students
+              </h2>
+              <p className="text-lg text-gray-700 mb-6">
+                Our mentorship program has helped students from top universities 
+                launch successful careers in technology, finance, consulting, and more.
+              </p>
+              <div className="grid grid-cols-2 gap-6 text-center">
+                <div>
+                  <div className="text-3xl font-bold text-primary-custom mb-2">1,500+</div>
+                  <div className="text-sm text-gray-600">Students Mentored</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-secondary-custom mb-2">85%</div>
+                  <div className="text-sm text-gray-600">Job Placement Rate</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <img
+                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&h=700"
+                alt="Diverse group of university students collaborating on laptops in modern study space"
+                className="rounded-2xl shadow-xl w-full h-auto"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* What You'll Gain */}
       <section className="py-24 bg-light-custom">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
