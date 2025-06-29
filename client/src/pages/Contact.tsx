@@ -1,86 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Mail, Twitter, Clock, MapPin, Phone } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import emailjs from '@emailjs/browser';
 
 export default function Contact() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Simple form validation
-    if (!formData.name || !formData.email || !formData.message) {
-      toast({
-        title: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // EmailJS configuration - these need to be set up in EmailJS dashboard
-      const serviceId = 'service_aspirelink'; // You'll need to create this
-      const templateId = 'template_contact'; // You'll need to create this
-      const publicKey = 'YOUR_PUBLIC_KEY'; // You'll need to get this from EmailJS
-
-      const templateParams = {
-        from_name: formData.name,
-        from_email: formData.email,
-        subject: formData.subject || 'Contact Form Submission',
-        message: formData.message,
-        to_email: 'contact@aspirelink.com',
-      };
-
-      await emailjs.send(serviceId, templateId, templateParams, publicKey);
-      
-      toast({
-        title: "Message sent successfully!",
-        description: "We'll get back to you within 24 hours.",
-      });
-
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        message: "",
-      });
-    } catch (error) {
-      console.error('EmailJS error:', error);
-      toast({
-        title: "Failed to send message",
-        description: "Please try again or contact us directly at contact@aspirelink.com",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -116,44 +37,30 @@ export default function Contact() {
                       Email Us
                     </h3>
                     <a
-                      href="mailto:contact@aspirelink.org"
+                      href="mailto:contact@aspirelink.com"
                       className="text-primary-custom hover:text-secondary-custom transition-colors duration-200"
                     >
-                      contact@aspirelink.org
+                      contact@aspirelink.com
                     </a>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-secondary-custom bg-opacity-10 rounded-full flex items-center justify-center">
-                    <Twitter className="text-secondary-custom w-6 h-6" />
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Twitter className="text-blue-600 w-6 h-6" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-charcoal-custom">
-                      Follow Us
+                      LinkedIn
                     </h3>
                     <a
-                      href="https://twitter.com/AspireLinkOrg"
+                      href="https://www.linkedin.com/company/aspirelinkorg"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-secondary-custom hover:text-primary-custom transition-colors duration-200"
+                      className="text-primary-custom hover:text-secondary-custom transition-colors duration-200"
                     >
                       @AspireLinkOrg
                     </a>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-accent-custom bg-opacity-10 rounded-full flex items-center justify-center">
-                    <Clock className="text-accent-custom w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-charcoal-custom">
-                      Response Time
-                    </h3>
-                    <p className="text-gray-600">
-                      We'll get back to you within 24 hours
-                    </p>
                   </div>
                 </div>
               </div>
@@ -168,85 +75,60 @@ export default function Contact() {
               </div>
             </div>
 
-            {/* Contact Form */}
+            {/* How to Reach Us */}
             <div>
               <Card className="shadow-lg">
                 <CardContent className="p-8">
-                  <h3 className="font-inter font-semibold text-2xl text-charcoal-custom mb-6">
-                    Send us a Message
+                  <h3 className="font-inter font-bold text-2xl text-charcoal-custom mb-6">
+                    How to Reach Us
                   </h3>
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                      <Label htmlFor="name" className="text-charcoal-custom">
-                        Full Name *
-                      </Label>
-                      <Input
-                        id="name"
-                        name="name"
-                        type="text"
-                        required
-                        value={formData.name}
-                        onChange={handleChange}
-                        className="mt-1"
-                        placeholder="Your full name"
-                      />
+                  <div className="space-y-6">
+                    <div className="p-6 bg-primary-custom bg-opacity-5 rounded-lg">
+                      <div className="flex items-start space-x-4">
+                        <div className="w-12 h-12 bg-primary-custom bg-opacity-10 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Mail className="text-primary-custom w-6 h-6" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-charcoal-custom mb-2">
+                            Email for Applications & Inquiries
+                          </h4>
+                          <p style={{color: '#2F3E46'}} className="mb-3">
+                            Send your student applications, mentor applications, or general inquiries directly to our team:
+                          </p>
+                          <a
+                            href="mailto:contact@aspirelink.com"
+                            className="text-primary-custom hover:text-secondary-custom transition-colors duration-200 font-medium text-lg"
+                          >
+                            contact@aspirelink.com
+                          </a>
+                        </div>
+                      </div>
                     </div>
 
-                    <div>
-                      <Label htmlFor="email" className="text-charcoal-custom">
-                        Email Address *
-                      </Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        required
-                        value={formData.email}
-                        onChange={handleChange}
-                        className="mt-1"
-                        placeholder="your.email@example.com"
-                      />
+                    <div className="p-6 bg-blue-50 rounded-lg">
+                      <div className="flex items-start space-x-4">
+                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Twitter className="text-blue-600 w-6 h-6" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-charcoal-custom mb-2">
+                            Connect on LinkedIn
+                          </h4>
+                          <p style={{color: '#2F3E46'}} className="mb-3">
+                            Follow us for program updates, success stories, and professional networking opportunities:
+                          </p>
+                          <a
+                            href="https://www.linkedin.com/company/aspirelinkorg"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary-custom hover:text-secondary-custom transition-colors duration-200 font-medium text-lg"
+                          >
+                            @AspireLinkOrg
+                          </a>
+                        </div>
+                      </div>
                     </div>
-
-                    <div>
-                      <Label htmlFor="subject" className="text-charcoal-custom">
-                        Subject
-                      </Label>
-                      <Input
-                        id="subject"
-                        name="subject"
-                        type="text"
-                        value={formData.subject}
-                        onChange={handleChange}
-                        className="mt-1"
-                        placeholder="What's this about?"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="message" className="text-charcoal-custom">
-                        Message *
-                      </Label>
-                      <Textarea
-                        id="message"
-                        name="message"
-                        required
-                        value={formData.message}
-                        onChange={handleChange}
-                        rows={5}
-                        className="mt-1"
-                        placeholder="Tell us how we can help you..."
-                      />
-                    </div>
-
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full bg-primary-custom hover:bg-primary-dark disabled:opacity-50 text-white py-3 font-semibold"
-                    >
-                      {isSubmitting ? "Sending..." : "Send Message"}
-                    </Button>
-                  </form>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -269,7 +151,7 @@ export default function Contact() {
                 <h3 className="font-semibold text-charcoal-custom mb-2">
                   Office Hours
                 </h3>
-                <p className="text-gray-600 text-sm">
+                <p style={{color: '#2F3E46'}} className="text-sm">
                   Monday - Friday
                   <br />
                   9:00 AM - 5:00 PM EST
@@ -283,12 +165,12 @@ export default function Contact() {
                   <MapPin className="text-secondary-custom w-8 h-8" />
                 </div>
                 <h3 className="font-semibold text-charcoal-custom mb-2">
-                  Virtual First
+                  Location
                 </h3>
-                <p className="text-gray-600 text-sm">
-                  All programs conducted online
+                <p style={{color: '#2F3E46'}} className="text-sm">
+                  Virtual Program
                   <br />
-                  Global accessibility
+                  Available Worldwide
                 </p>
               </CardContent>
             </Card>
@@ -299,12 +181,12 @@ export default function Contact() {
                   <Clock className="text-accent-custom w-8 h-8" />
                 </div>
                 <h3 className="font-semibold text-charcoal-custom mb-2">
-                  Quick Response
+                  Program Duration
                 </h3>
-                <p className="text-gray-600 text-sm">
-                  24-hour response guarantee
+                <p style={{color: '#2F3E46'}} className="text-sm">
+                  4-Month Cohorts
                   <br />
-                  Priority support
+                  Year-Round Enrollment
                 </p>
               </CardContent>
             </Card>
