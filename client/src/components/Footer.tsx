@@ -3,7 +3,7 @@ import { Users, Twitter, Linkedin, Facebook, Instagram } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-charcoal-custom text-white py-16">
+    <footer className="py-16" style={{backgroundColor: '#2F3E46', color: '#ffffff'}}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-8 mb-12">
           <div>
@@ -13,7 +13,7 @@ export default function Footer() {
               </div>
               <span className="font-inter font-bold text-xl">AspireLink</span>
             </div>
-            <p className="text-white mb-6">
+            <p className="mb-6" style={{color: '#ffffff'}}>
               Connecting students with experienced professionals through
               meaningful mentorship relationships.
             </p>
@@ -49,11 +49,12 @@ export default function Footer() {
 
           <div>
             <h3 className="font-inter font-semibold text-lg mb-6">Program</h3>
-            <ul className="space-y-3 text-white">
+            <ul className="space-y-3" style={{color: '#ffffff'}}>
               <li>
                 <Link
                   href="/about"
                   className="hover:text-primary-custom transition-colors duration-200"
+                  style={{color: '#ffffff'}}
                 >
                   About
                 </Link>
@@ -62,6 +63,7 @@ export default function Footer() {
                 <Link
                   href="/students"
                   className="hover:text-primary-custom transition-colors duration-200"
+                  style={{color: '#ffffff'}}
                 >
                   For Students
                 </Link>
@@ -70,6 +72,7 @@ export default function Footer() {
                 <Link
                   href="/mentors"
                   className="hover:text-primary-custom transition-colors duration-200"
+                  style={{color: '#ffffff'}}
                 >
                   For Mentors
                 </Link>
@@ -78,6 +81,7 @@ export default function Footer() {
                 <a
                   href="#"
                   className="hover:text-primary-custom transition-colors duration-200"
+                  style={{color: '#ffffff'}}
                 >
                   Success Stories
                 </a>
@@ -87,11 +91,12 @@ export default function Footer() {
 
           <div>
             <h3 className="font-inter font-semibold text-lg mb-6">Support</h3>
-            <ul className="space-y-3 text-white">
+            <ul className="space-y-3" style={{color: '#ffffff'}}>
               <li>
                 <Link
                   href="/faq"
                   className="hover:text-primary-custom transition-colors duration-200"
+                  style={{color: '#ffffff'}}
                 >
                   FAQ
                 </Link>
@@ -100,6 +105,7 @@ export default function Footer() {
                 <Link
                   href="/contact"
                   className="hover:text-primary-custom transition-colors duration-200"
+                  style={{color: '#ffffff'}}
                 >
                   Contact
                 </Link>
@@ -108,6 +114,7 @@ export default function Footer() {
                 <a
                   href="#"
                   className="hover:text-primary-custom transition-colors duration-200"
+                  style={{color: '#ffffff'}}
                 >
                   Help Center
                 </a>
@@ -116,6 +123,7 @@ export default function Footer() {
                 <a
                   href="#"
                   className="hover:text-primary-custom transition-colors duration-200"
+                  style={{color: '#ffffff'}}
                 >
                   Resources
                 </a>
@@ -125,11 +133,12 @@ export default function Footer() {
 
           <div>
             <h3 className="font-inter font-semibold text-lg mb-6">Legal</h3>
-            <ul className="space-y-3 text-white">
+            <ul className="space-y-3" style={{color: '#ffffff'}}>
               <li>
                 <a
                   href="#"
                   className="hover:text-primary-custom transition-colors duration-200"
+                  style={{color: '#ffffff'}}
                 >
                   Privacy Policy
                 </a>
@@ -138,6 +147,7 @@ export default function Footer() {
                 <a
                   href="#"
                   className="hover:text-primary-custom transition-colors duration-200"
+                  style={{color: '#ffffff'}}
                 >
                   Terms of Service
                 </a>
@@ -146,6 +156,7 @@ export default function Footer() {
                 <a
                   href="#"
                   className="hover:text-primary-custom transition-colors duration-200"
+                  style={{color: '#ffffff'}}
                 >
                   Code of Conduct
                 </a>
@@ -154,6 +165,7 @@ export default function Footer() {
                 <a
                   href="#"
                   className="hover:text-primary-custom transition-colors duration-200"
+                  style={{color: '#ffffff'}}
                 >
                   Accessibility
                 </a>
@@ -162,8 +174,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-700 pt-8 text-center text-white">
-          <p>
+        <div className="border-t border-gray-700 pt-8 text-center">
+          <p style={{color: '#ffffff'}}>
             &copy; 2024 AspireLink. All rights reserved.
           </p>
         </div>
