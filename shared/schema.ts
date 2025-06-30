@@ -37,6 +37,8 @@ export const mentorRegistrations = pgTable("mentor_registrations", {
   motivation: text("motivation"),
   agreedToCommitment: boolean("agreed_to_commitment").default(false),
   consentToContact: boolean("consent_to_contact").default(false),
+  // Admin fields
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -60,7 +62,26 @@ export const studentRegistrations = pgTable("student_registrations", {
   // Consent & Confirmation
   agreedToCommitment: boolean("agreed_to_commitment").default(false),
   consentToContact: boolean("consent_to_contact").default(false),
+  // Admin fields
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Admin users table
+export const adminUsers = pgTable("admin_users", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Mentor-Student assignments table
+export const mentorStudentAssignments = pgTable("mentor_student_assignments", {
+  id: serial("id").primaryKey(),
+  mentorId: integer("mentor_id").notNull().references(() => mentorRegistrations.id),
+  studentId: integer("student_id").notNull().references(() => studentRegistrations.id),
+  isActive: boolean("is_active").default(true),
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -85,6 +106,16 @@ export const insertStudentRegistrationSchema = createInsertSchema(studentRegistr
   createdAt: true,
 });
 
+export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMentorStudentAssignmentSchema = createInsertSchema(mentorStudentAssignments).omit({
+  id: true,
+  assignedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertContact = z.infer<typeof insertContactSchema>;
@@ -93,3 +124,7 @@ export type InsertMentorRegistration = z.infer<typeof insertMentorRegistrationSc
 export type MentorRegistration = typeof mentorRegistrations.$inferSelect;
 export type InsertStudentRegistration = z.infer<typeof insertStudentRegistrationSchema>;
 export type StudentRegistration = typeof studentRegistrations.$inferSelect;
+export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
+export type AdminUser = typeof adminUsers.$inferSelect;
+export type InsertMentorStudentAssignment = z.infer<typeof insertMentorStudentAssignmentSchema>;
+export type MentorStudentAssignment = typeof mentorStudentAssignments.$inferSelect;

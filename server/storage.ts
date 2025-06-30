@@ -1,4 +1,4 @@
-import { users, contacts, mentorRegistrations, studentRegistrations, type User, type InsertUser, type Contact, type InsertContact, type MentorRegistration, type InsertMentorRegistration, type StudentRegistration, type InsertStudentRegistration } from "@shared/schema";
+import { users, contacts, mentorRegistrations, studentRegistrations, adminUsers, mentorStudentAssignments, type User, type InsertUser, type Contact, type InsertContact, type MentorRegistration, type InsertMentorRegistration, type StudentRegistration, type InsertStudentRegistration, type AdminUser, type InsertAdminUser, type MentorStudentAssignment, type InsertMentorStudentAssignment } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -11,8 +11,21 @@ export interface IStorage {
   getAllContacts(): Promise<Contact[]>;
   createMentorRegistration(registration: InsertMentorRegistration): Promise<MentorRegistration>;
   getAllMentorRegistrations(): Promise<MentorRegistration[]>;
+  updateMentorRegistration(id: number, updates: Partial<MentorRegistration>): Promise<MentorRegistration>;
+  deleteMentorRegistration(id: number): Promise<void>;
   createStudentRegistration(registration: InsertStudentRegistration): Promise<StudentRegistration>;
   getAllStudentRegistrations(): Promise<StudentRegistration[]>;
+  updateStudentRegistration(id: number, updates: Partial<StudentRegistration>): Promise<StudentRegistration>;
+  deleteStudentRegistration(id: number): Promise<void>;
+  // Admin authentication
+  getAdminByEmail(email: string): Promise<AdminUser | undefined>;
+  createAdmin(admin: InsertAdminUser): Promise<AdminUser>;
+  // Mentor-Student assignments
+  createAssignment(assignment: InsertMentorStudentAssignment): Promise<MentorStudentAssignment>;
+  getAllAssignments(): Promise<MentorStudentAssignment[]>;
+  deleteAssignment(id: number): Promise<void>;
+  getAssignmentsByMentor(mentorId: number): Promise<MentorStudentAssignment[]>;
+  getAssignmentsByStudent(studentId: number): Promise<MentorStudentAssignment[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -91,6 +104,7 @@ export class MemStorage implements IStorage {
       motivation: insertRegistration.motivation || null,
       agreedToCommitment: insertRegistration.agreedToCommitment || false,
       consentToContact: insertRegistration.consentToContact || false,
+      isActive: insertRegistration.isActive ?? true,
       createdAt: new Date()
     };
     this.mentorRegistrations.set(id, registration);
@@ -121,6 +135,7 @@ export class MemStorage implements IStorage {
       mentorshipGoals: insertRegistration.mentorshipGoals || null,
       agreedToCommitment: insertRegistration.agreedToCommitment || false,
       consentToContact: insertRegistration.consentToContact || false,
+      isActive: insertRegistration.isActive ?? true,
       createdAt: new Date()
     };
     this.studentRegistrations.set(id, registration);

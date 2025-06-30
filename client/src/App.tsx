@@ -14,6 +14,8 @@ import FAQ from "@/pages/FAQ";
 import Contact from "@/pages/Contact";
 import RegisterMentor from "@/pages/RegisterMentor";
 import RegisterStudent from "@/pages/RegisterStudent";
+import AdminLogin from "@/pages/AdminLogin";
+import AdminDashboard from "@/pages/AdminDashboard";
 
 function Router() {
   return (
@@ -29,6 +31,8 @@ function Router() {
           <Route path="/register-student" component={RegisterStudent} />
           <Route path="/faq" component={FAQ} />
           <Route path="/contact" component={Contact} />
+          <Route path="/admin/login" component={AdminLogin} />
+          <Route path="/admin/dashboard" component={AdminDashboard} />
           <Route component={NotFound} />
         </Switch>
       </main>
