@@ -55,7 +55,8 @@ export default function CreateAssignment() {
     mutationFn: async (data: { mentorId: number; studentId: number }) => {
       return apiRequest("/api/admin/assignments", "POST", data);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Assignment created successfully:", data);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/assignments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
       toast({
@@ -64,7 +65,8 @@ export default function CreateAssignment() {
       });
       setLocation("/admin/dashboard");
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Assignment creation failed:", error);
       toast({
         title: "Assignment Failed",
         description: "Failed to create assignment. Please try again.",
@@ -75,6 +77,8 @@ export default function CreateAssignment() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log("Form submitted with:", { selectedMentorId, selectedStudentId });
     
     if (!selectedMentorId || !selectedStudentId) {
       toast({
@@ -88,9 +92,13 @@ export default function CreateAssignment() {
     const mentorId = parseInt(selectedMentorId);
     const studentId = parseInt(selectedStudentId);
 
+    console.log("Parsed IDs:", { mentorId, studentId });
+
     // Check if mentor and student are active
     const selectedMentor = mentors?.find((m: Mentor) => m.id === mentorId);
     const selectedStudent = students?.find((s: Student) => s.id === studentId);
+
+    console.log("Found users:", { selectedMentor, selectedStudent });
 
     if (!selectedMentor?.isActive) {
       toast({
@@ -110,6 +118,7 @@ export default function CreateAssignment() {
       return;
     }
 
+    console.log("Creating assignment...");
     createAssignmentMutation.mutate({ mentorId, studentId });
   };
 

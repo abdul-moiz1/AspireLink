@@ -195,6 +195,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin create assignment endpoint
+  app.post("/api/admin/assignments", async (req, res) => {
+    try {
+      const { mentorId, studentId } = req.body;
+      
+      // Get mentor and student names for the assignment
+      const mentors = await storage.getAllMentorRegistrations();
+      const students = await storage.getAllStudentRegistrations();
+      
+      const mentor = mentors.find(m => m.id === mentorId);
+      const student = students.find(s => s.id === studentId);
+      
+      if (!mentor || !student) {
+        return res.status(404).json({ error: "Mentor or student not found" });
+      }
+      
+      const assignmentData = {
+        mentorId,
+        studentId,
+        mentorName: mentor.fullName,
+        studentName: student.fullName
+      };
+      
+      const newAssignment = await storage.createAssignment(assignmentData);
+      res.json(newAssignment);
+    } catch (error) {
+      console.error("Error creating assignment:", error);
+      res.status(500).json({ error: "Failed to create assignment" });
+    }
+  });
+
   // Admin authentication endpoint
   app.post("/api/admin/login", async (req, res) => {
     try {
