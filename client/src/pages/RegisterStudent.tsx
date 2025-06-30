@@ -130,6 +130,60 @@ export default function RegisterStudent() {
       }
     }
 
+    if (step === 2) {
+      if (!studentData.nominatedBy.trim()) {
+        toast({
+          title: "Nominator Required",
+          description: "Please enter the professor's name who nominated you.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!studentData.professorEmail.trim()) {
+        toast({
+          title: "Professor Email Required",
+          description: "Please enter your nominating professor's email address.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    if (step === 3) {
+      if (!studentData.careerInterests.trim()) {
+        toast({
+          title: "Career Interests Required",
+          description: "Please describe your career interests and goals.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (studentData.preferredIndustries.length === 0) {
+        toast({
+          title: "Industry Preferences Required",
+          description: "Please select at least one industry preference.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!studentData.mentoringTopics.trim()) {
+        toast({
+          title: "Mentoring Topics Required",
+          description: "Please describe what topics you'd like mentoring on.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!studentData.mentorshipGoals.trim()) {
+        toast({
+          title: "Mentorship Goals Required",
+          description: "Please describe your mentorship goals.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setStep(step + 1);
   };
 
@@ -190,10 +244,15 @@ export default function RegisterStudent() {
                       <li>• Your 4-month mentorship program will begin once both parties confirm</li>
                     </ul>
                   </div>
-                  <div className="flex justify-center">
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Link href="/">
                       <Button className="bg-primary-custom hover:bg-primary-dark text-white px-8 py-3">
                         Return to Home
+                      </Button>
+                    </Link>
+                    <Link href="/faq">
+                      <Button variant="outline" className="px-8 py-3">
+                        View FAQ
                       </Button>
                     </Link>
                   </div>
@@ -374,7 +433,7 @@ export default function RegisterStudent() {
 
               <div>
                 <Label htmlFor="nominatedBy" className="text-base font-medium">
-                  Nominated By: Professor's Full Name
+                  Nominated By: Professor's Full Name *
                 </Label>
                 <Input
                   id="nominatedBy"
@@ -383,12 +442,11 @@ export default function RegisterStudent() {
                   placeholder="Dr. Jane Smith"
                   className="mt-2"
                 />
-                <p className="text-sm text-gray-500 mt-1">Optional</p>
               </div>
 
               <div>
                 <Label htmlFor="professorEmail" className="text-base font-medium">
-                  Professor's Email Address
+                  Professor's Email Address *
                 </Label>
                 <Input
                   id="professorEmail"
@@ -398,7 +456,6 @@ export default function RegisterStudent() {
                   placeholder="professor@university.edu"
                   className="mt-2"
                 />
-                <p className="text-sm text-gray-500 mt-1">Optional</p>
               </div>
 
               <div className="flex justify-between pt-6">
@@ -424,7 +481,7 @@ export default function RegisterStudent() {
             <CardContent className="space-y-6">
               <div>
                 <Label htmlFor="careerInterests" className="text-base font-medium">
-                  Career Interests or Goals
+                  Career Interests or Goals *
                 </Label>
                 <Textarea
                   id="careerInterests"
@@ -433,13 +490,12 @@ export default function RegisterStudent() {
                   placeholder="Describe your career interests, goals, and what you hope to achieve..."
                   className="mt-2 min-h-[100px]"
                 />
-                <p className="text-sm text-gray-500 mt-1">Optional - helps us match you with relevant mentors</p>
               </div>
 
               <div>
-                <Label className="text-base font-medium">Preferred Mentor Industry</Label>
+                <Label className="text-base font-medium">Preferred Mentor Industry *</Label>
                 <p className="text-sm text-gray-500 mb-3">
-                  Select industries you're interested in learning about (optional)
+                  Select at least one industry you're interested in learning about
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
                   {industryOptions.map((industry) => (
@@ -473,7 +529,7 @@ export default function RegisterStudent() {
 
               <div>
                 <Label htmlFor="mentoringTopics" className="text-base font-medium">
-                  Topics you'd like to discuss with a mentor
+                  Topics you'd like to discuss with a mentor *
                 </Label>
                 <Textarea
                   id="mentoringTopics"
@@ -482,12 +538,11 @@ export default function RegisterStudent() {
                   placeholder="e.g., Career planning, networking, industry insights, skill development, interview preparation..."
                   className="mt-2 min-h-[80px]"
                 />
-                <p className="text-sm text-gray-500 mt-1">Optional</p>
               </div>
 
               <div>
                 <Label htmlFor="mentorshipGoals" className="text-base font-medium">
-                  What do you hope to gain from this mentorship experience?
+                  What do you hope to gain from this mentorship experience? *
                 </Label>
                 <Textarea
                   id="mentorshipGoals"
@@ -496,7 +551,6 @@ export default function RegisterStudent() {
                   placeholder="Describe your expectations and goals for the mentorship program..."
                   className="mt-2 min-h-[100px]"
                 />
-                <p className="text-sm text-gray-500 mt-1">Optional</p>
               </div>
 
               <div className="flex justify-between pt-6">
