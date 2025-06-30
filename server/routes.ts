@@ -116,14 +116,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
 
       
-      // Check hardcoded admin credentials (accept both .com and .org)
-      if ((email === "program.admin@aspirelink.com" || email === "program.admin@aspirelink.org") && password === "@sp1reLink") {
+      // Check hardcoded admin credentials
+      if (email === "program.admin@aspirelink.org" && password === "@sp1reLink") {
         // Simple token for demo purposes
         const token = Buffer.from(`${email}:${Date.now()}`).toString('base64');
-        console.log("Login successful, generating token");
+
         res.json({ success: true, token });
       } else {
-        console.log("Login failed - credentials don't match");
+
         res.status(401).json({ success: false, error: "Invalid credentials" });
       }
     } catch (error) {
