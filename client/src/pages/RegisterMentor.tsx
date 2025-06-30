@@ -223,6 +223,15 @@ export default function RegisterMentor() {
       return;
     }
 
+    if (selectedAvailability.length === 0) {
+      toast({
+        title: "Availability Required",
+        description: "Please select at least one availability option.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const registrationData = {
       linkedinUrl: linkedinUrl || null,
       fullName: linkedinData.fullName,
@@ -608,9 +617,9 @@ export default function RegisterMentor() {
 
                 {/* Availability */}
                 <div>
-                  <Label className="text-base font-medium">Availability</Label>
+                  <Label className="text-base font-medium">Availability *</Label>
                   <p className="text-sm text-gray-500 mb-3">
-                    When are you generally available for mentoring sessions? (optional)
+                    Select at least one time when you're available for mentoring sessions
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {availabilityOptions.map((option) => (
