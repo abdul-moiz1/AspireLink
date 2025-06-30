@@ -128,49 +128,6 @@ export default function RegisterStudent() {
         });
         return;
       }
-      if (!studentData.universityName.trim()) {
-        toast({
-          title: "University Required",
-          description: "Please enter your university name to continue.",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (!studentData.academicProgram.trim()) {
-        toast({
-          title: "Academic Program Required",
-          description: "Please enter your academic program/major to continue.",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (!studentData.yearOfStudy) {
-        toast({
-          title: "Year of Study Required",
-          description: "Please select your year of study to continue.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    if (step === 2) {
-      if (!studentData.nominatedBy.trim()) {
-        toast({
-          title: "Nominator Required",
-          description: "Please enter the professor's name who nominated you.",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (!studentData.professorEmail.trim()) {
-        toast({
-          title: "Professor Email Required",
-          description: "Please enter your nominating professor's email address.",
-          variant: "destructive",
-        });
-        return;
-      }
     }
 
     setStep(step + 1);
@@ -233,15 +190,10 @@ export default function RegisterStudent() {
                       <li>• Your 4-month mentorship program will begin once both parties confirm</li>
                     </ul>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex justify-center">
                     <Link href="/">
-                      <Button className="bg-primary-custom hover:bg-primary-dark text-white px-6 py-3">
+                      <Button className="bg-primary-custom hover:bg-primary-dark text-white px-8 py-3">
                         Return to Home
-                      </Button>
-                    </Link>
-                    <Link href="/faq">
-                      <Button variant="outline" className="px-6 py-3">
-                        View FAQ
                       </Button>
                     </Link>
                   </div>
@@ -351,22 +303,23 @@ export default function RegisterStudent() {
 
                 <div>
                   <Label htmlFor="universityName" className="text-base font-medium">
-                    University Name *
+                    University Name
                   </Label>
                   <Input
                     id="universityName"
                     value={studentData.universityName}
                     onChange={(e) => setStudentData({...studentData, universityName: e.target.value})}
-                    placeholder="University of Example"
+                    placeholder="Name of University"
                     className="mt-2"
                   />
+                  <p className="text-sm text-gray-500 mt-1">Optional</p>
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="academicProgram" className="text-base font-medium">
-                    Academic Program / Major *
+                    Academic Program / Major
                   </Label>
                   <Input
                     id="academicProgram"
@@ -375,10 +328,11 @@ export default function RegisterStudent() {
                     placeholder="Computer Science, Business, etc."
                     className="mt-2"
                   />
+                  <p className="text-sm text-gray-500 mt-1">Optional</p>
                 </div>
 
                 <div>
-                  <Label className="text-base font-medium">Year of Study *</Label>
+                  <Label className="text-base font-medium">Year of Study</Label>
                   <Select value={studentData.yearOfStudy} onValueChange={(value) => setStudentData({...studentData, yearOfStudy: value})}>
                     <SelectTrigger className="mt-2">
                       <SelectValue placeholder="Select your year of study" />
@@ -389,6 +343,7 @@ export default function RegisterStudent() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-sm text-gray-500 mt-1">Optional</p>
                 </div>
               </div>
 
@@ -419,7 +374,7 @@ export default function RegisterStudent() {
 
               <div>
                 <Label htmlFor="nominatedBy" className="text-base font-medium">
-                  Nominated By: Professor's Full Name *
+                  Nominated By: Professor's Full Name
                 </Label>
                 <Input
                   id="nominatedBy"
@@ -428,11 +383,12 @@ export default function RegisterStudent() {
                   placeholder="Dr. Jane Smith"
                   className="mt-2"
                 />
+                <p className="text-sm text-gray-500 mt-1">Optional</p>
               </div>
 
               <div>
                 <Label htmlFor="professorEmail" className="text-base font-medium">
-                  Professor's Email Address *
+                  Professor's Email Address
                 </Label>
                 <Input
                   id="professorEmail"
@@ -442,6 +398,7 @@ export default function RegisterStudent() {
                   placeholder="professor@university.edu"
                   className="mt-2"
                 />
+                <p className="text-sm text-gray-500 mt-1">Optional</p>
               </div>
 
               <div className="flex justify-between pt-6">
