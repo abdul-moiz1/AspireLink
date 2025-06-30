@@ -356,14 +356,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get assignments (placeholder for now)
+  // Get assignments with mentor and student names
   app.get("/api/admin/assignments", async (req, res) => {
     try {
-      // For now return empty array until assignments table is fully implemented
-      res.json([]);
+      const assignments = await storage.getAllAssignments();
+      const mentors = await storage.getAllMentorRegistrations();
+      const students = await storage.getAllStudentRegistrations();
+      
+      // Enrich assignments with mentor and student names
+      const enrichedAssignments = assignments.map(assignment => {
+        const mentor = mentors.find(m => m.id === assignment.mentorId);
+        const student = students.find(s => s.id === assignment.studentId);
+        
+        return {
+          ...assignment,
+          mentorName: mentor?.fullName || 'Unknown Mentor',
+          studentName: student?.fullName || 'Unknown Student'
+        };
+      });
+      
+      res.json(enrichedAssignments);
     } catch (error) {
       console.error("Get assignments error:", error);
       res.status(500).json({ success: false, error: "Failed to fetch assignments" });
+    }
+  });
+
+  // Delete assignment endpoint
+  app.delete("/api/admin/assignments/:id", async (req, res) => {
+    try {
+      const assignmentId = parseInt(req.params.id);
+      await storage.deleteAssignment(assignmentId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete assignment error:", error);
+      res.status(500).json({ success: false, error: "Failed to delete assignment" });
     }
   });
 

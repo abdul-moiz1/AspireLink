@@ -145,23 +145,23 @@ export default function AdminDashboard() {
     }
   });
 
-  // Create assignment mutation
-  const createAssignmentMutation = useMutation({
-    mutationFn: async ({ mentorId, studentId }: { mentorId: number; studentId: number }) => {
-      return apiRequest("/api/admin/assignments", "POST", { mentorId, studentId });
+  // Delete assignment mutation
+  const deleteAssignmentMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/admin/assignments/${id}`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/assignments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
       toast({
-        title: "Assignment Created",
-        description: "Student successfully assigned to mentor.",
+        title: "Assignment Deleted",
+        description: "Assignment deleted successfully.",
       });
     },
     onError: () => {
       toast({
-        title: "Assignment Failed",
-        description: "Failed to create assignment. Please try again.",
+        title: "Delete Failed",
+        description: "Failed to delete assignment. Please try again.",
         variant: "destructive",
       });
     }
@@ -181,6 +181,12 @@ export default function AdminDashboard() {
   const handleDelete = (type: "student" | "mentor", id: number, name: string) => {
     if (window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
       deleteUserMutation.mutate({ type, id });
+    }
+  };
+
+  const handleDeleteAssignment = (id: number, mentorName: string, studentName: string) => {
+    if (window.confirm(`Are you sure you want to delete the assignment between ${mentorName} and ${studentName}?`)) {
+      deleteAssignmentMutation.mutate(id);
     }
   };
 
@@ -504,13 +510,11 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Button size="sm" variant="outline">
-                          <Edit className="w-4 h-4" />
-                        </Button>
                         <Button
                           size="sm"
                           variant="outline"
                           className="text-red-600 hover:text-red-700"
+                          onClick={() => handleDeleteAssignment(assignment.id, assignment.mentorName, assignment.studentName)}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
