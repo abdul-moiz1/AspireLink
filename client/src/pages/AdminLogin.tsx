@@ -82,7 +82,7 @@ export default function AdminLogin() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="program.admin@aspirelink.org"
+                  placeholder="Enter admin email address"
                   className="mt-2"
                   required
                 />
