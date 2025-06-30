@@ -39,7 +39,7 @@ export default function Home() {
                       Apply as Student
                     </Button>
                   </Link>
-                  <Link href="/mentors">
+                  <Link href="/register-mentor">
                     <Button
                       variant="outline"
                       className="border-2 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
@@ -257,7 +257,7 @@ export default function Home() {
                 Apply as Student
               </Button>
             </Link>
-            <Link href="/mentors">
+            <Link href="/register-mentor">
               <Button
                 variant="outline"
                 className="border-2 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
