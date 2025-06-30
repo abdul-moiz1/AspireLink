@@ -205,6 +205,24 @@ export default function RegisterMentor() {
       return;
     }
 
+    if (selectedDisciplines.length === 0) {
+      toast({
+        title: "Student Disciplines Required",
+        description: "Please select at least one preferred student discipline.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedTopics.length === 0) {
+      toast({
+        title: "Mentoring Topics Required",
+        description: "Please select at least one mentoring topic.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const registrationData = {
       linkedinUrl: linkedinUrl || null,
       fullName: linkedinData.fullName,
@@ -544,9 +562,9 @@ export default function RegisterMentor() {
               <CardContent className="space-y-6">
                 {/* Preferred Disciplines */}
                 <div>
-                  <Label className="text-base font-medium">Preferred Student Disciplines</Label>
+                  <Label className="text-base font-medium">Preferred Student Disciplines *</Label>
                   <p className="text-sm text-gray-500 mb-3">
-                    Select the fields where you can provide valuable mentorship (optional)
+                    Select at least one field where you can provide valuable mentorship
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {disciplines.map((discipline) => (
@@ -567,9 +585,9 @@ export default function RegisterMentor() {
 
                 {/* Mentoring Topics */}
                 <div>
-                  <Label className="text-base font-medium">Mentoring Topics</Label>
+                  <Label className="text-base font-medium">Mentoring Topics *</Label>
                   <p className="text-sm text-gray-500 mb-3">
-                    What areas can you help students with? (optional)
+                    Select at least one area where you can help students
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {mentoringTopics.map((topic) => (

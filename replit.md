@@ -136,6 +136,7 @@ Changelog:
 - June 30, 2025. Added email format validation to all email address fields in student registration form. Both student email and professor email fields now validate proper email format using regex pattern before allowing form progression.
 - June 30, 2025. Added optional LinkedIn URL field to mentor registration form step 1. Field includes URL input type and helpful placeholder text to assist with professional profile verification.
 - June 30, 2025. Updated mentor registration form validation: Made Current Job Title field mandatory in step 1, changed location placeholder to "City, Province", and made agreement and consent checkboxes mandatory in step 2 with proper validation error messages.
+- June 30, 2025. Enhanced mentor registration step 2 validation: Made "Preferred Student Disciplines" and "Mentoring Topics" fields mandatory with selection validation and updated field labels and descriptions to reflect required status.
 - June 29, 2025. Integrated custom AspireLink logo (handshake design) into navigation header and updated favicon, added SEO meta tags with proper title and description
 - June 29, 2025. Added professional student collaboration image to For Students page with accurate founding cohort messaging instead of false success statistics
 
