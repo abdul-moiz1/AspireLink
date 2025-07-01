@@ -57,7 +57,6 @@ export default function Accessibility() {
                     <li>Flexible session scheduling for different time zones and schedules</li>
                     <li>Multiple communication options (video, phone, text-based)</li>
                     <li>Document formats available in various accessible formats</li>
-                    <li>Sign language interpretation upon request</li>
                     <li>Extended time for program activities when needed</li>
                     <li>Alternative assessment methods</li>
                   </ul>

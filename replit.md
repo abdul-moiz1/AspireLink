@@ -151,6 +151,7 @@ Changelog:
 - July 1, 2025. Cleaned up contact information across all policy pages: removed fictional Toronto addresses from Privacy Policy, Terms of Service, and Accessibility pages; removed phone numbers from Code of Conduct and Accessibility pages; all pages now only show appropriate email contact information
 - July 1, 2025. Updated Accessibility page to show accurate Web Accessibility Standards (WCAG 2.1 Level AA, semantic HTML, keyboard navigation) and realistic Supported Technologies (screen readers, browser tools, high contrast) removing unverified compliance claims
 - July 1, 2025. Removed "Common Accommodations" section from Accessibility page to simplify content and focus on verified capabilities
+- July 1, 2025. Removed "Sign language interpretation upon request" from Program Accommodations section as this service is not available for volunteer-based program
 
 ## User Preferences
 
