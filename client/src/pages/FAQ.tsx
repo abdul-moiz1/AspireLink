@@ -10,7 +10,7 @@ export default function FAQ() {
     {
       question: "How does the matching process work?",
       answer:
-        "Our AI-powered system matches students with mentors based on career goals, industry interests, personality compatibility, and availability. We consider factors like communication style, professional background, and specific areas of expertise to ensure the best possible pairing.",
+        "Our smart matching system connects students with mentors based on career goals, industry interests, personality compatibility, and availability. We consider factors like communication style, professional background, and specific areas of expertise to ensure the best possible pairing.",
     },
     {
       question: "What is the time commitment for mentors?",

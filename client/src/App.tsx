@@ -21,6 +21,10 @@ import CreateMentor from "@/pages/CreateMentor";
 import CreateAssignment from "@/pages/CreateAssignment";
 import EditStudent from "@/pages/EditStudent";
 import EditMentor from "@/pages/EditMentor";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import TermsOfService from "@/pages/TermsOfService";
+import CodeOfConduct from "@/pages/CodeOfConduct";
+import Accessibility from "@/pages/Accessibility";
 
 function Router() {
   return (
@@ -43,6 +47,10 @@ function Router() {
           <Route path="/admin/create-assignment" component={CreateAssignment} />
           <Route path="/admin/edit-student/:id" component={EditStudent} />
           <Route path="/admin/edit-mentor/:id" component={EditMentor} />
+          <Route path="/privacy" component={PrivacyPolicy} />
+          <Route path="/terms" component={TermsOfService} />
+          <Route path="/conduct" component={CodeOfConduct} />
+          <Route path="/accessibility" component={Accessibility} />
           <Route component={NotFound} />
         </Switch>
       </main>

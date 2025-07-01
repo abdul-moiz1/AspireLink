@@ -135,40 +135,40 @@ export default function Footer() {
             <h3 className="font-inter font-semibold text-lg mb-6">Legal</h3>
             <ul className="space-y-3" style={{color: '#ffffff'}}>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/privacy"
                   className="hover:text-primary-custom transition-colors duration-200"
                   style={{color: '#ffffff'}}
                 >
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/terms"
                   className="hover:text-primary-custom transition-colors duration-200"
                   style={{color: '#ffffff'}}
                 >
                   Terms of Service
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/conduct"
                   className="hover:text-primary-custom transition-colors duration-200"
                   style={{color: '#ffffff'}}
                 >
                   Code of Conduct
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/accessibility"
                   className="hover:text-primary-custom transition-colors duration-200"
                   style={{color: '#ffffff'}}
                 >
                   Accessibility
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

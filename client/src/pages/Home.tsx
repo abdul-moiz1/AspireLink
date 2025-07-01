@@ -141,7 +141,7 @@ export default function Home() {
                   2. Matching
                 </h3>
                 <p style={{color: '#2F3E46'}}>
-                  AI-powered matching connects students with compatible mentors
+                  Smart matching connects students with compatible mentors
                   based on goals and industry
                 </p>
               </CardContent>
@@ -202,8 +202,8 @@ export default function Home() {
                   Personalized Matching
                 </h3>
                 <p style={{color: '#2F3E46'}}>
-                  AI-powered system connects you with mentors based on your career goals, 
-                  interests, and personality for the perfect fit.
+                  Smart matching system connects you with mentors based on your career goals, 
+                  interests, and compatibility for the perfect fit.
                 </p>
               </CardContent>
             </Card>

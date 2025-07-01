@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart, Lightbulb, Network, Users, Clock, Target } from "lucide-react";
+import { Heart, Lightbulb, Network, Users, Clock, Target, FileText, UserCheck, Calendar } from "lucide-react";
 import { Link } from "wouter";
 
 export default function ForMentors() {
@@ -170,8 +170,8 @@ export default function ForMentors() {
           </h2>
           <div className="space-y-8">
             <div className="flex items-start space-x-6">
-              <div className="w-12 h-12 bg-primary-custom text-white rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0">
-                1
+              <div className="w-12 h-12 bg-primary-custom text-white rounded-full flex items-center justify-center flex-shrink-0">
+                <FileText className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="font-semibold text-xl mb-2">
@@ -185,8 +185,8 @@ export default function ForMentors() {
             </div>
 
             <div className="flex items-start space-x-6">
-              <div className="w-12 h-12 bg-secondary-custom text-white rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0">
-                2
+              <div className="w-12 h-12 bg-secondary-custom text-white rounded-full flex items-center justify-center flex-shrink-0">
+                <UserCheck className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="font-semibold text-xl mb-2">
@@ -201,8 +201,8 @@ export default function ForMentors() {
             </div>
 
             <div className="flex items-start space-x-6">
-              <div className="w-12 h-12 bg-accent-custom text-white rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0">
-                3
+              <div className="w-12 h-12 bg-accent-custom text-white rounded-full flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="font-semibold text-xl mb-2">
@@ -217,8 +217,8 @@ export default function ForMentors() {
             </div>
 
             <div className="flex items-start space-x-6">
-              <div className="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0">
-                4
+              <div className="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center flex-shrink-0">
+                <Target className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="font-semibold text-xl mb-2">

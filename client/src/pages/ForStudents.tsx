@@ -7,6 +7,10 @@ import {
   CheckCircle,
   Star,
   Clock,
+  FileText,
+  UserCheck,
+  Users,
+  Trophy,
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -128,8 +132,8 @@ export default function ForStudents() {
             <div className="grid md:grid-cols-2 gap-8">
               <Card>
                 <CardContent className="p-8">
-                  <div className="w-12 h-12 bg-primary-custom text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">
-                    1
+                  <div className="w-12 h-12 bg-primary-custom text-white rounded-full flex items-center justify-center mb-4">
+                    <FileText className="w-6 h-6" />
                   </div>
                   <h3 className="font-semibold text-xl mb-3">
                     Complete Application
@@ -143,8 +147,8 @@ export default function ForStudents() {
 
               <Card>
                 <CardContent className="p-8">
-                  <div className="w-12 h-12 bg-secondary-custom text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">
-                    2
+                  <div className="w-12 h-12 bg-secondary-custom text-white rounded-full flex items-center justify-center mb-4">
+                    <UserCheck className="w-6 h-6" />
                   </div>
                   <h3 className="font-semibold text-xl mb-3">Get Nominated</h3>
                   <p className="text-gray-600">
@@ -156,8 +160,8 @@ export default function ForStudents() {
 
               <Card>
                 <CardContent className="p-8">
-                  <div className="w-12 h-12 bg-accent-custom text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">
-                    3
+                  <div className="w-12 h-12 bg-accent-custom text-white rounded-full flex items-center justify-center mb-4">
+                    <Users className="w-6 h-6" />
                   </div>
                   <h3 className="font-semibold text-xl mb-3">
                     Interview & Matching
@@ -171,8 +175,8 @@ export default function ForStudents() {
 
               <Card>
                 <CardContent className="p-8">
-                  <div className="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">
-                    4
+                  <div className="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center mb-4">
+                    <Trophy className="w-6 h-6" />
                   </div>
                   <h3 className="font-semibold text-xl mb-3">Start Program</h3>
                   <p className="text-gray-600">
