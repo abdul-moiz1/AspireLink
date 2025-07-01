@@ -12,6 +12,10 @@ import {
   Heart,
   Lightbulb,
   Network,
+  FileText,
+  UserCheck,
+  Calendar,
+  Target
 } from "lucide-react";
 import { Link } from "wouter";
 import brandedImagePath from "@assets/AspireLink-300-1_1751236725408.png";
@@ -120,7 +124,7 @@ export default function Home() {
             <Card className="text-center group card-hover">
               <CardContent className="p-8">
                 <div className="w-16 h-16 bg-primary-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary-custom group-hover:bg-opacity-20 transition-colors duration-200">
-                  <UserPlus className="text-primary-custom w-8 h-8" />
+                  <FileText className="text-primary-custom w-8 h-8" />
                 </div>
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   1. Nomination
@@ -135,7 +139,7 @@ export default function Home() {
             <Card className="text-center group card-hover">
               <CardContent className="p-8">
                 <div className="w-16 h-16 bg-secondary-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-secondary-custom group-hover:bg-opacity-20 transition-colors duration-200">
-                  <Search className="text-secondary-custom w-8 h-8" />
+                  <Users className="text-secondary-custom w-8 h-8" />
                 </div>
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   2. Matching
@@ -150,7 +154,7 @@ export default function Home() {
             <Card className="text-center group card-hover">
               <CardContent className="p-8">
                 <div className="w-16 h-16 bg-accent-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-accent-custom group-hover:bg-opacity-20 transition-colors duration-200">
-                  <Video className="text-accent-custom w-8 h-8" />
+                  <Calendar className="text-accent-custom w-8 h-8" />
                 </div>
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   3. Sessions
@@ -165,7 +169,7 @@ export default function Home() {
             <Card className="text-center group card-hover">
               <CardContent className="p-8">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-green-200 transition-colors duration-200">
-                  <Award className="text-green-600 w-8 h-8" />
+                  <Target className="text-green-600 w-8 h-8" />
                 </div>
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   4. Recognition
@@ -196,7 +200,7 @@ export default function Home() {
             <Card className="card-hover">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-primary-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Heart className="text-primary-custom w-8 h-8" />
+                  <UserCheck className="text-primary-custom w-8 h-8" />
                 </div>
                 <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
                   Personalized Matching
@@ -211,7 +215,7 @@ export default function Home() {
             <Card className="card-hover">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-secondary-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Lightbulb className="text-secondary-custom w-8 h-8" />
+                  <CheckCircle className="text-secondary-custom w-8 h-8" />
                 </div>
                 <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
                   Structured Program
@@ -226,7 +230,7 @@ export default function Home() {
             <Card className="card-hover">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-accent-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Network className="text-accent-custom w-8 h-8" />
+                  <Star className="text-accent-custom w-8 h-8" />
                 </div>
                 <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
                   Industry Networks
