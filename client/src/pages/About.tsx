@@ -1,5 +1,4 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { InfoTooltip, EncouragementTooltip } from "@/components/ui/help-tooltip";
 
 export default function About() {
   return (
@@ -7,15 +6,9 @@ export default function About() {
       {/* Hero Section */}
       <section className="py-24" style={{background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)'}}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center mb-6">
-            <h1 className="font-inter font-bold text-4xl md:text-5xl" style={{color: '#ffffff'}}>
-              About AspireLink
-            </h1>
-            <InfoTooltip 
-              content="AspireLink was founded to bridge the gap between academic learning and real-world career success. We believe every student deserves access to professional guidance, regardless of their background or connections."
-              side="bottom"
-            />
-          </div>
+          <h1 className="font-inter font-bold text-4xl md:text-5xl mb-6" style={{color: '#ffffff'}}>
+            About AspireLink
+          </h1>
           <p className="text-xl leading-relaxed" style={{color: '#ffffff'}}>
             Bridging the gap between academic learning and professional success
             through meaningful mentorship connections.

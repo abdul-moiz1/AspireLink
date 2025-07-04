@@ -4,7 +4,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { TipTooltip } from "@/components/ui/help-tooltip";
 
 export default function FAQ() {
   const faqs = [
@@ -65,15 +64,9 @@ export default function FAQ() {
       {/* Hero Section */}
       <section className="py-24" style={{background: 'linear-gradient(135deg, #F18F01 0%, #c47301 100%)'}}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center mb-6">
-            <h1 className="font-inter font-bold text-4xl md:text-5xl" style={{color: '#ffffff'}}>
-              Frequently Asked Questions
-            </h1>
-            <TipTooltip 
-              content="Can't find the answer you're looking for? Feel free to contact us at info@aspirelink.org. We're here to help you understand how our mentorship program works and how you can get involved!"
-              side="bottom"
-            />
-          </div>
+          <h1 className="font-inter font-bold text-4xl md:text-5xl mb-6" style={{color: '#ffffff'}}>
+            Frequently Asked Questions
+          </h1>
           <p className="text-xl" style={{color: '#ffffff'}}>
             Everything you need to know about AspireLink
           </p>
