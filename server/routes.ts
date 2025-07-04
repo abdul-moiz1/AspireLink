@@ -535,6 +535,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dashboard API endpoints
+
+  // Student dashboard - get student profile
+  app.get("/api/student-profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'student') {
+        return res.status(403).json({ error: "Access denied. Student role required." });
+      }
+
+      // Get student registration data
+      const studentRegistrations = await storage.getAllStudentRegistrations();
+      const studentProfile = studentRegistrations.find(s => s.emailAddress === user.email);
+      
+      if (!studentProfile) {
+        return res.status(404).json({ error: "Student profile not found" });
+      }
+
+      res.json(studentProfile);
+    } catch (error) {
+      console.error("Error fetching student profile:", error);
+      res.status(500).json({ error: "Failed to fetch student profile" });
+    }
+  });
+
+  // Student dashboard - get mentor assignment
+  app.get("/api/student-mentor-assignment", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'student') {
+        return res.status(403).json({ error: "Access denied. Student role required." });
+      }
+
+      // Get student registration to find student ID
+      const studentRegistrations = await storage.getAllStudentRegistrations();
+      const studentProfile = studentRegistrations.find(s => s.emailAddress === user.email);
+      
+      if (!studentProfile) {
+        return res.status(404).json({ error: "Student profile not found" });
+      }
+
+      // Get mentor assignment
+      const assignments = await storage.getAssignmentsByStudent(studentProfile.id);
+      const activeAssignment = assignments.find(a => a.isActive);
+      
+      if (!activeAssignment) {
+        return res.status(404).json({ error: "No active mentor assignment found" });
+      }
+
+      // Get mentor details
+      const mentorRegistrations = await storage.getAllMentorRegistrations();
+      const mentor = mentorRegistrations.find(m => m.id === activeAssignment.mentorId);
+      
+      const mentorMatch = {
+        id: activeAssignment.id,
+        mentorId: activeAssignment.mentorId,
+        mentorName: mentor?.fullName || 'Unknown Mentor',
+        mentorJobTitle: mentor?.currentJobTitle,
+        mentorCompany: mentor?.company,
+        mentorLocation: mentor?.location,
+        isActive: activeAssignment.isActive,
+        assignedAt: activeAssignment.assignedAt
+      };
+
+      res.json(mentorMatch);
+    } catch (error) {
+      console.error("Error fetching student mentor assignment:", error);
+      res.status(500).json({ error: "Failed to fetch mentor assignment" });
+    }
+  });
+
+  // Student dashboard - get sessions (placeholder for now)
+  app.get("/api/student-sessions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'student') {
+        return res.status(403).json({ error: "Access denied. Student role required." });
+      }
+
+      // For now, return empty array as session management is not implemented yet
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching student sessions:", error);
+      res.status(500).json({ error: "Failed to fetch sessions" });
+    }
+  });
+
+  // Mentor dashboard - get mentor profile
+  app.get("/api/mentor-profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'mentor') {
+        return res.status(403).json({ error: "Access denied. Mentor role required." });
+      }
+
+      // Get mentor registration data
+      const mentorRegistrations = await storage.getAllMentorRegistrations();
+      const mentorProfile = mentorRegistrations.find(m => m.emailAddress === user.email);
+      
+      if (!mentorProfile) {
+        return res.status(404).json({ error: "Mentor profile not found" });
+      }
+
+      res.json(mentorProfile);
+    } catch (error) {
+      console.error("Error fetching mentor profile:", error);
+      res.status(500).json({ error: "Failed to fetch mentor profile" });
+    }
+  });
+
+  // Mentor dashboard - get student assignments
+  app.get("/api/mentor-student-assignments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'mentor') {
+        return res.status(403).json({ error: "Access denied. Mentor role required." });
+      }
+
+      // Get mentor registration to find mentor ID
+      const mentorRegistrations = await storage.getAllMentorRegistrations();
+      const mentorProfile = mentorRegistrations.find(m => m.emailAddress === user.email);
+      
+      if (!mentorProfile) {
+        return res.status(404).json({ error: "Mentor profile not found" });
+      }
+
+      // Get student assignments
+      const assignments = await storage.getAssignmentsByMentor(mentorProfile.id);
+      
+      // Get student details for each assignment
+      const studentRegistrations = await storage.getAllStudentRegistrations();
+      const studentMatches = assignments.map(assignment => {
+        const student = studentRegistrations.find(s => s.id === assignment.studentId);
+        return {
+          id: assignment.id,
+          studentId: assignment.studentId,
+          studentName: student?.fullName || 'Unknown Student',
+          studentEmail: student?.emailAddress || '',
+          studentUniversity: student?.universityName,
+          studentProgram: student?.academicProgram,
+          studentYear: student?.yearOfStudy,
+          isActive: assignment.isActive,
+          assignedAt: assignment.assignedAt
+        };
+      });
+
+      res.json(studentMatches);
+    } catch (error) {
+      console.error("Error fetching mentor student assignments:", error);
+      res.status(500).json({ error: "Failed to fetch student assignments" });
+    }
+  });
+
+  // Mentor dashboard - get sessions (placeholder for now)
+  app.get("/api/mentor-sessions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'mentor') {
+        return res.status(403).json({ error: "Access denied. Mentor role required." });
+      }
+
+      // For now, return empty array as session management is not implemented yet
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching mentor sessions:", error);
+      res.status(500).json({ error: "Failed to fetch sessions" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

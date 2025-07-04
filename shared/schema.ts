@@ -46,9 +46,11 @@ export const contacts = pgTable("contacts", {
 
 export const mentorRegistrations = pgTable("mentor_registrations", {
   id: serial("id").primaryKey(),
+  // Basic contact info
+  fullName: text("full_name").notNull(),
+  emailAddress: text("email_address").notNull(),
   // Professional data
   linkedinUrl: text("linkedin_url"),
-  fullName: text("full_name").notNull(),
   currentJobTitle: text("current_job_title"),
   company: text("company"),
   yearsExperience: integer("years_experience"),

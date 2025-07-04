@@ -15,6 +15,8 @@ import FAQ from "@/pages/FAQ";
 import Contact from "@/pages/Contact";
 import RegisterMentor from "@/pages/RegisterMentor";
 import RegisterStudent from "@/pages/RegisterStudent";
+import StudentDashboard from "@/pages/StudentDashboard";
+import MentorDashboard from "@/pages/MentorDashboard";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
 import CreateStudent from "@/pages/CreateStudent";
@@ -39,6 +41,8 @@ function Router() {
           <Route path="/mentors" component={ForMentors} />
           <Route path="/register-mentor" component={RegisterMentor} />
           <Route path="/register-student" component={RegisterStudent} />
+          <Route path="/student-dashboard" component={StudentDashboard} />
+          <Route path="/mentor-dashboard" component={MentorDashboard} />
           <Route path="/faq" component={FAQ} />
           <Route path="/contact" component={Contact} />
           <Route path="/admin/login" component={AdminLogin} />
