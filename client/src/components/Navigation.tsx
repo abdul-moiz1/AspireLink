@@ -9,12 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 export default function Navigation() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const { user, isAuthenticated, isLoading } = useAuth();
-  
-  // Debug logging
-  console.log("Navigation - user:", user);
-  console.log("Navigation - isAuthenticated:", isAuthenticated);
-  console.log("Navigation - isLoading:", isLoading);
+  const { isAuthenticated } = useAuth();
 
   const navItems = [
     { href: "/", label: "Home" },
@@ -64,20 +59,12 @@ export default function Navigation() {
               
               {/* Authentication Buttons */}
               {isAuthenticated ? (
-                <>
-                  <Link 
-                    href="/dashboard"
-                    className="font-medium text-charcoal-custom hover:text-primary-custom transition-colors duration-200"
-                  >
-                    Dashboard
-                  </Link>
-                  <a 
-                    href="/api/logout"
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-200"
-                  >
-                    Logout
-                  </a>
-                </>
+                <a 
+                  href="/api/logout"
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-200"
+                >
+                  Logout
+                </a>
               ) : (
                 <a 
                   href="/api/login"
@@ -118,22 +105,13 @@ export default function Navigation() {
                   
                   {/* Mobile Authentication Buttons */}
                   {isAuthenticated ? (
-                    <div className="mt-4 space-y-3">
-                      <Link 
-                        href="/dashboard"
-                        onClick={() => setIsOpen(false)}
-                        className="block px-3 py-2 text-base font-medium text-charcoal-custom hover:text-primary-custom transition-colors duration-200"
-                      >
-                        Dashboard
-                      </Link>
-                      <a 
-                        href="/api/logout"
-                        onClick={() => setIsOpen(false)}
-                        className="block bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium text-base transition-colors duration-200 text-center"
-                      >
-                        Logout
-                      </a>
-                    </div>
+                    <a 
+                      href="/api/logout"
+                      onClick={() => setIsOpen(false)}
+                      className="block bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium text-base transition-colors duration-200 text-center mt-4"
+                    >
+                      Logout
+                    </a>
                   ) : (
                     <a 
                       href="/api/login"
