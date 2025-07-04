@@ -1,14 +1,12 @@
-import { users, contacts, mentorRegistrations, studentRegistrations, adminUsers, mentorStudentAssignments, type User, type UpsertUser, type UserRole, type Contact, type InsertContact, type MentorRegistration, type InsertMentorRegistration, type StudentRegistration, type InsertStudentRegistration, type AdminUser, type InsertAdminUser, type MentorStudentAssignment, type InsertMentorStudentAssignment } from "@shared/schema";
+import { users, contacts, mentorRegistrations, studentRegistrations, adminUsers, mentorStudentAssignments, type User, type InsertUser, type Contact, type InsertContact, type MentorRegistration, type InsertMentorRegistration, type StudentRegistration, type InsertStudentRegistration, type AdminUser, type InsertAdminUser, type MentorStudentAssignment, type InsertMentorStudentAssignment } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
 // Storage interface with CRUD operations
 export interface IStorage {
-  // User operations (Replit Auth)
-  getUser(id: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
-  updateUserRole(id: string, role: UserRole): Promise<User>;
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
   createContact(contact: InsertContact): Promise<Contact>;
   getAllContacts(): Promise<Contact[]>;
   createMentorRegistration(registration: InsertMentorRegistration): Promise<MentorRegistration>;
@@ -31,10 +29,11 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<string, User>;
+  private users: Map<number, User>;
   private contacts: Map<number, Contact>;
   private mentorRegistrations: Map<number, MentorRegistration>;
   private studentRegistrations: Map<number, StudentRegistration>;
+  private currentUserId: number;
   private currentContactId: number;
   private currentMentorRegistrationId: number;
   private currentStudentRegistrationId: number;
@@ -44,48 +43,27 @@ export class MemStorage implements IStorage {
     this.contacts = new Map();
     this.mentorRegistrations = new Map();
     this.studentRegistrations = new Map();
+    this.currentUserId = 1;
     this.currentContactId = 1;
     this.currentMentorRegistrationId = 1;
     this.currentStudentRegistrationId = 1;
   }
 
-  async getUser(id: string): Promise<User | undefined> {
+  async getUser(id: number): Promise<User | undefined> {
     return this.users.get(id);
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    for (const user of this.users.values()) {
-      if (user.email === email) {
-        return user;
-      }
-    }
-    return undefined;
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.username === username,
+    );
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
-    const existingUser = this.users.get(userData.id);
-    const user: User = {
-      id: userData.id,
-      email: userData.email || null,
-      firstName: userData.firstName || null,
-      lastName: userData.lastName || null,
-      profileImageUrl: userData.profileImageUrl || null,
-      role: (userData.role as UserRole) || "student",
-      createdAt: existingUser?.createdAt || new Date(),
-      updatedAt: new Date(),
-    };
-    this.users.set(userData.id, user);
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = this.currentUserId++;
+    const user: User = { ...insertUser, id };
+    this.users.set(id, user);
     return user;
-  }
-
-  async updateUserRole(id: string, role: UserRole): Promise<User> {
-    const user = this.users.get(id);
-    if (!user) {
-      throw new Error("User not found");
-    }
-    const updatedUser = { ...user, role, updatedAt: new Date() };
-    this.users.set(id, updatedUser);
-    return updatedUser;
   }
 
   async createContact(insertContact: InsertContact): Promise<Contact> {
@@ -211,8 +189,8 @@ export class MemStorage implements IStorage {
       return {
         id: 1,
         email: "program.admin@aspirelink.org",
-        password: "@sp1reLink",
-        
+        passwordHash: "@sp1reLink",
+        isActive: true,
         createdAt: new Date()
       };
     }
@@ -234,7 +212,7 @@ export class MemStorage implements IStorage {
     const newAssignment: MentorStudentAssignment = {
       ...assignment,
       id,
-      
+      isActive: true,
       assignedAt: new Date()
     };
     return newAssignment;
@@ -258,49 +236,20 @@ export class MemStorage implements IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  async getUser(id: string): Promise<User | undefined> {
+  async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
     return user || undefined;
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
-    const userValues = {
-      id: userData.id,
-      email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      profileImageUrl: userData.profileImageUrl,
-      role: userData.role as UserRole,
-    };
-
+  async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
-      .values(userValues)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          profileImageUrl: userData.profileImageUrl,
-          role: userData.role as UserRole,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return user;
-  }
-
-  async updateUserRole(id: string, role: UserRole): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({ role, updatedAt: new Date() })
-      .where(eq(users.id, id))
+      .values(insertUser)
       .returning();
     return user;
   }
@@ -372,8 +321,8 @@ export class DatabaseStorage implements IStorage {
       return {
         id: 1,
         email: "program.admin@aspirelink.org",
-        password: "@sp1reLink",
-        
+        passwordHash: "@sp1reLink",
+        isActive: true,
         createdAt: new Date()
       };
     }

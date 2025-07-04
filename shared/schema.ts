@@ -1,42 +1,11 @@
-import {
-  pgTable,
-  text,
-  serial,
-  integer,
-  boolean,
-  timestamp,
-  varchar,
-  jsonb,
-  index,
-} from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Session storage table (required for Replit Auth)
-export const sessions = pgTable(
-  "sessions",
-  {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
-  },
-  (table) => [index("IDX_session_expire").on(table.expire)],
-);
-
-// User roles enum
-export const userRoles = ["student", "mentor", "program_director", "admin"] as const;
-export type UserRole = typeof userRoles[number];
-
-// Users table (updated for Replit Auth)
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(), // Replit user ID
-  email: varchar("email").unique(),
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
-  profileImageUrl: varchar("profile_image_url"),
-  role: text("role").$type<UserRole>().default("student").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
 });
 
 export const contacts = pgTable("contacts", {
@@ -115,8 +84,10 @@ export const mentorStudentAssignments = pgTable("mentor_student_assignments", {
   assignedAt: timestamp("assigned_at").defaultNow().notNull(),
 });
 
-// Schema for upserting users (Replit Auth)
-export const upsertUserSchema = createInsertSchema(users);
+export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  password: true,
+});
 
 export const insertContactSchema = createInsertSchema(contacts).pick({
   name: true,
@@ -145,7 +116,7 @@ export const insertMentorStudentAssignmentSchema = createInsertSchema(mentorStud
   assignedAt: true,
 });
 
-export type UpsertUser = z.infer<typeof upsertUserSchema>;
+export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertContact = z.infer<typeof insertContactSchema>;
 export type Contact = typeof contacts.$inferSelect;

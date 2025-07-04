@@ -4,12 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import logoPath from "@assets/AspireLink-Favicon_1751236188567.png";
-import { useAuth } from "@/hooks/useAuth";
 
 export default function Navigation() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
 
   const navItems = [
     { href: "/", label: "Home" },
@@ -56,23 +54,6 @@ export default function Navigation() {
                   {item.label}
                 </Link>
               ))}
-              
-              {/* Authentication Buttons */}
-              {isAuthenticated ? (
-                <a 
-                  href="/api/logout"
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-200"
-                >
-                  Logout
-                </a>
-              ) : (
-                <a 
-                  href="/api/login"
-                  className="bg-primary-custom hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-200"
-                >
-                  Login
-                </a>
-              )}
             </div>
           </div>
 
@@ -102,25 +83,7 @@ export default function Navigation() {
                       {item.label}
                     </Link>
                   ))}
-                  
-                  {/* Mobile Authentication Buttons */}
-                  {isAuthenticated ? (
-                    <a 
-                      href="/api/logout"
-                      onClick={() => setIsOpen(false)}
-                      className="block bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium text-base transition-colors duration-200 text-center mt-4"
-                    >
-                      Logout
-                    </a>
-                  ) : (
-                    <a 
-                      href="/api/login"
-                      onClick={() => setIsOpen(false)}
-                      className="block bg-primary-custom hover:bg-primary-dark text-white px-4 py-3 rounded-lg font-medium text-base transition-colors duration-200 text-center mt-4"
-                    >
-                      Login
-                    </a>
-                  )}
+
                 </div>
               </SheetContent>
             </Sheet>

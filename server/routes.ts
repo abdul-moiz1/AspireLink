@@ -5,40 +5,8 @@ import { insertContactSchema, insertMentorRegistrationSchema, insertStudentRegis
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { setupAuth, isAuthenticated, requireRole } from "./replitAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Test route to verify API is working
-  app.get('/api/test', (req, res) => {
-    res.json({ message: "API is working", timestamp: new Date().toISOString() });
-  });
-
-  // Setup authentication system first
-  try {
-    await setupAuth(app);
-    console.log("Auth setup successful");
-  } catch (error) {
-    console.error("Auth setup failed:", error);
-  }
-
-  // Auth user route - defined after setupAuth to use proper authentication
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      console.log("Auth user request - req.user:", req.user);
-      console.log("Auth user request - req.isAuthenticated():", req.isAuthenticated());
-      
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      console.log("Auth user request - fetched user:", user);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
-
-
-
   // Contact form submission endpoint
   app.post("/api/contact", async (req, res) => {
     try {

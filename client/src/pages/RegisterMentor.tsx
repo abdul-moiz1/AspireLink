@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,6 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/useAuth";
 import { 
   Linkedin, 
   User, 
@@ -56,6 +55,7 @@ interface LinkedInData {
 }
 
 export default function RegisterMentor() {
+  const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [linkedinData, setLinkedinData] = useState<LinkedInData | null>({
@@ -77,24 +77,6 @@ export default function RegisterMentor() {
   const [agreedToCommitment, setAgreedToCommitment] = useState(false);
   const [consentToContact, setConsentToContact] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const { user, isLoading, isAuthenticated } = useAuth();
-  const { toast } = useToast();
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to access the registration form.",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login?role=mentor";
-      }, 1000);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
 
   const autoFillMutation = useMutation({
     mutationFn: async (url: string) => {
