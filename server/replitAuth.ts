@@ -157,10 +157,12 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/callback", (req, res, next) => {
     passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/dashboard",
       failureRedirect: "/api/login",
     })(req, res, (err: any) => {
-      if (err) return next(err);
+      if (err) {
+        console.error("Authentication error:", err);
+        return res.redirect("/api/login");
+      }
       
       // Handle role-based redirect after successful login
       const roleIntent = req.session.roleIntent;

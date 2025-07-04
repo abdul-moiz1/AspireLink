@@ -55,6 +55,9 @@ function Router() {
             <>
               <Route path="/" component={Dashboard} />
               <Route path="/dashboard" component={Dashboard} />
+              {/* Registration routes also available to authenticated users */}
+              <Route path="/register-mentor" component={RegisterMentor} />
+              <Route path="/register-student" component={RegisterStudent} />
               <Route path="/admin/dashboard" component={AdminDashboard} />
               <Route path="/admin/create-student" component={CreateStudent} />
               <Route path="/admin/create-mentor" component={CreateMentor} />
