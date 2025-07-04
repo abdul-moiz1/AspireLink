@@ -184,27 +184,28 @@ export default function Home() {
                   >
                     Apply as Student
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="border-2 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
-                    style={{
-                      borderColor: '#2E86AB',
-                      color: '#2E86AB',
-                      backgroundColor: 'transparent'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#2E86AB';
-                      e.currentTarget.style.color = '#ffffff';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.color = '#2E86AB';
-                    }}
-                    onClick={handleMentorRegistration}
-                    disabled={isLoading}
-                  >
-                    Become a Mentor
-                  </Button>
+                  <Link href="/register-mentor">
+                    <Button
+                      variant="outline"
+                      className="border-2 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
+                      style={{
+                        borderColor: '#2E86AB',
+                        color: '#2E86AB',
+                        backgroundColor: 'transparent'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#2E86AB';
+                        e.currentTarget.style.color = '#ffffff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = '#2E86AB';
+                      }}
+                      disabled={isLoading}
+                    >
+                      Become a Mentor
+                    </Button>
+                  </Link>
                 </div>
                 <div className="flex items-center justify-center lg:justify-start space-x-6 text-sm" style={{color: '#2F3E46'}}>
                   <div className="flex items-center">
@@ -404,27 +405,28 @@ export default function Home() {
             >
               Apply as Student
             </Button>
-            <Button
-              variant="outline"
-              className="border-2 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
-              style={{
-                borderColor: '#ffffff',
-                color: '#ffffff',
-                backgroundColor: 'transparent'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#ffffff';
-                e.currentTarget.style.color = '#2E86AB';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = '#ffffff';
-              }}
-              onClick={handleMentorRegistration}
-              disabled={isLoading}
-            >
-              Become a Mentor
-            </Button>
+            <Link href="/register-mentor">
+              <Button
+                variant="outline"
+                className="border-2 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
+                style={{
+                  borderColor: '#ffffff',
+                  color: '#ffffff',
+                  backgroundColor: 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#ffffff';
+                  e.currentTarget.style.color = '#2E86AB';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
+                disabled={isLoading}
+              >
+                Become a Mentor
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

@@ -66,7 +66,7 @@ export default function Navigation() {
                     {isAuthenticated ? (
                       <div className="flex items-center space-x-3">
                         {user && (
-                          <span className="text-sm text-charcoal-custom max-w-32 truncate">
+                          <span className="text-sm text-charcoal-custom max-w-28 truncate whitespace-nowrap" title={`Hello, ${user.firstName || user.email || 'User'}`}>
                             Hello, {user.firstName || user.email?.split('@')[0] || 'User'}
                           </span>
                         )}
