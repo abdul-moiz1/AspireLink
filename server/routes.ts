@@ -716,6 +716,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Profile Update Routes
+  // Update student profile
+  app.put("/api/student-profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'student') {
+        return res.status(403).json({ error: "Access denied. Student role required." });
+      }
+
+      // Find student registration by email
+      const studentRegistrations = await storage.getAllStudentRegistrations();
+      const studentProfile = studentRegistrations.find(s => s.emailAddress === user.email);
+      
+      if (!studentProfile) {
+        return res.status(404).json({ error: "Student profile not found" });
+      }
+
+      // Update student profile
+      const updatedStudent = await storage.updateStudentRegistration(studentProfile.id, {
+        fullName: req.body.fullName || studentProfile.fullName,
+        phoneNumber: req.body.phoneNumber || studentProfile.phoneNumber,
+        universityName: req.body.universityName || studentProfile.universityName,
+        academicProgram: req.body.academicProgram || studentProfile.academicProgram,
+        yearOfStudy: req.body.yearOfStudy || studentProfile.yearOfStudy,
+        preferredDisciplines: req.body.preferredDisciplines || studentProfile.preferredDisciplines,
+        mentoringTopics: req.body.mentoringTopics || studentProfile.mentoringTopics,
+        mentorshipGoals: req.body.mentorshipGoals || studentProfile.mentorshipGoals
+      });
+
+      res.json(updatedStudent);
+    } catch (error) {
+      console.error("Error updating student profile:", error);
+      res.status(500).json({ error: "Failed to update student profile" });
+    }
+  });
+
+  // Update mentor profile  
+  app.put("/api/mentor-profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'mentor') {
+        return res.status(403).json({ error: "Access denied. Mentor role required." });
+      }
+
+      // Find mentor registration by fullName (since email not in current DB)
+      const mentorRegistrations = await storage.getAllMentorRegistrations();
+      const mentorProfile = mentorRegistrations.find(m => 
+        m.fullName === user.firstName + ' ' + user.lastName ||
+        (req.body.id && m.id === parseInt(req.body.id))
+      );
+      
+      if (!mentorProfile) {
+        return res.status(404).json({ error: "Mentor profile not found" });
+      }
+
+      // Update mentor profile
+      const updatedMentor = await storage.updateMentorRegistration(mentorProfile.id, {
+        fullName: req.body.fullName || mentorProfile.fullName,
+        linkedinUrl: req.body.linkedinUrl || mentorProfile.linkedinUrl,
+        currentJobTitle: req.body.currentJobTitle || mentorProfile.currentJobTitle,
+        company: req.body.company || mentorProfile.company,
+        location: req.body.location || mentorProfile.location,
+        yearsExperience: req.body.yearsExperience || mentorProfile.yearsExperience,
+        preferredDisciplines: req.body.preferredDisciplines || mentorProfile.preferredDisciplines,
+        mentoringTopics: req.body.mentoringTopics || mentorProfile.mentoringTopics,
+        availability: req.body.availability || mentorProfile.availability,
+        motivation: req.body.motivation || mentorProfile.motivation
+      });
+
+      res.json(updatedMentor);
+    } catch (error) {
+      console.error("Error updating mentor profile:", error);
+      res.status(500).json({ error: "Failed to update mentor profile" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

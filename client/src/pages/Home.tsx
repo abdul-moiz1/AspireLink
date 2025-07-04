@@ -17,14 +17,27 @@ import {
   Calendar,
   Target
 } from "lucide-react";
-import { Link } from "wouter";
-import brandedImagePath from "@assets/AspireLink-300-1_1751236725408.png";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
+import brandedImagePath from "@assets/AspireLink-300-1_1751236725408.png";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+
+  // Auto-redirect authenticated users to their dashboards
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user?.role) {
+      if (user.role === 'student') {
+        setLocation('/student-dashboard');
+      } else if (user.role === 'mentor') {
+        setLocation('/mentor-dashboard');
+      }
+    }
+  }, [isLoading, isAuthenticated, user?.role, setLocation]);
 
   const handleStudentRegistration = async () => {
     console.log('Student registration clicked', { isLoading, isAuthenticated, user });

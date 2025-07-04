@@ -4,12 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Clock, MessageCircle, Target, TrendingUp, CheckCircle, User, Mail, Phone, MapPin, GraduationCap, BookOpen } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { apiRequest } from "@/lib/queryClient";
 
 interface StudentProfile {
   id: number;
@@ -49,10 +54,90 @@ interface Session {
 export default function StudentDashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState('overview');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    fullName: '',
+    phoneNumber: '',
+    universityName: '',
+    academicProgram: '',
+    yearOfStudy: '',
+    preferredDisciplines: [],
+    mentoringTopics: [],
+    mentorshipGoals: ''
+  });
 
   // Enable session timeout after 7 minutes of inactivity
   useSessionTimeout();
+
+  // Profile update mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async (updatedData: any) => {
+      await apiRequest('/api/student-profile', 'PUT', updatedData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
+      setIsEditing(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/student-profile'] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Update Failed",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Functions to handle editing
+  const startEditing = () => {
+    if (studentProfile) {
+      setEditForm({
+        fullName: studentProfile.fullName || '',
+        phoneNumber: studentProfile.phoneNumber || '',
+        universityName: studentProfile.universityName || '',
+        academicProgram: studentProfile.academicProgram || '',
+        yearOfStudy: studentProfile.yearOfStudy || '',
+        preferredDisciplines: studentProfile.preferredDisciplines || [],
+        mentoringTopics: studentProfile.mentoringTopics || [],
+        mentorshipGoals: studentProfile.mentorshipGoals || ''
+      });
+      setIsEditing(true);
+    }
+  };
+
+  const handleSave = () => {
+    updateProfileMutation.mutate(editForm);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditForm({
+      fullName: '',
+      phoneNumber: '',
+      universityName: '',
+      academicProgram: '',
+      yearOfStudy: '',
+      preferredDisciplines: [],
+      mentoringTopics: [],
+      mentorshipGoals: ''
+    });
+  };
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -263,7 +348,34 @@ export default function StudentDashboard() {
         {selectedTab === 'profile' && studentProfile && (
           <Card>
             <CardHeader>
-              <CardTitle>Student Profile</CardTitle>
+              <CardTitle className="flex justify-between items-center">
+                <span>Student Profile</span>
+                <div className="space-x-2">
+                  {!isEditing ? (
+                    <Button onClick={startEditing} variant="outline" size="sm">
+                      Edit Profile
+                    </Button>
+                  ) : (
+                    <>
+                      <Button 
+                        onClick={handleSave} 
+                        size="sm"
+                        disabled={updateProfileMutation.isPending}
+                      >
+                        {updateProfileMutation.isPending ? 'Saving...' : 'Save'}
+                      </Button>
+                      <Button 
+                        onClick={handleCancel} 
+                        variant="outline" 
+                        size="sm"
+                        disabled={updateProfileMutation.isPending}
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
