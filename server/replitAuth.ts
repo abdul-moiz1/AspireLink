@@ -91,21 +91,30 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) {
-    const user = {};
-    updateUserSession(user, tokens);
-    
-    // Check if there's a role intent in the session
-    const req = arguments[2] as any; // Access the request object
-    const intentRole = req?.session?.roleIntent as UserRole;
-    
-    await upsertUser(tokens.claims(), intentRole);
-    
-    // Clear role intent after use
-    if (req?.session?.roleIntent) {
-      delete req.session.roleIntent;
+    try {
+      const user = {};
+      updateUserSession(user, tokens);
+      
+      // Check if there's a role intent in the session
+      const req = arguments[2] as any; // Access the request object
+      const intentRole = req?.session?.roleIntent as UserRole;
+      
+      console.log("Authentication verify - User claims:", tokens.claims());
+      console.log("Authentication verify - Role intent:", intentRole);
+      
+      await upsertUser(tokens.claims(), intentRole);
+      
+      // Clear role intent after use
+      if (req?.session?.roleIntent) {
+        delete req.session.roleIntent;
+      }
+      
+      console.log("Authentication verify - User session created:", user);
+      verified(null, user);
+    } catch (error) {
+      console.error("Authentication verify error:", error);
+      verified(error, null);
     }
-    
-    verified(null, user);
   };
 
   for (const domain of process.env
