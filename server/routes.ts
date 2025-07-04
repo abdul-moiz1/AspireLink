@@ -5,8 +5,19 @@ import { insertContactSchema, insertMentorRegistrationSchema, insertStudentRegis
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { setupAuth, isAuthenticated, requireRole } from "./replitAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication system
+  try {
+    await setupAuth(app);
+  } catch (error) {
+    console.error("Auth setup failed:", error);
+    // Continue without auth for now - add simple mock auth
+    app.get('/api/auth/user', (req, res) => {
+      res.status(401).json({ message: "Authentication not configured" });
+    });
+  }
   // Contact form submission endpoint
   app.post("/api/contact", async (req, res) => {
     try {
