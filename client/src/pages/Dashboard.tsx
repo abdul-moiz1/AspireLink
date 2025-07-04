@@ -2,11 +2,19 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { CheckCircle, Calendar, Users, Star } from "lucide-react";
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
 
-  if (isLoading) {
+  // Check if student has completed registration
+  const { data: studentRegistrations, isLoading: isLoadingRegistrations } = useQuery({
+    queryKey: ["/api/student-registrations"],
+    enabled: !!user && user.role === "student",
+  });
+
+  if (isLoading || isLoadingRegistrations) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
@@ -77,23 +85,100 @@ export default function Dashboard() {
         );
       
       case "student":
-        return (
-          <div>
-            <h1 className="text-3xl font-bold mb-6">Welcome to AspireLink!</h1>
-            <p className="mb-4">We're excited to help you connect with industry professionals.</p>
-            <Card>
-              <CardHeader>
-                <CardTitle>Complete Your Student Application</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">Please complete your student registration to get matched with a mentor.</p>
-                <Button onClick={() => window.location.href = "/register-student"}>
-                  Complete Application
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+        // Check if student has already registered
+        const userRegistration = studentRegistrations?.find(
+          (reg: any) => reg.emailAddress === user.email
         );
+        
+        if (userRegistration) {
+          return (
+            <div>
+              <h1 className="text-3xl font-bold mb-6">Welcome back, {user.firstName}!</h1>
+              <p className="mb-6">Thank you for registering with AspireLink. Here's your application status:</p>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CheckCircle className="text-green-500" />
+                      Application Submitted
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600">Your application has been received and is under review.</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="text-blue-500" />
+                      Mentor Matching
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600">We're working on finding the perfect mentor match for you based on your preferences.</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="text-orange-500" />
+                      Next Steps
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600">You'll receive an email within 2 weeks with your mentor assignment and program details.</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Star className="text-purple-500" />
+                      Program Duration
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600">Your 4-month mentorship program will begin once both you and your mentor confirm the match.</p>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="mt-8 p-6 bg-blue-50 rounded-lg">
+                <h3 className="font-semibold text-blue-900 mb-2">Questions about the program?</h3>
+                <p className="text-blue-800 mb-4">Check out our FAQ or contact us for more information.</p>
+                <div className="flex gap-4">
+                  <Button variant="outline" onClick={() => window.location.href = "/faq"}>
+                    View FAQ
+                  </Button>
+                  <Button variant="outline" onClick={() => window.location.href = "/contact"}>
+                    Contact Us
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        } else {
+          return (
+            <div>
+              <h1 className="text-3xl font-bold mb-6">Welcome to AspireLink!</h1>
+              <p className="mb-4">We're excited to help you connect with industry professionals.</p>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Complete Your Student Application</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="mb-4">Please complete your student registration to get matched with a mentor.</p>
+                  <Button onClick={() => window.location.href = "/register-student"}>
+                    Complete Application
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          );
+        }
       
       default:
         return (
