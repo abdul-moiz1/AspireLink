@@ -112,6 +112,8 @@ export async function setupAuth(app: Express) {
       // If not in session, try cache with session ID
       if (!intentRole) {
         const sessionId = req?.session?.id || req?.sessionID;
+        console.log("Authentication verify - Current session ID:", sessionId);
+        
         if (sessionId) {
           const cachedRole = roleIntentCache.get(sessionId);
           if (cachedRole) {
@@ -119,6 +121,18 @@ export async function setupAuth(app: Express) {
             console.log("Authentication verify - Role intent from cache (session ID):", intentRole);
             // Clean up the cache entry
             roleIntentCache.delete(sessionId);
+          } else {
+            // Try to find any matching role intent for debugging
+            console.log("Authentication verify - Session ID not found in cache, checking all entries");
+            const cacheEntries = Array.from(roleIntentCache.entries());
+            for (const [cacheSessionId, cacheRole] of cacheEntries) {
+              if (cacheSessionId.includes(sessionId.slice(-8)) || sessionId.includes(cacheSessionId.slice(-8))) {
+                intentRole = cacheRole;
+                console.log("Authentication verify - Found partial match:", cacheSessionId, "->", cacheRole);
+                roleIntentCache.delete(cacheSessionId);
+                break;
+              }
+            }
           }
         }
       }
@@ -206,21 +220,9 @@ export async function setupAuth(app: Express) {
         console.log("Login request - stored role intent in cache with session ID:", sessionId, roleIntent);
       }
       
-      // Also store role intent based on email if user is already authenticated
-      if (req.isAuthenticated() && req.user) {
-        const userClaims = (req.user as any)?.claims;
-        const userEmail = userClaims?.email;
-        if (userEmail && typeof userEmail === 'string') {
-          emailRoleIntentCache.set(userEmail, roleIntent as UserRole);
-          console.log("Login request - stored role intent in email cache:", userEmail, roleIntent);
-          
-          // Set a timeout to clean up the email cache entry after 10 minutes
-          setTimeout(() => {
-            emailRoleIntentCache.delete(userEmail);
-            console.log("Login request - cleaned up email cached role intent for:", userEmail);
-          }, 10 * 60 * 1000);
-        }
-      }
+      // Store role intent in session with a different key for immediate access
+      (req.session as any).immediateRoleIntent = roleIntent as UserRole;
+      console.log("Login request - stored immediate role intent:", roleIntent);
       
       // Set a timeout to clean up the session cache entry after 5 minutes
       if (sessionId) {

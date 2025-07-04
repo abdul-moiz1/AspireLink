@@ -61,6 +61,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simple redirect endpoint for role switching after login
+  app.get('/api/auth/switch-to/:role', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const role = req.params.role;
+      
+      // Validate role
+      if (!role || !['student', 'mentor', 'admin', 'program_director'].includes(role)) {
+        return res.redirect('/?error=invalid-role');
+      }
+      
+      console.log("Role switch redirect - User ID:", userId, "New role:", role);
+      
+      // Update user role in database
+      const updatedUser = await storage.updateUserRole(userId, role);
+      
+      console.log("Role switch redirect success - Updated user:", updatedUser);
+      res.redirect('/dashboard');
+    } catch (error) {
+      console.error("Error switching role:", error);
+      res.redirect('/?error=role-switch-failed');
+    }
+  });
+
   // Contact form submission endpoint
   app.post("/api/contact", async (req, res) => {
     try {
