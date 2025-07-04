@@ -5,11 +5,11 @@ import { insertContactSchema, insertMentorRegistrationSchema, insertStudentRegis
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupSimpleAuth, isAuthenticated } from "./simpleAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Replit Auth
-  await setupAuth(app);
+  // Setup Simple Auth for testing
+  setupSimpleAuth(app);
 
   // Auth endpoints
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
