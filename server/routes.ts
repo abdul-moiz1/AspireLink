@@ -8,15 +8,22 @@ import { z } from "zod";
 import { setupAuth, isAuthenticated, requireRole } from "./replitAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Test route to verify API is working
+  app.get('/api/test', (req, res) => {
+    res.json({ message: "API is working", timestamp: new Date().toISOString() });
+  });
+
+  // Simple auth route for now
+  app.get('/api/auth/user', (req, res) => {
+    res.status(401).json({ message: "Not authenticated" });
+  });
+
   // Setup authentication system
   try {
     await setupAuth(app);
+    console.log("Auth setup successful");
   } catch (error) {
     console.error("Auth setup failed:", error);
-    // Continue without auth for now - add simple mock auth
-    app.get('/api/auth/user', (req, res) => {
-      res.status(401).json({ message: "Authentication not configured" });
-    });
   }
   // Contact form submission endpoint
   app.post("/api/contact", async (req, res) => {
