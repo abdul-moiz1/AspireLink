@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
+import { InfoTooltip, TipTooltip, FeatureTooltip, EncouragementTooltip } from "@/components/ui/help-tooltip";
 import {
   CheckCircle,
   Users,
@@ -29,10 +30,16 @@ export default function Home() {
           <div className="bg-white bg-opacity-95 rounded-3xl shadow-2xl p-8 lg:p-12">
             <div className="grid lg:grid-cols-2 gap-8 items-stretch">
               <div className="text-center lg:text-left flex flex-col justify-center h-full bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-2xl">
-                <h1 className="font-inter font-bold text-4xl md:text-5xl lg:text-6xl text-charcoal-custom leading-tight mb-6">
-                  Connect. Learn.{" "}
-                  <span className="text-primary-custom">Aspire.</span>
-                </h1>
+                <div className="flex items-center mb-6">
+                  <h1 className="font-inter font-bold text-4xl md:text-5xl lg:text-6xl text-charcoal-custom leading-tight">
+                    Connect. Learn.{" "}
+                    <span className="text-primary-custom">Aspire.</span>
+                  </h1>
+                  <EncouragementTooltip 
+                    content="Welcome to AspireLink! We're here to help you connect with industry professionals, learn from their experience, and aspire to achieve your career goals. This free program is designed specifically for ambitious students like you!"
+                    side="bottom"
+                  />
+                </div>
                 <p className="text-xl mb-8 leading-relaxed" style={{color: '#2F3E46'}}>
                   Join AspireLink's free mentorship program connecting students
                   with experienced professionals through 4-month academic cohorts.
@@ -126,9 +133,15 @@ export default function Home() {
                 <div className="w-16 h-16 bg-primary-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary-custom group-hover:bg-opacity-20 transition-colors duration-200">
                   <span className="text-primary-custom text-3xl font-bold">📄</span>
                 </div>
-                <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
-                  1. Nomination
-                </h3>
+                <div className="flex items-center justify-center mb-4">
+                  <h3 className="font-inter font-semibold text-xl text-charcoal-custom">
+                    1. Nomination
+                  </h3>
+                  <InfoTooltip 
+                    content="Don't worry about finding a professor to nominate you! You can apply directly through our registration form. We also accept self-nominations and peer recommendations."
+                    side="right"
+                  />
+                </div>
                 <p style={{color: '#2F3E46'}}>
                   Students apply and get nominated by faculty or peers for the
                   program
@@ -141,9 +154,15 @@ export default function Home() {
                 <div className="w-16 h-16 bg-secondary-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-secondary-custom group-hover:bg-opacity-20 transition-colors duration-200">
                   <span className="text-secondary-custom text-3xl font-bold">👥</span>
                 </div>
-                <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
-                  2. Matching
-                </h3>
+                <div className="flex items-center justify-center mb-4">
+                  <h3 className="font-inter font-semibold text-xl text-charcoal-custom">
+                    2. Matching
+                  </h3>
+                  <FeatureTooltip 
+                    content="Our matching algorithm considers your academic background, career interests, preferred industries, and mentoring goals to connect you with the perfect mentor. We take the guesswork out of finding the right professional guidance!"
+                    side="right"
+                  />
+                </div>
                 <p style={{color: '#2F3E46'}}>
                   Smart matching connects students with compatible mentors
                   based on goals and industry
@@ -156,9 +175,15 @@ export default function Home() {
                 <div className="w-16 h-16 bg-accent-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-accent-custom group-hover:bg-opacity-20 transition-colors duration-200">
                   <span className="text-accent-custom text-3xl font-bold">📅</span>
                 </div>
-                <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
-                  3. Sessions
-                </h3>
+                <div className="flex items-center justify-center mb-4">
+                  <h3 className="font-inter font-semibold text-xl text-charcoal-custom">
+                    3. Sessions
+                  </h3>
+                  <TipTooltip 
+                    content="You'll have monthly 30-45 minute virtual meetings with your mentor. Each session includes goal setting, progress review, career advice, and actionable next steps. We provide structured guidance to make every conversation valuable!"
+                    side="right"
+                  />
+                </div>
                 <p style={{color: '#2F3E46'}}>
                   Monthly virtual meetings with structured guidance and goal
                   tracking
@@ -171,9 +196,15 @@ export default function Home() {
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-green-200 transition-colors duration-200">
                   <span className="text-green-600 text-3xl font-bold">🏆</span>
                 </div>
-                <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
-                  4. Recognition
-                </h3>
+                <div className="flex items-center justify-center mb-4">
+                  <h3 className="font-inter font-semibold text-xl text-charcoal-custom">
+                    4. Recognition
+                  </h3>
+                  <EncouragementTooltip 
+                    content="You'll receive a program completion certificate and join our alumni network! Many participants gain valuable LinkedIn recommendations from their mentors and build professional relationships that last well beyond the program."
+                    side="right"
+                  />
+                </div>
                 <p style={{color: '#2F3E46'}}>
                   Celebrate achievements and build lasting professional
                   relationships
@@ -202,9 +233,15 @@ export default function Home() {
                 <div className="w-16 h-16 bg-primary-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6">
                   <span className="text-primary-custom text-3xl font-bold">🎯</span>
                 </div>
-                <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
-                  Personalized Matching
-                </h3>
+                <div className="flex items-center justify-center mb-4">
+                  <h3 className="font-semibold text-xl text-charcoal-custom">
+                    Personalized Matching
+                  </h3>
+                  <FeatureTooltip 
+                    content="Our matching considers your university, academic program, career interests, preferred industries, and mentoring goals. We also match based on personality and communication styles to ensure great conversations!"
+                    side="bottom"
+                  />
+                </div>
                 <p style={{color: '#2F3E46'}}>
                   Smart matching system connects you with mentors based on your career goals, 
                   interests, and compatibility for the perfect fit.
@@ -217,9 +254,15 @@ export default function Home() {
                 <div className="w-16 h-16 bg-secondary-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6">
                   <span className="text-secondary-custom text-3xl font-bold">📈</span>
                 </div>
-                <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
-                  Structured Program
-                </h3>
+                <div className="flex items-center justify-center mb-4">
+                  <h3 className="font-semibold text-xl text-charcoal-custom">
+                    Structured Program
+                  </h3>
+                  <InfoTooltip 
+                    content="Each month has specific focus areas: Month 1 - Goal Setting & Industry Overview, Month 2 - Skill Development, Month 3 - Career Strategy, Month 4 - Network Building & Next Steps. You'll never wonder what to discuss!"
+                    side="bottom"
+                  />
+                </div>
                 <p style={{color: '#2F3E46'}}>
                   Four-month guided journey with clear milestones, goal tracking, 
                   and resources to maximize your growth.
@@ -232,9 +275,15 @@ export default function Home() {
                 <div className="w-16 h-16 bg-accent-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-6">
                   <span className="text-accent-custom text-3xl font-bold">🌟</span>
                 </div>
-                <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
-                  Industry Networks
-                </h3>
+                <div className="flex items-center justify-center mb-4">
+                  <h3 className="font-semibold text-xl text-charcoal-custom">
+                    Industry Networks
+                  </h3>
+                  <EncouragementTooltip 
+                    content="Your mentor can introduce you to other professionals in their network! Many students receive LinkedIn connections, informational interview opportunities, and even job referrals through our program."
+                    side="bottom"
+                  />
+                </div>
                 <p style={{color: '#2F3E46'}}>
                   Access to exclusive professional networks and connections 
                   that extend beyond the mentorship program.

@@ -22,6 +22,7 @@ import {
   Plus,
   Link as LinkIcon
 } from "lucide-react";
+import { InfoTooltip, TipTooltip, FeatureTooltip } from "@/components/ui/help-tooltip";
 
 interface DashboardStats {
   totalStudents: number;
@@ -289,6 +290,10 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <h1 className="text-2xl font-bold text-charcoal-custom">AspireLink Admin</h1>
+              <InfoTooltip 
+                content="This admin dashboard allows you to manage students, mentors, and assignments. Use the tabs below to view registrations, create new mentor-student pairs, and track program progress. All data is real-time and updated automatically."
+                side="bottom"
+              />
             </div>
             <Button onClick={handleLogout} variant="outline" className="flex items-center space-x-2">
               <LogOut className="w-4 h-4" />

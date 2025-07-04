@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
+import { InfoTooltip, TipTooltip, EncouragementTooltip } from "@/components/ui/help-tooltip";
 
 interface StudentData {
   fullName: string;
@@ -313,9 +314,15 @@ export default function RegisterStudent() {
     <div className="min-h-screen bg-light-custom py-24">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-charcoal-custom mb-4">
-            Student Registration
-          </h1>
+          <div className="flex items-center justify-center mb-4">
+            <h1 className="text-4xl font-bold text-charcoal-custom">
+              Student Registration
+            </h1>
+            <EncouragementTooltip 
+              content="Welcome to the AspireLink family! This registration takes about 5-7 minutes to complete. We use this information to match you with the perfect mentor who shares your interests and can guide your career journey."
+              side="bottom"
+            />
+          </div>
           <p className="text-xl text-gray-600">
             Apply to join AspireLink's mentorship program and get matched with an industry professional
           </p>
