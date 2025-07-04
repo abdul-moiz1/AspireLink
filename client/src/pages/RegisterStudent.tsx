@@ -76,11 +76,20 @@ export default function RegisterStudent() {
 
   // Pre-populate form with authenticated user data
   useEffect(() => {
+    console.log("RegisterStudent - User data:", user);
+    console.log("RegisterStudent - IsLoading:", isLoading);
+    
     if (user && !isLoading) {
+      const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+      const emailAddress = user.email || '';
+      
+      console.log("RegisterStudent - Setting fullName:", fullName);
+      console.log("RegisterStudent - Setting emailAddress:", emailAddress);
+      
       setStudentData(prev => ({
         ...prev,
-        fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
-        emailAddress: user.email || ''
+        fullName,
+        emailAddress
       }));
     }
   }, [user, isLoading]);
