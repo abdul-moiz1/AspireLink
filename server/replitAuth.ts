@@ -61,13 +61,16 @@ async function upsertUser(
 ) {
   const existingUser = await storage.getUser(claims["sub"]);
   
-  // Determine role: keep existing role or use intent role, default to student
+  // Determine role: prioritize intent role for role switching, fallback to existing or default
   let role: UserRole = "student";
-  if (existingUser?.role) {
-    role = existingUser.role;
-  } else if (intentRole) {
+  if (intentRole) {
+    // If there's a role intent, use it (allows role switching)
     role = intentRole;
+  } else if (existingUser?.role) {
+    // If no intent but user exists, keep existing role
+    role = existingUser.role;
   }
+  // Otherwise, default to student
 
   await storage.upsertUser({
     id: claims["sub"],
@@ -160,6 +163,7 @@ export async function setupAuth(app: Express) {
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
+      state: roleIntent || '', // Pass role intent as state parameter
     })(req, res, next);
   });
 
@@ -183,11 +187,12 @@ export async function setupAuth(app: Express) {
           
           console.log("Callback redirect - User role:", userRole);
           
-          // Check if there was a role intent for first-time registration
+          // Check if there was a role intent for registration/role switching
           const roleIntent = req.session.roleIntent;
+          console.log("Callback redirect - Role intent from session:", roleIntent);
           if (roleIntent) {
             delete req.session.roleIntent;
-            console.log("Callback redirect - Role intent:", roleIntent);
+            console.log("Callback redirect - Cleared role intent from session");
           }
           
           // If there's a role intent, redirect to registration
