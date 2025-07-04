@@ -55,6 +55,14 @@ export default function Navigation() {
                   {item.label}
                 </Link>
               ))}
+              
+              {/* Login Button */}
+              <a 
+                href="/api/login"
+                className="bg-primary-custom hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-200"
+              >
+                Login
+              </a>
             </div>
           </div>
 
@@ -84,7 +92,15 @@ export default function Navigation() {
                       {item.label}
                     </Link>
                   ))}
-
+                  
+                  {/* Mobile Login Button */}
+                  <a 
+                    href="/api/login"
+                    onClick={() => setIsOpen(false)}
+                    className="block bg-primary-custom hover:bg-primary-dark text-white px-4 py-3 rounded-lg font-medium text-base transition-colors duration-200 text-center mt-4"
+                  >
+                    Login
+                  </a>
                 </div>
               </SheetContent>
             </Sheet>

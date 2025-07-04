@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "wouter";
 import {
   CheckCircle,
   Users,
@@ -17,7 +18,6 @@ import {
   Calendar,
   Target
 } from "lucide-react";
-import { Link } from "wouter";
 import brandedImagePath from "@assets/AspireLink-300-1_1751236725408.png";
 
 export default function Home() {
@@ -38,12 +38,12 @@ export default function Home() {
                   with experienced professionals through 4-month academic cohorts.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
-                  <a href="/api/login?role=student">
+                  <Link href="/register-student">
                     <Button className="bg-primary-custom hover:bg-primary-dark text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-lg">
                       Apply as Student
                     </Button>
-                  </a>
-                  <a href="/api/login?role=mentor">
+                  </Link>
+                  <Link href="/register-mentor">
                     <Button
                       variant="outline"
                       className="border-2 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
@@ -63,7 +63,7 @@ export default function Home() {
                     >
                       Become a Mentor
                     </Button>
-                  </a>
+                  </Link>
                 </div>
                 <div className="flex items-center justify-center lg:justify-start space-x-6 text-sm" style={{color: '#2F3E46'}}>
                   <div className="flex items-center">
