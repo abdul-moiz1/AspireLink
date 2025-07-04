@@ -9,7 +9,12 @@ import { useAuth } from "@/hooks/useAuth";
 export default function Navigation() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  
+  // Debug logging
+  console.log("Navigation - user:", user);
+  console.log("Navigation - isAuthenticated:", isAuthenticated);
+  console.log("Navigation - isLoading:", isLoading);
 
   const navItems = [
     { href: "/", label: "Home" },
@@ -59,7 +64,7 @@ export default function Navigation() {
               
               {/* Authentication Buttons */}
               {isAuthenticated ? (
-                <div className="flex items-center space-x-4">
+                <>
                   <Link 
                     href="/dashboard"
                     className="font-medium text-charcoal-custom hover:text-primary-custom transition-colors duration-200"
@@ -72,7 +77,7 @@ export default function Navigation() {
                   >
                     Logout
                   </a>
-                </div>
+                </>
               ) : (
                 <a 
                   href="/api/login"
