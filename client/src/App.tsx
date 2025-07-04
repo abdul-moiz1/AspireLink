@@ -46,15 +46,15 @@ function Router() {
           <Route path="/terms" component={TermsOfService} />
           <Route path="/conduct" component={CodeOfConduct} />
           <Route path="/accessibility" component={Accessibility} />
+          <Route path="/register-mentor" component={RegisterMentor} />
+          <Route path="/register-student" component={RegisterStudent} />
+          <Route path="/admin/login" component={AdminLogin} />
 
           {/* Authentication-aware routes */}
           {!isLoading && isAuthenticated ? (
             <>
               <Route path="/" component={Dashboard} />
               <Route path="/dashboard" component={Dashboard} />
-              <Route path="/register-mentor" component={RegisterMentor} />
-              <Route path="/register-student" component={RegisterStudent} />
-              <Route path="/admin/login" component={AdminLogin} />
               <Route path="/admin/dashboard" component={AdminDashboard} />
               <Route path="/admin/create-student" component={CreateStudent} />
               <Route path="/admin/create-mentor" component={CreateMentor} />
