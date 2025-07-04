@@ -193,14 +193,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex justify-between items-center mb-8">
-          {getDashboardContent()}
-          <div className="ml-auto">
-            <Button variant="outline" onClick={() => window.location.href = "/api/logout"}>
-              Logout
-            </Button>
-          </div>
-        </div>
+        {getDashboardContent()}
       </div>
     </div>
   );
