@@ -60,14 +60,14 @@ export default function Navigation() {
               </div>
               
               {/* Auth buttons */}
-              <div className="flex items-center space-x-4 ml-8">
+              <div className="flex items-center space-x-3 ml-6">
                 {!isLoading && (
                   <>
                     {isAuthenticated ? (
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-3">
                         {user && (
-                          <span className="text-sm text-charcoal-custom">
-                            Hello, {user.firstName || user.email}
+                          <span className="text-sm text-charcoal-custom max-w-32 truncate">
+                            Hello, {user.firstName || user.email?.split('@')[0] || 'User'}
                           </span>
                         )}
                         <Button

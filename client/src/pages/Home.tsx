@@ -70,14 +70,14 @@ export default function Home() {
       return;
     }
     
-    // User is authenticated but has no role, assign student role
+    // User is authenticated but has no role, assign mentor role
     try {
       const response = await fetch('/api/auth/assign-role', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ role: 'student' }),
+        body: JSON.stringify({ role: 'mentor' }),
       });
       
       if (response.ok) {
