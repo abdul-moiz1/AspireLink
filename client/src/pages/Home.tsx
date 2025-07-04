@@ -38,12 +38,12 @@ export default function Home() {
                   with experienced professionals through 4-month academic cohorts.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
-                  <Link href="/register-student">
+                  <a href="/api/login?role=student">
                     <Button className="bg-primary-custom hover:bg-primary-dark text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-lg">
                       Apply as Student
                     </Button>
-                  </Link>
-                  <Link href="/register-mentor">
+                  </a>
+                  <a href="/api/login?role=mentor">
                     <Button
                       variant="outline"
                       className="border-2 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
@@ -63,7 +63,7 @@ export default function Home() {
                     >
                       Become a Mentor
                     </Button>
-                  </Link>
+                  </a>
                 </div>
                 <div className="flex items-center justify-center lg:justify-start space-x-6 text-sm" style={{color: '#2F3E46'}}>
                   <div className="flex items-center">
@@ -256,12 +256,12 @@ export default function Home() {
             their careers through meaningful mentorship.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/register-student">
+            <a href="/api/login?role=student">
               <Button className="bg-white text-primary-custom hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold text-lg">
                 Apply as Student
               </Button>
-            </Link>
-            <Link href="/register-mentor">
+            </a>
+            <a href="/api/login?role=mentor">
               <Button
                 variant="outline"
                 className="border-2 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
@@ -281,7 +281,7 @@ export default function Home() {
               >
                 Become a Mentor
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </section>

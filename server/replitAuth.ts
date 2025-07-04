@@ -87,21 +87,21 @@ export async function setupAuth(app: Express) {
 
   const config = await getOidcConfig();
 
-  const verify: VerifyFunction = async (
+  const verify: VerifyFunction = async function(
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
-  ) => {
+  ) {
     const user = {};
     updateUserSession(user, tokens);
     
     // Check if there's a role intent in the session
     const req = arguments[2] as any; // Access the request object
-    const intentRole = req.session?.roleIntent as UserRole;
+    const intentRole = req?.session?.roleIntent as UserRole;
     
     await upsertUser(tokens.claims(), intentRole);
     
     // Clear role intent after use
-    if (req.session?.roleIntent) {
+    if (req?.session?.roleIntent) {
       delete req.session.roleIntent;
     }
     
@@ -143,6 +143,12 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/login", (req, res, next) => {
+    // Store role intent in session for post-login redirect
+    const roleIntent = req.query.role as string;
+    if (roleIntent && ['student', 'mentor', 'admin', 'program_director'].includes(roleIntent)) {
+      req.session.roleIntent = roleIntent as UserRole;
+    }
+    
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
@@ -153,7 +159,29 @@ export async function setupAuth(app: Express) {
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/dashboard",
       failureRedirect: "/api/login",
-    })(req, res, next);
+    })(req, res, (err: any) => {
+      if (err) return next(err);
+      
+      // Handle role-based redirect after successful login
+      const roleIntent = req.session.roleIntent;
+      if (roleIntent) {
+        delete req.session.roleIntent; // Clear role intent from session
+        
+        switch (roleIntent) {
+          case 'student':
+            return res.redirect('/register-student');
+          case 'mentor':
+            return res.redirect('/register-mentor');
+          case 'admin':
+            return res.redirect('/admin/dashboard');
+          default:
+            return res.redirect('/dashboard');
+        }
+      }
+      
+      // Default redirect to dashboard
+      res.redirect('/dashboard');
+    });
   });
 
   app.get("/api/logout", (req, res) => {
@@ -226,5 +254,15 @@ declare global {
     interface Request {
       currentUser?: any;
     }
+    interface User {
+      claims?: any;
+    }
+  }
+}
+
+// Extend session data type
+declare module 'express-session' {
+  interface SessionData {
+    roleIntent?: UserRole;
   }
 }
