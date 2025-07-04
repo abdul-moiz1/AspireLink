@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ import {
   Loader2,
   X
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const disciplines = [
   "Computer Science", "Engineering", "Business", "Marketing", "Design", 
@@ -44,6 +45,7 @@ const availabilityOptions = [
 
 interface LinkedInData {
   fullName: string;
+  emailAddress: string;
   currentJobTitle: string;
   company: string;
   yearsExperience: number;
@@ -56,10 +58,12 @@ interface LinkedInData {
 
 export default function RegisterMentor() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [linkedinData, setLinkedinData] = useState<LinkedInData | null>({
     fullName: "",
+    emailAddress: "",
     currentJobTitle: "",
     company: "",
     yearsExperience: 0,
@@ -69,6 +73,17 @@ export default function RegisterMentor() {
     timeZone: "",
     profileSummary: ""
   });
+
+  // Auto-populate form with authenticated user data
+  useEffect(() => {
+    if (user && linkedinData) {
+      setLinkedinData(prev => ({
+        ...prev!,
+        fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+        emailAddress: user.email || ''
+      }));
+    }
+  }, [user]);
   const [isAutoFilling, setIsAutoFilling] = useState(false);
   const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
@@ -334,58 +349,55 @@ export default function RegisterMentor() {
                   <Input
                     id="fullName"
                     value={linkedinData?.fullName || ""}
-                    onChange={(e) => setLinkedinData(prev => prev ? {...prev, fullName: e.target.value} : {
-                      fullName: e.target.value,
-                      currentJobTitle: "",
-                      company: "",
-                      yearsExperience: 0,
-                      education: "",
-                      skills: [],
-                      location: "",
-                      timeZone: "",
-                      profileSummary: ""
-                    })}
+                    onChange={(e) => setLinkedinData(prev => prev ? {...prev, fullName: e.target.value} : null)}
                     placeholder="Your full name"
                     className="mt-2"
                   />
                 </div>
                 <div>
+                  <Label htmlFor="emailAddress">Email Address *</Label>
+                  <Input
+                    id="emailAddress"
+                    type="email"
+                    value={linkedinData?.emailAddress || ""}
+                    onChange={(e) => setLinkedinData(prev => prev ? {...prev, emailAddress: e.target.value} : null)}
+                    placeholder="your.email@company.com"
+                    className="mt-2"
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
                   <Label htmlFor="currentJobTitle">Current Job Title *</Label>
                   <Input
                     id="currentJobTitle"
                     value={linkedinData?.currentJobTitle || ""}
-                    onChange={(e) => setLinkedinData(prev => prev ? {...prev, currentJobTitle: e.target.value} : {
-                      fullName: "",
-                      currentJobTitle: e.target.value,
-                      company: "",
-                      yearsExperience: 0,
-                      education: "",
-                      skills: [],
-                      location: "",
-                      timeZone: "",
-                      profileSummary: ""
-                    })}
+                    onChange={(e) => setLinkedinData(prev => prev ? {...prev, currentJobTitle: e.target.value} : null)}
                     placeholder="Senior Software Engineer"
                     className="mt-2"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="company">Company/Organization</Label>
+                  <Label htmlFor="company">Company/Organization *</Label>
                   <Input
                     id="company"
                     value={linkedinData?.company || ""}
-                    onChange={(e) => setLinkedinData(prev => prev ? {...prev, company: e.target.value} : {
-                      fullName: "",
-                      currentJobTitle: "",
-                      company: e.target.value,
-                      yearsExperience: 0,
-                      education: "",
-                      skills: [],
-                      location: "",
-                      timeZone: "",
-                      profileSummary: ""
-                    })}
+                    onChange={(e) => setLinkedinData(prev => prev ? {...prev, company: e.target.value} : null)}
                     placeholder="Your current company"
+                    className="mt-2"
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="location">Location *</Label>
+                  <Input
+                    id="location"
+                    value={linkedinData?.location || ""}
+                    onChange={(e) => setLinkedinData(prev => prev ? {...prev, location: e.target.value} : null)}
+                    placeholder="City, Province"
                     className="mt-2"
                   />
                 </div>
@@ -397,61 +409,24 @@ export default function RegisterMentor() {
                     min="0"
                     max="50"
                     value={linkedinData?.yearsExperience || ""}
-                    onChange={(e) => setLinkedinData(prev => prev ? {...prev, yearsExperience: parseInt(e.target.value) || 0} : {
-                      fullName: "",
-                      currentJobTitle: "",
-                      company: "",
-                      yearsExperience: parseInt(e.target.value) || 0,
-                      education: "",
-                      skills: [],
-                      location: "",
-                      timeZone: "",
-                      profileSummary: ""
-                    })}
+                    onChange={(e) => setLinkedinData(prev => prev ? {...prev, yearsExperience: parseInt(e.target.value) || 0} : null)}
                     placeholder="5"
                     className="mt-2"
                   />
+                  <p className="text-sm text-gray-500 mt-1">Optional</p>
                 </div>
-                <div>
-                  <Label htmlFor="education">Education</Label>
-                  <Input
-                    id="education"
-                    value={linkedinData?.education || ""}
-                    onChange={(e) => setLinkedinData(prev => prev ? {...prev, education: e.target.value} : {
-                      fullName: "",
-                      currentJobTitle: "",
-                      company: "",
-                      yearsExperience: 0,
-                      education: e.target.value,
-                      skills: [],
-                      location: "",
-                      timeZone: "",
-                      profileSummary: ""
-                    })}
-                    placeholder="MBA, University of California"
-                    className="mt-2"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={linkedinData?.location || ""}
-                    onChange={(e) => setLinkedinData(prev => prev ? {...prev, location: e.target.value} : {
-                      fullName: "",
-                      currentJobTitle: "",
-                      company: "",
-                      yearsExperience: 0,
-                      education: "",
-                      skills: [],
-                      location: e.target.value,
-                      timeZone: "",
-                      profileSummary: ""
-                    })}
-                    placeholder="City, Province"
-                    className="mt-2"
-                  />
-                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="education">Education</Label>
+                <Input
+                  id="education"
+                  value={linkedinData?.education || ""}
+                  onChange={(e) => setLinkedinData(prev => prev ? {...prev, education: e.target.value} : null)}
+                  placeholder="MBA, University of California"
+                  className="mt-2"
+                />
+                <p className="text-sm text-gray-500 mt-1">Optional</p>
               </div>
 
               <div>
@@ -472,17 +447,7 @@ export default function RegisterMentor() {
                 <Textarea
                   id="profileSummary"
                   value={linkedinData?.profileSummary || ""}
-                  onChange={(e) => setLinkedinData(prev => prev ? {...prev, profileSummary: e.target.value} : {
-                    fullName: "",
-                    currentJobTitle: "",
-                    company: "",
-                    yearsExperience: 0,
-                    education: "",
-                    skills: [],
-                    location: "",
-                    timeZone: "",
-                    profileSummary: e.target.value
-                  })}
+                  onChange={(e) => setLinkedinData(prev => prev ? {...prev, profileSummary: e.target.value} : null)}
                   placeholder="Brief description of your professional background and experience..."
                   rows={3}
                   className="mt-2"
@@ -494,10 +459,52 @@ export default function RegisterMentor() {
               <div className="flex justify-end">
                 <Button 
                   onClick={() => {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    
                     if (!linkedinData?.fullName?.trim()) {
                       toast({
                         title: "Name Required",
                         description: "Please enter your full name to continue.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    if (!linkedinData?.emailAddress?.trim()) {
+                      toast({
+                        title: "Email Required",
+                        description: "Please enter your email address to continue.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    if (!emailRegex.test(linkedinData.emailAddress.trim())) {
+                      toast({
+                        title: "Invalid Email Format",
+                        description: "Please enter a valid email address.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    if (!linkedinData?.currentJobTitle?.trim()) {
+                      toast({
+                        title: "Job Title Required",
+                        description: "Please enter your current job title to continue.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    if (!linkedinData?.company?.trim()) {
+                      toast({
+                        title: "Company Required",
+                        description: "Please enter your company/organization to continue.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    if (!linkedinData?.location?.trim()) {
+                      toast({
+                        title: "Location Required",
+                        description: "Please enter your location to continue.",
                         variant: "destructive",
                       });
                       return;

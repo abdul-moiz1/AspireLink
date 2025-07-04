@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,11 +12,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 
 interface StudentData {
   fullName: string;
   emailAddress: string;
   phoneNumber: string;
+  linkedinUrl: string;
   universityName: string;
   academicProgram: string;
   yearOfStudy: string;
@@ -56,6 +58,7 @@ export default function RegisterStudent() {
     fullName: "",
     emailAddress: "",
     phoneNumber: "",
+    linkedinUrl: "",
     universityName: "",
     academicProgram: "",
     yearOfStudy: "",
@@ -71,6 +74,18 @@ export default function RegisterStudent() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  // Auto-populate form with authenticated user data
+  useEffect(() => {
+    if (user) {
+      setStudentData(prev => ({
+        ...prev,
+        fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+        emailAddress: user.email || ''
+      }));
+    }
+  }, [user]);
 
   const registrationMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -159,6 +174,38 @@ export default function RegisterStudent() {
         toast({
           title: "Invalid Email Format",
           description: "Please enter a valid email address.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!studentData.phoneNumber.trim()) {
+        toast({
+          title: "Phone Number Required",
+          description: "Please enter your phone number to continue.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!studentData.universityName.trim()) {
+        toast({
+          title: "University Required",
+          description: "Please enter your university name to continue.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!studentData.academicProgram.trim()) {
+        toast({
+          title: "Academic Program Required",
+          description: "Please enter your academic program to continue.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!studentData.yearOfStudy.trim()) {
+        toast({
+          title: "Year of Study Required",
+          description: "Please select your year of study to continue.",
           variant: "destructive",
         });
         return;
@@ -392,7 +439,7 @@ export default function RegisterStudent() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="phoneNumber" className="text-base font-medium">
-                    Phone Number
+                    Phone Number *
                   </Label>
                   <Input
                     id="phoneNumber"
@@ -401,18 +448,18 @@ export default function RegisterStudent() {
                     placeholder="(555) 123-4567"
                     className="mt-2"
                   />
-                  <p className="text-sm text-gray-500 mt-1">Optional</p>
                 </div>
 
                 <div>
-                  <Label htmlFor="universityName" className="text-base font-medium">
-                    University Name
+                  <Label htmlFor="linkedinUrl" className="text-base font-medium">
+                    LinkedIn Profile URL
                   </Label>
                   <Input
-                    id="universityName"
-                    value={studentData.universityName}
-                    onChange={(e) => setStudentData({...studentData, universityName: e.target.value})}
-                    placeholder="Name of University"
+                    id="linkedinUrl"
+                    type="url"
+                    value={studentData.linkedinUrl}
+                    onChange={(e) => setStudentData({...studentData, linkedinUrl: e.target.value})}
+                    placeholder="https://linkedin.com/in/yourprofile"
                     className="mt-2"
                   />
                   <p className="text-sm text-gray-500 mt-1">Optional</p>
@@ -421,8 +468,21 @@ export default function RegisterStudent() {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
+                  <Label htmlFor="universityName" className="text-base font-medium">
+                    University Name *
+                  </Label>
+                  <Input
+                    id="universityName"
+                    value={studentData.universityName}
+                    onChange={(e) => setStudentData({...studentData, universityName: e.target.value})}
+                    placeholder="Name of University"
+                    className="mt-2"
+                  />
+                </div>
+
+                <div>
                   <Label htmlFor="academicProgram" className="text-base font-medium">
-                    Academic Program / Major
+                    Academic Program / Major *
                   </Label>
                   <Input
                     id="academicProgram"
@@ -431,23 +491,21 @@ export default function RegisterStudent() {
                     placeholder="Computer Science, Business, etc."
                     className="mt-2"
                   />
-                  <p className="text-sm text-gray-500 mt-1">Optional</p>
                 </div>
+              </div>
 
-                <div>
-                  <Label className="text-base font-medium">Year of Study</Label>
-                  <Select value={studentData.yearOfStudy} onValueChange={(value) => setStudentData({...studentData, yearOfStudy: value})}>
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Select your year of study" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {yearOfStudyOptions.map((year) => (
-                        <SelectItem key={year} value={year}>{year}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-gray-500 mt-1">Optional</p>
-                </div>
+              <div>
+                <Label className="text-base font-medium">Year of Study *</Label>
+                <Select value={studentData.yearOfStudy} onValueChange={(value) => setStudentData({...studentData, yearOfStudy: value})}>
+                  <SelectTrigger className="mt-2">
+                    <SelectValue placeholder="Select your year of study" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {yearOfStudyOptions.map((year) => (
+                      <SelectItem key={year} value={year}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex justify-end pt-6">
