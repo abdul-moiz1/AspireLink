@@ -10,11 +10,23 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+// Debug Firebase config
+console.log('Firebase Config Debug:', {
+  hasApiKey: !!firebaseConfig.apiKey,
+  hasProjectId: !!firebaseConfig.projectId,
+  hasAppId: !!firebaseConfig.appId,
+  authDomain: firebaseConfig.authDomain
+});
+
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// Configure Google provider
+googleProvider.addScope('email');
+googleProvider.addScope('profile');
 
 // User roles
 export type UserRole = 'admin' | 'student' | 'mentor' | 'pd';

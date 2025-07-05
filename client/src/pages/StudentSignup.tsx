@@ -21,7 +21,9 @@ export default function StudentSignup() {
   const handleGoogleSignup = async () => {
     setLoading(true);
     try {
+      console.log('Starting Google signup...');
       const userCredential = await signInWithGoogle();
+      console.log('Google signup successful:', userCredential.user.email);
       
       // Create student profile in Firestore
       await createUserProfile(userCredential.user, 'student', {
@@ -36,13 +38,18 @@ export default function StudentSignup() {
       // Redirect to student registration form
       setLocation('/register-student');
     } catch (error: any) {
-      console.error('Google signup error:', error);
-      let errorMessage = "Failed to sign up with Google. Please try again.";
+      console.error('Google signup error details:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      
+      let errorMessage = `Failed to sign up with Google: ${error.message}`;
       
       if (error.code === 'auth/popup-closed-by-user') {
         errorMessage = "Sign-up was cancelled. Please try again.";
       } else if (error.code === 'auth/account-exists-with-different-credential') {
         errorMessage = "An account with this email already exists. Please try logging in instead.";
+      } else if (error.code === 'auth/configuration-not-found') {
+        errorMessage = "Firebase configuration error. Please contact support.";
       }
 
       toast({
