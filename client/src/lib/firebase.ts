@@ -10,13 +10,15 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Debug Firebase config
-console.log('Firebase Config Debug:', {
-  hasApiKey: !!firebaseConfig.apiKey,
-  hasProjectId: !!firebaseConfig.projectId,
-  hasAppId: !!firebaseConfig.appId,
-  authDomain: firebaseConfig.authDomain
-});
+// Debug Firebase config (only in development)
+if (import.meta.env.DEV) {
+  console.log('Firebase Config Debug:', {
+    hasApiKey: !!firebaseConfig.apiKey,
+    hasProjectId: !!firebaseConfig.projectId,
+    hasAppId: !!firebaseConfig.appId,
+    authDomain: firebaseConfig.authDomain
+  });
+}
 
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
