@@ -19,64 +19,10 @@ export default function Contact() {
 
       {/* Contact Content */}
       <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-start">
-            {/* Contact Information */}
-            <div>
-              <h2 className="font-inter font-bold text-3xl text-charcoal-custom mb-8">
-                Contact Information
-              </h2>
-
-              <div className="space-y-6 mb-12">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-primary-custom rounded-full flex items-center justify-center">
-                    <Mail className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-charcoal-custom">
-                      Email Us
-                    </h3>
-                    <a
-                      href="mailto:info@aspirelink.org"
-                      className="text-primary-custom hover:text-secondary-custom transition-colors duration-200"
-                    >
-                      info@aspirelink.org
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-secondary-custom rounded-full flex items-center justify-center">
-                    <Twitter className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-charcoal-custom">
-                      LinkedIn
-                    </h3>
-                    <a
-                      href="https://www.linkedin.com/company/aspirelinkorg"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary-custom hover:text-secondary-custom transition-colors duration-200"
-                    >
-                      @AspireLinkOrg
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              {/* Contact Image */}
-              <div className="hidden lg:block">
-                <img
-                  src="https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600"
-                  alt="Professional virtual meeting session between mentor and student on laptop screen"
-                  className="rounded-2xl shadow-xl w-full h-auto"
-                />
-              </div>
-            </div>
-
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-center">
             {/* How to Reach Us */}
-            <div>
+            <div className="w-full max-w-2xl">
               <Card className="shadow-lg">
                 <CardContent className="p-8">
                   <h3 className="font-inter font-bold text-2xl text-charcoal-custom mb-6">
@@ -136,63 +82,7 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* Additional Resources */}
-      <section className="py-24 bg-light-custom">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-inter font-bold text-3xl text-charcoal-custom text-center mb-12">
-            Other Ways to Connect
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="text-center">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-primary-custom rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Clock className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="font-semibold text-charcoal-custom mb-2">
-                  Office Hours
-                </h3>
-                <p style={{color: '#2F3E46'}} className="text-sm">
-                  Monday - Friday
-                  <br />
-                  9:00 AM - 5:00 PM EST
-                </p>
-              </CardContent>
-            </Card>
 
-            <Card className="text-center">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-secondary-custom rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MapPin className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="font-semibold text-charcoal-custom mb-2">
-                  Location
-                </h3>
-                <p style={{color: '#2F3E46'}} className="text-sm">
-                  Virtual Program
-                  <br />
-                  Available Worldwide
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-accent-custom rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="font-semibold text-charcoal-custom mb-2">
-                  Program Duration
-                </h3>
-                <p style={{color: '#2F3E46'}} className="text-sm">
-                  4-Month Cohorts
-                  <br />
-                  Year-Round Enrollment
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
