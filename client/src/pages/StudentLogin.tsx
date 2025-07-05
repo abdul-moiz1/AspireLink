@@ -8,56 +8,47 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
-import { signInWithGoogle, signUpWithEmailAndRole } from '@/lib/firebase';
+import { signInWithGoogle } from '@/lib/firebase';
 import { Separator } from '@/components/ui/separator';
-import { AlertCircle, Mail, Lock, BookOpen, User } from 'lucide-react';
+import { AlertCircle, Mail, Lock, BookOpen } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Checkbox } from '@/components/ui/checkbox';
 
-const signupSchema = z.object({
-  displayName: z.string().min(2, 'Full name must be at least 2 characters'),
+const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string(),
-  agreeToTerms: z.boolean().refine(val => val === true, 'You must agree to the terms'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
 });
 
-type SignupFormData = z.infer<typeof signupSchema>;
+type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function StudentSignup() {
+export default function StudentLogin() {
   const [, setLocation] = useLocation();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const form = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
-      displayName: '',
       email: '',
       password: '',
-      confirmPassword: '',
-      agreeToTerms: false,
     },
   });
 
-  const onSubmit = async (data: SignupFormData) => {
+  const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     setError(null);
     
     try {
-      await signUpWithEmailAndRole(data.email, data.password, 'student');
-      setLocation('/student/dashboard');
+      await login(data.email, data.password);
+      setLocation('/dashboard');
     } catch (error: any) {
-      setError(error.message || 'Signup failed. Please try again.');
+      setError(error.message || 'Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleSignUp = async () => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setError(null);
     
@@ -65,7 +56,7 @@ export default function StudentSignup() {
       await signInWithGoogle();
       setLocation('/dashboard');
     } catch (error: any) {
-      setError(error.message || 'Google sign-up failed. Please try again.');
+      setError(error.message || 'Google sign-in failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -80,9 +71,9 @@ export default function StudentSignup() {
               <BookOpen className="w-6 h-6 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Create Student Account</CardTitle>
+          <CardTitle className="text-2xl font-bold">Student Login</CardTitle>
           <CardDescription>
-            Join AspireLink and find your perfect mentor
+            Access your mentorship dashboard
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -94,7 +85,7 @@ export default function StudentSignup() {
           )}
 
           <Button
-            onClick={handleGoogleSignUp}
+            onClick={handleGoogleSignIn}
             disabled={isLoading}
             variant="outline"
             className="w-full"
@@ -105,7 +96,7 @@ export default function StudentSignup() {
               <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            Sign up with Google
+            Continue with Google
           </Button>
 
           <div className="relative">
@@ -119,28 +110,6 @@ export default function StudentSignup() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="displayName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <Input
-                          {...field}
-                          placeholder="Enter your full name"
-                          className="pl-10"
-                          disabled={isLoading}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <FormField
                 control={form.control}
                 name="email"
@@ -176,86 +145,34 @@ export default function StudentSignup() {
                         <Input
                           {...field}
                           type="password"
-                          placeholder="Create a password (6+ characters)"
+                          placeholder="Enter your password"
                           className="pl-10"
                           disabled={isLoading}
                         />
                       </div>
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <Input
-                          {...field}
-                          type="password"
-                          placeholder="Confirm your password"
-                          className="pl-10"
-                          disabled={isLoading}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="agreeToTerms"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel className="text-sm">
-                        I agree to the{' '}
-                        <Link href="/terms" className="text-blue-600 hover:text-blue-500">
-                          Terms of Service
-                        </Link>{' '}
-                        and{' '}
-                        <Link href="/privacy" className="text-blue-600 hover:text-blue-500">
-                          Privacy Policy
-                        </Link>
-                      </FormLabel>
-                      <FormMessage />
-                    </div>
                   </FormItem>
                 )}
               />
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Creating account...' : 'Create Account'}
+                {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
           </Form>
 
           <div className="text-center space-y-2">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Already have an account?{' '}
-              <Link href="/student/login" className="text-blue-600 hover:text-blue-500 font-medium">
-                Sign in here
+              Don't have an account?{' '}
+              <Link href="/student/signup" className="text-blue-600 hover:text-blue-500 font-medium">
+                Sign up here
               </Link>
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Are you a mentor?{' '}
-              <Link href="/mentor/signup" className="text-blue-600 hover:text-blue-500 font-medium">
-                Mentor Signup
+              <Link href="/mentor/login" className="text-blue-600 hover:text-blue-500 font-medium">
+                Mentor Login
               </Link>
             </p>
             <Link href="/" className="text-sm text-gray-500 hover:text-gray-400">

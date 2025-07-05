@@ -69,6 +69,21 @@ export const signInWithEmail = (email: string, password: string) =>
 export const signUpWithEmail = (email: string, password: string) => 
   createUserWithEmailAndPassword(auth, email, password);
 
+export const signUpWithEmailAndRole = async (email: string, password: string, role: UserRole) => {
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    
+    // Create profile with specified role
+    await createUserProfile(user, role);
+    
+    return userCredential;
+  } catch (error) {
+    console.error('Error signing up:', error);
+    throw error;
+  }
+};
+
 export const logOut = () => signOut(auth);
 
 // User profile functions

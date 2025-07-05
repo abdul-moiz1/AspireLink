@@ -27,10 +27,14 @@ import TermsOfService from "@/pages/TermsOfService";
 import CodeOfConduct from "@/pages/CodeOfConduct";
 import Accessibility from "@/pages/Accessibility";
 import Login from "@/pages/Login";
+import StudentLogin from "@/pages/StudentLogin";
 import StudentSignup from "@/pages/StudentSignup";
+import MentorLogin from "@/pages/MentorLogin";
 import MentorSignup from "@/pages/MentorSignup";
 import SimpleSignup from "@/pages/SimpleSignup";
 import Dashboard from "@/pages/Dashboard";
+import StudentDashboard from "@/pages/StudentDashboard";
+import MentorDashboard from "@/pages/MentorDashboard";
 import AdminSetup from "@/pages/AdminSetup";
 
 function Router() {
@@ -48,10 +52,14 @@ function Router() {
           <Route path="/faq" component={FAQ} />
           <Route path="/contact" component={Contact} />
           <Route path="/login" component={Login} />
-          <Route path="/signup/student" component={StudentSignup} />
-          <Route path="/signup/mentor" component={MentorSignup} />
+          <Route path="/student/login" component={StudentLogin} />
+          <Route path="/student/signup" component={StudentSignup} />
+          <Route path="/mentor/login" component={MentorLogin} />
+          <Route path="/mentor/signup" component={MentorSignup} />
           <Route path="/signup/test" component={SimpleSignup} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/student/dashboard" component={StudentDashboard} />
+          <Route path="/mentor/dashboard" component={MentorDashboard} />
           <Route path="/admin/setup" component={AdminSetup} />
           <Route path="/admin/login" component={AdminLogin} />
           <Route path="/admin" component={AdminDashboard} />

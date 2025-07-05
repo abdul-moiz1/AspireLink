@@ -1,12 +1,34 @@
+import React, { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useLocation } from 'wouter';
+import { Loader2 } from 'lucide-react';
 
 export default function Dashboard() {
-  const { currentUser, userProfile, logout } = useAuth();
+  const { currentUser, userProfile, logout, loading } = useAuth();
   const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!loading && userProfile?.role) {
+      // Redirect based on role
+      switch (userProfile.role) {
+        case 'student':
+          setLocation('/student/dashboard');
+          break;
+        case 'mentor':
+          setLocation('/mentor/dashboard');
+          break;
+        case 'admin':
+          setLocation('/admin/dashboard');
+          break;
+        default:
+          // Stay on this page for unknown roles
+          break;
+      }
+    }
+  }, [userProfile, loading, setLocation]);
 
   // Debug function to fix profile issues
   const fixUserProfile = async () => {
