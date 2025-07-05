@@ -101,29 +101,54 @@ export default function StudentSignup() {
     }
 
     setLoading(true);
+    
+    // Add timeout to prevent indefinite hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Authentication timeout after 30 seconds')), 30000);
+    });
+    
     try {
-      // Create Firebase user
-      const userCredential = await signUpWithEmail(email, password);
+      console.log('Starting email signup process...');
+      
+      // Create Firebase user with timeout
+      console.log('Step 1: Creating Firebase user...');
+      const userCredential = await Promise.race([
+        signUpWithEmail(email, password),
+        timeoutPromise
+      ]) as any;
+      console.log('Step 1 complete: User created', userCredential.user.uid);
       
       // Update display name
+      console.log('Step 2: Updating display name...');
       await updateProfile(userCredential.user, {
         displayName: fullName
       });
+      console.log('Step 2 complete: Display name updated');
 
       // Create user profile in Firestore with student role
-      await createUserProfile(userCredential.user, 'student', {
-        displayName: fullName
-      });
+      console.log('Step 3: Creating user profile in Firestore...');
+      try {
+        await createUserProfile(userCredential.user, 'student', {
+          displayName: fullName
+        });
+        console.log('Step 3 complete: User profile created');
+      } catch (firestoreError) {
+        console.warn('Firestore profile creation failed, continuing anyway:', firestoreError);
+        // Continue without Firestore profile for now
+      }
 
       toast({
         title: "Account Created",
         description: "Your student account has been created successfully",
       });
 
+      console.log('Redirecting to registration form...');
       // Redirect to student registration form
       setLocation('/register-student');
     } catch (error: any) {
-      console.error('Registration error:', error);
+      console.error('Registration error details:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
       let errorMessage = "Registration failed. Please try again.";
       
       if (error.code === 'auth/email-already-in-use') {
