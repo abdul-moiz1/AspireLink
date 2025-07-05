@@ -29,8 +29,8 @@ export default function Contact() {
 
               <div className="space-y-6 mb-12">
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-primary-custom bg-opacity-10 rounded-full flex items-center justify-center">
-                    <Mail className="text-primary-custom w-6 h-6" />
+                  <div className="w-12 h-12 bg-primary-custom rounded-full flex items-center justify-center">
+                    <Mail className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-charcoal-custom">
@@ -46,8 +46,8 @@ export default function Contact() {
                 </div>
 
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Twitter className="text-blue-600 w-6 h-6" />
+                  <div className="w-12 h-12 bg-secondary-custom rounded-full flex items-center justify-center">
+                    <Twitter className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-charcoal-custom">
@@ -85,8 +85,8 @@ export default function Contact() {
                   <div className="space-y-6">
                     <div className="p-6 bg-gray-50 border border-gray-100 rounded-lg">
                       <div className="flex items-start space-x-4">
-                        <div className="w-12 h-12 bg-primary-custom bg-opacity-10 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Mail className="text-primary-custom w-6 h-6" />
+                        <div className="w-12 h-12 bg-primary-custom rounded-full flex items-center justify-center flex-shrink-0">
+                          <Mail className="w-6 h-6 text-white" />
                         </div>
                         <div>
                           <h4 className="font-semibold text-charcoal-custom mb-2">
@@ -107,8 +107,8 @@ export default function Contact() {
 
                     <div className="p-6 bg-blue-50 rounded-lg">
                       <div className="flex items-start space-x-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Twitter className="text-blue-600 w-6 h-6" />
+                        <div className="w-12 h-12 bg-secondary-custom rounded-full flex items-center justify-center flex-shrink-0">
+                          <Twitter className="w-6 h-6 text-white" />
                         </div>
                         <div>
                           <h4 className="font-semibold text-charcoal-custom mb-2">
