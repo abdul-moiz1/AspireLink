@@ -79,7 +79,7 @@ export default function ForMentors() {
                 </div>
               </div>
 
-              <Link href="/mentor/signup">
+              <Link href="/register-mentor">
                 <Button className="bg-secondary-custom hover:bg-secondary-dark text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-lg">
                   Become a Mentor
                 </Button>
@@ -248,7 +248,7 @@ export default function ForMentors() {
             professional excellence.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signup/mentor">
+            <Link href="/register-mentor">
               <Button className="bg-white text-secondary-custom hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold text-lg">
                 Apply to Mentor
               </Button>

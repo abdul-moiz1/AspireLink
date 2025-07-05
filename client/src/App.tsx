@@ -3,7 +3,6 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/contexts/AuthContext";
 import NotFound from "@/pages/not-found";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -26,16 +25,6 @@ import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import CodeOfConduct from "@/pages/CodeOfConduct";
 import Accessibility from "@/pages/Accessibility";
-import Login from "@/pages/Login";
-import StudentLogin from "@/pages/StudentLogin";
-import StudentSignup from "@/pages/StudentSignup";
-import MentorLogin from "@/pages/MentorLogin";
-import MentorSignup from "@/pages/MentorSignup";
-import SimpleSignup from "@/pages/SimpleSignup";
-import Dashboard from "@/pages/Dashboard";
-import StudentDashboard from "@/pages/StudentDashboard";
-import MentorDashboard from "@/pages/MentorDashboard";
-import AdminSetup from "@/pages/AdminSetup";
 
 function Router() {
   return (
@@ -51,18 +40,7 @@ function Router() {
           <Route path="/register-student" component={RegisterStudent} />
           <Route path="/faq" component={FAQ} />
           <Route path="/contact" component={Contact} />
-          <Route path="/login" component={Login} />
-          <Route path="/student/login" component={StudentLogin} />
-          <Route path="/student/signup" component={StudentSignup} />
-          <Route path="/mentor/login" component={MentorLogin} />
-          <Route path="/mentor/signup" component={MentorSignup} />
-          <Route path="/signup/test" component={SimpleSignup} />
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/student/dashboard" component={StudentDashboard} />
-          <Route path="/mentor/dashboard" component={MentorDashboard} />
-          <Route path="/admin/setup" component={AdminSetup} />
           <Route path="/admin/login" component={AdminLogin} />
-          <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/dashboard" component={AdminDashboard} />
           <Route path="/admin/create-student" component={CreateStudent} />
           <Route path="/admin/create-mentor" component={CreateMentor} />
@@ -84,12 +62,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Router />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }

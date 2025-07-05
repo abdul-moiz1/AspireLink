@@ -4,22 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import logoPath from "@assets/AspireLink-Favicon_1751236188567.png";
-import { useAuth } from "@/contexts/AuthContext";
 
 export default function Navigation() {
-  const [location, setLocation] = useLocation();
+  const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const { currentUser, userProfile, logout } = useAuth();
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      // Redirect to home page after successful logout
-      setLocation('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
 
   const navItems = [
     { href: "/", label: "Home" },
@@ -52,7 +40,7 @@ export default function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
-            <div className="ml-10 flex items-center space-x-8">
+            <div className="ml-10 flex items-baseline space-x-8">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
@@ -66,33 +54,6 @@ export default function Navigation() {
                   {item.label}
                 </Link>
               ))}
-              
-              {/* Authentication Buttons */}
-              {currentUser ? (
-                <div className="flex items-center space-x-4">
-                  <Link href="/dashboard">
-                    <Button variant="outline" size="sm">
-                      Dashboard
-                    </Button>
-                  </Link>
-                  <Button variant="ghost" size="sm" onClick={handleLogout}>
-                    Sign Out
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-4">
-                  <Link href="/login">
-                    <Button variant="ghost" size="sm">
-                      Sign In
-                    </Button>
-                  </Link>
-                  <Link href="/student/signup">
-                    <Button size="sm">
-                      Get Started
-                    </Button>
-                  </Link>
-                </div>
-              )}
             </div>
           </div>
 
@@ -123,48 +84,6 @@ export default function Navigation() {
                     </Link>
                   ))}
 
-                  {/* Mobile Authentication */}
-                  <div className="border-t pt-4 mt-6">
-                    {currentUser ? (
-                      <div className="space-y-3">
-                        <Link
-                          href="/dashboard"
-                          onClick={() => setIsOpen(false)}
-                          className="block px-3 py-2 text-base font-medium text-charcoal-custom hover:text-primary-custom"
-                        >
-                          Dashboard
-                        </Link>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start px-3"
-                          onClick={() => {
-                            handleLogout();
-                            setIsOpen(false);
-                          }}
-                        >
-                          Sign Out
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <Link
-                          href="/login"
-                          onClick={() => setIsOpen(false)}
-                          className="block px-3 py-2 text-base font-medium text-charcoal-custom hover:text-primary-custom"
-                        >
-                          Sign In
-                        </Link>
-                        <Link
-                          href="/student/signup"
-                          onClick={() => setIsOpen(false)}
-                        >
-                          <Button className="w-full">
-                            Get Started
-                          </Button>
-                        </Link>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </SheetContent>
             </Sheet>
