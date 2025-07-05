@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, Twitter, Clock, MapPin, Phone } from "lucide-react";
+import { Mail, Twitter, Clock, MapPin, Phone, Calendar } from "lucide-react";
 
 export default function Contact() {
   return (
@@ -145,8 +145,8 @@ export default function Contact() {
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="text-center">
               <CardContent className="p-8">
-                <div className="w-16 h-16 bg-primary-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Phone className="text-primary-custom w-8 h-8" />
+                <div className="w-16 h-16 bg-primary-custom rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Clock className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-semibold text-charcoal-custom mb-2">
                   Office Hours
@@ -161,8 +161,8 @@ export default function Contact() {
 
             <Card className="text-center">
               <CardContent className="p-8">
-                <div className="w-16 h-16 bg-secondary-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MapPin className="text-secondary-custom w-8 h-8" />
+                <div className="w-16 h-16 bg-secondary-custom rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MapPin className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-semibold text-charcoal-custom mb-2">
                   Location
@@ -177,8 +177,8 @@ export default function Contact() {
 
             <Card className="text-center">
               <CardContent className="p-8">
-                <div className="w-16 h-16 bg-accent-custom bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Clock className="text-accent-custom w-8 h-8" />
+                <div className="w-16 h-16 bg-accent-custom rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-semibold text-charcoal-custom mb-2">
                   Program Duration

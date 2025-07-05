@@ -15,7 +15,8 @@ import {
   FileText,
   UserCheck,
   Calendar,
-  Target
+  Target,
+  TrendingUp
 } from "lucide-react";
 import { Link } from "wouter";
 import brandedImagePath from "@assets/AspireLink-300-1_1751236725408.png";
@@ -124,7 +125,7 @@ export default function Home() {
             <Card className="text-center group card-hover">
               <CardContent className="p-8">
                 <div className="w-16 h-16 bg-primary-custom rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary-dark transition-colors duration-200">
-                  <span className="text-white text-2xl font-bold">1</span>
+                  <FileText className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   1. Nomination
@@ -139,7 +140,7 @@ export default function Home() {
             <Card className="text-center group card-hover">
               <CardContent className="p-8">
                 <div className="w-16 h-16 bg-secondary-custom rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-secondary-dark transition-colors duration-200">
-                  <span className="text-white text-2xl font-bold">2</span>
+                  <UserCheck className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   2. Matching
@@ -154,7 +155,7 @@ export default function Home() {
             <Card className="text-center group card-hover">
               <CardContent className="p-8">
                 <div className="w-16 h-16 bg-accent-custom rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-accent-dark transition-colors duration-200">
-                  <span className="text-white text-2xl font-bold">3</span>
+                  <Calendar className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   3. Sessions
@@ -169,7 +170,7 @@ export default function Home() {
             <Card className="text-center group card-hover">
               <CardContent className="p-8">
                 <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-green-700 transition-colors duration-200">
-                  <span className="text-white text-2xl font-bold">4</span>
+                  <Award className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   4. Recognition
@@ -200,7 +201,7 @@ export default function Home() {
             <Card className="card-hover">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-primary-custom rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-white text-2xl font-bold">1</span>
+                  <Target className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
                   Personalized Matching
@@ -215,7 +216,7 @@ export default function Home() {
             <Card className="card-hover">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-secondary-custom rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-white text-2xl font-bold">2</span>
+                  <TrendingUp className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
                   Structured Program
@@ -230,7 +231,7 @@ export default function Home() {
             <Card className="card-hover">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-accent-custom rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-white text-2xl font-bold">3</span>
+                  <Network className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
                   Industry Networks

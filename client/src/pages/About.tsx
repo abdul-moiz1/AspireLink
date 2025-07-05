@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Globe, Heart, Rocket } from "lucide-react";
 
 export default function About() {
   return (
@@ -96,7 +97,7 @@ export default function About() {
           <div className="grid md:grid-cols-3 gap-8 mt-12">
             <div className="text-center">
               <div className="w-16 h-16 bg-primary-custom rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white text-2xl font-bold">1</span>
+                <Globe className="w-8 h-8 text-white" />
               </div>
               <h3 className="font-semibold text-charcoal-custom mb-2">
                 Global Reach
@@ -107,7 +108,7 @@ export default function About() {
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-secondary-custom rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white text-2xl font-bold">2</span>
+                <Heart className="w-8 h-8 text-white" />
               </div>
               <h3 className="font-semibold text-charcoal-custom mb-2">
                 Inclusive Community
@@ -118,7 +119,7 @@ export default function About() {
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-accent-custom rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white text-2xl font-bold">3</span>
+                <Rocket className="w-8 h-8 text-white" />
               </div>
               <h3 className="font-semibold text-charcoal-custom mb-2">
                 Career Acceleration
