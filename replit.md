@@ -156,6 +156,8 @@ Changelog:
 - July 5, 2025. Enhanced student registration form: LinkedIn URL field already exists and is now mandatory, made all Step 1 fields mandatory (Full Name, Email, LinkedIn URL, Phone Number, University Name, Academic Program, Year of Study) with comprehensive validation at both step transition and final submission
 - July 5, 2025. Enhanced mentor registration form: added mandatory phone number field to database schema and form, made company/organization and location fields mandatory with comprehensive validation for all Step 1 required fields (Full Name, Current Job Title, Company, Location, Phone Number) before progression to preferences step
 - July 5, 2025. Improved icon contrast across platform: increased background opacity from 10% to 20% for circular icon backgrounds in Home page (process steps and features sections) and About page (vision section) for better visual accessibility and readability
+- July 5, 2025. Updated mentor registration placeholders: changed "Senior Software Engineer" to "Senior Manager" and "University of California" to "University name" for more appropriate professional examples
+- July 5, 2025. Standardized circular icons across platform: replaced emoji-based icons with numbered circles matching student/mentor registration form style (solid colored backgrounds with white numbers) for consistent visual design across Home page process steps, features section, and About page vision section
 
 ## User Preferences
 

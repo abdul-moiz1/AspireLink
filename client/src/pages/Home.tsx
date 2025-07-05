@@ -123,8 +123,8 @@ export default function Home() {
           <div className="grid md:grid-cols-4 gap-8">
             <Card className="text-center group card-hover">
               <CardContent className="p-8">
-                <div className="w-16 h-16 bg-primary-custom bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary-custom group-hover:bg-opacity-30 transition-colors duration-200">
-                  <span className="text-primary-custom text-3xl font-bold">📄</span>
+                <div className="w-16 h-16 bg-primary-custom rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary-dark transition-colors duration-200">
+                  <span className="text-white text-2xl font-bold">1</span>
                 </div>
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   1. Nomination
@@ -138,8 +138,8 @@ export default function Home() {
 
             <Card className="text-center group card-hover">
               <CardContent className="p-8">
-                <div className="w-16 h-16 bg-secondary-custom bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-secondary-custom group-hover:bg-opacity-30 transition-colors duration-200">
-                  <span className="text-secondary-custom text-3xl font-bold">👥</span>
+                <div className="w-16 h-16 bg-secondary-custom rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-secondary-dark transition-colors duration-200">
+                  <span className="text-white text-2xl font-bold">2</span>
                 </div>
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   2. Matching
@@ -153,8 +153,8 @@ export default function Home() {
 
             <Card className="text-center group card-hover">
               <CardContent className="p-8">
-                <div className="w-16 h-16 bg-accent-custom bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-accent-custom group-hover:bg-opacity-30 transition-colors duration-200">
-                  <span className="text-accent-custom text-3xl font-bold">📅</span>
+                <div className="w-16 h-16 bg-accent-custom rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-accent-dark transition-colors duration-200">
+                  <span className="text-white text-2xl font-bold">3</span>
                 </div>
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   3. Sessions
@@ -168,8 +168,8 @@ export default function Home() {
 
             <Card className="text-center group card-hover">
               <CardContent className="p-8">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-green-200 transition-colors duration-200">
-                  <span className="text-green-600 text-3xl font-bold">🏆</span>
+                <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-green-700 transition-colors duration-200">
+                  <span className="text-white text-2xl font-bold">4</span>
                 </div>
                 <h3 className="font-inter font-semibold text-xl text-charcoal-custom mb-4">
                   4. Recognition
@@ -199,8 +199,8 @@ export default function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <Card className="card-hover">
               <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-primary-custom bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-primary-custom text-3xl font-bold">🎯</span>
+                <div className="w-16 h-16 bg-primary-custom rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-white text-2xl font-bold">1</span>
                 </div>
                 <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
                   Personalized Matching
@@ -214,8 +214,8 @@ export default function Home() {
 
             <Card className="card-hover">
               <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-secondary-custom bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-secondary-custom text-3xl font-bold">📈</span>
+                <div className="w-16 h-16 bg-secondary-custom rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-white text-2xl font-bold">2</span>
                 </div>
                 <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
                   Structured Program
@@ -229,8 +229,8 @@ export default function Home() {
 
             <Card className="card-hover">
               <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-accent-custom bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-accent-custom text-3xl font-bold">🌟</span>
+                <div className="w-16 h-16 bg-accent-custom rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-white text-2xl font-bold">3</span>
                 </div>
                 <h3 className="font-semibold text-xl text-charcoal-custom mb-4">
                   Industry Networks

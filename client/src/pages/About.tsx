@@ -95,8 +95,8 @@ export default function About() {
           </p>
           <div className="grid md:grid-cols-3 gap-8 mt-12">
             <div className="text-center">
-              <div className="w-16 h-16 bg-primary-custom bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🌍</span>
+              <div className="w-16 h-16 bg-primary-custom rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-white text-2xl font-bold">1</span>
               </div>
               <h3 className="font-semibold text-charcoal-custom mb-2">
                 Global Reach
@@ -106,8 +106,8 @@ export default function About() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-secondary-custom bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🤝</span>
+              <div className="w-16 h-16 bg-secondary-custom rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-white text-2xl font-bold">2</span>
               </div>
               <h3 className="font-semibold text-charcoal-custom mb-2">
                 Inclusive Community
@@ -117,8 +117,8 @@ export default function About() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-accent-custom bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🚀</span>
+              <div className="w-16 h-16 bg-accent-custom rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-white text-2xl font-bold">3</span>
               </div>
               <h3 className="font-semibold text-charcoal-custom mb-2">
                 Career Acceleration

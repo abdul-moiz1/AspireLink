@@ -339,7 +339,7 @@ export default function RegisterMentor() {
                     id="currentJobTitle"
                     value={linkedinData?.currentJobTitle || ""}
                     onChange={(e) => setLinkedinData(prev => prev ? {...prev, currentJobTitle: e.target.value} : {...getEmptyLinkedInData(), currentJobTitle: e.target.value})}
-                    placeholder="Senior Software Engineer"
+                    placeholder="Senior Manager"
                     className="mt-2"
                   />
                 </div>
@@ -372,7 +372,7 @@ export default function RegisterMentor() {
                     id="education"
                     value={linkedinData?.education || ""}
                     onChange={(e) => setLinkedinData(prev => prev ? {...prev, education: e.target.value} : {...getEmptyLinkedInData(), education: e.target.value})}
-                    placeholder="MBA, University of California"
+                    placeholder="MBA, University name"
                     className="mt-2"
                   />
                 </div>
