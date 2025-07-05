@@ -2,13 +2,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { useLocation } from 'wouter';
 
 export default function Dashboard() {
   const { currentUser, userProfile, logout } = useAuth();
+  const [, setLocation] = useLocation();
 
   const handleLogout = async () => {
     try {
       await logout();
+      // Redirect to home page after successful logout
+      setLocation('/');
     } catch (error) {
       console.error('Logout error:', error);
     }

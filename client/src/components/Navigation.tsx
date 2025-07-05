@@ -7,13 +7,15 @@ import logoPath from "@assets/AspireLink-Favicon_1751236188567.png";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Navigation() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const { currentUser, userProfile, logout } = useAuth();
 
   const handleLogout = async () => {
     try {
       await logout();
+      // Redirect to home page after successful logout
+      setLocation('/');
     } catch (error) {
       console.error('Logout error:', error);
     }
