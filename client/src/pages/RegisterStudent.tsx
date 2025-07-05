@@ -95,10 +95,22 @@ export default function RegisterStudent() {
   };
 
   const handleSubmit = () => {
-    if (!studentData.fullName.trim() || !studentData.emailAddress.trim()) {
+    // Validate all required Step 1 fields
+    const requiredStep1Fields = [
+      { field: studentData.fullName, name: "Full Name" },
+      { field: studentData.emailAddress, name: "Email Address" },
+      { field: studentData.linkedinUrl, name: "LinkedIn URL" },
+      { field: studentData.phoneNumber, name: "Phone Number" },
+      { field: studentData.universityName, name: "University Name" },
+      { field: studentData.academicProgram, name: "Academic Program" },
+      { field: studentData.yearOfStudy, name: "Year of Study" }
+    ];
+
+    const missingField = requiredStep1Fields.find(({ field }) => !field.trim());
+    if (missingField) {
       toast({
-        title: "Required Fields Missing",
-        description: "Please fill in your full name and email address.",
+        title: "Required Field Missing",
+        description: `Please fill in ${missingField.name}.`,
         variant: "destructive",
       });
       return;
@@ -125,11 +137,11 @@ export default function RegisterStudent() {
     const registrationData = {
       fullName: studentData.fullName,
       emailAddress: studentData.emailAddress,
-      linkedinUrl: studentData.linkedinUrl || null,
-      phoneNumber: studentData.phoneNumber || null,
-      universityName: studentData.universityName || null,
-      academicProgram: studentData.academicProgram || null,
-      yearOfStudy: studentData.yearOfStudy || null,
+      linkedinUrl: studentData.linkedinUrl,
+      phoneNumber: studentData.phoneNumber,
+      universityName: studentData.universityName,
+      academicProgram: studentData.academicProgram,
+      yearOfStudy: studentData.yearOfStudy,
       nominatedBy: studentData.nominatedBy || null,
       professorEmail: studentData.professorEmail || null,
       careerInterests: studentData.careerInterests.trim() || null,
@@ -258,7 +270,7 @@ export default function RegisterStudent() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="phoneNumber">Phone Number</Label>
+                  <Label htmlFor="phoneNumber">Phone Number *</Label>
                   <Input
                     id="phoneNumber"
                     value={studentData.phoneNumber}
@@ -283,7 +295,7 @@ export default function RegisterStudent() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="universityName">University Name</Label>
+                  <Label htmlFor="universityName">University Name *</Label>
                   <Input
                     id="universityName"
                     value={studentData.universityName}
@@ -293,7 +305,7 @@ export default function RegisterStudent() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="academicProgram">Academic Program</Label>
+                  <Label htmlFor="academicProgram">Academic Program *</Label>
                   <Input
                     id="academicProgram"
                     value={studentData.academicProgram}
@@ -305,7 +317,7 @@ export default function RegisterStudent() {
               </div>
 
               <div>
-                <Label htmlFor="yearOfStudy">Year of Study</Label>
+                <Label htmlFor="yearOfStudy">Year of Study *</Label>
                 <Select value={studentData.yearOfStudy} onValueChange={(value) => setStudentData(prev => ({...prev, yearOfStudy: value}))}>
                   <SelectTrigger className="mt-2">
                     <SelectValue placeholder="Select your current year of study" />
@@ -321,18 +333,59 @@ export default function RegisterStudent() {
               <div className="flex justify-end">
                 <Button 
                   onClick={() => {
-                    if (!studentData.fullName.trim() || !studentData.emailAddress.trim()) {
+                    // Check all required Step 1 fields
+                    if (!studentData.fullName.trim()) {
                       toast({
-                        title: "Required Fields Missing",
-                        description: "Please enter your full name and email address to continue.",
+                        title: "Required Field Missing",
+                        description: "Please enter your full name to continue.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    if (!studentData.emailAddress.trim()) {
+                      toast({
+                        title: "Required Field Missing",
+                        description: "Please enter your email address to continue.",
                         variant: "destructive",
                       });
                       return;
                     }
                     if (!studentData.linkedinUrl.trim()) {
                       toast({
-                        title: "LinkedIn Required",
+                        title: "Required Field Missing",
                         description: "Please enter your LinkedIn profile URL to continue.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    if (!studentData.phoneNumber.trim()) {
+                      toast({
+                        title: "Required Field Missing",
+                        description: "Please enter your phone number to continue.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    if (!studentData.universityName.trim()) {
+                      toast({
+                        title: "Required Field Missing",
+                        description: "Please enter your university name to continue.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    if (!studentData.academicProgram.trim()) {
+                      toast({
+                        title: "Required Field Missing",
+                        description: "Please enter your academic program to continue.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    if (!studentData.yearOfStudy.trim()) {
+                      toast({
+                        title: "Required Field Missing",
+                        description: "Please select your year of study to continue.",
                         variant: "destructive",
                       });
                       return;

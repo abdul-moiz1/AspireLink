@@ -153,6 +153,7 @@ Changelog:
 - July 1, 2025. Removed "Common Accommodations" section from Accessibility page to simplify content and focus on verified capabilities
 - July 1, 2025. Removed "Sign language interpretation upon request" from Program Accommodations section as this service is not available for volunteer-based program
 - July 1, 2025. Fixed button text visibility issue on student registration step 3: added proper text color classes (hover:text-gray-900 and text-gray-700) to Academic Disciplines and Mentoring Topics buttons to prevent text from disappearing on hover
+- July 5, 2025. Enhanced student registration form: LinkedIn URL field already exists and is now mandatory, made all Step 1 fields mandatory (Full Name, Email, LinkedIn URL, Phone Number, University Name, Academic Program, Year of Study) with comprehensive validation at both step transition and final submission
 
 ## User Preferences
 

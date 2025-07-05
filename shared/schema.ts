@@ -49,9 +49,9 @@ export const studentRegistrations = pgTable("student_registrations", {
   emailAddress: text("email_address").notNull(),
   linkedinUrl: text("linkedin_url"),
   phoneNumber: text("phone_number"),
-  universityName: text("university_name").notNull(),
-  academicProgram: text("academic_program").notNull(),
-  yearOfStudy: text("year_of_study").notNull(),
+  universityName: text("university_name"),
+  academicProgram: text("academic_program"),
+  yearOfStudy: text("year_of_study"),
   // Nomination Verification
   nominatedBy: text("nominated_by").notNull(),
   professorEmail: text("professor_email").notNull(),
