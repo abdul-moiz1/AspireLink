@@ -30,6 +30,7 @@ export const mentorRegistrations = pgTable("mentor_registrations", {
   location: text("location"),
   timeZone: text("time_zone"),
   profileSummary: text("profile_summary"),
+  phoneNumber: text("phone_number"),
   // Mentorship-specific fields
   preferredDisciplines: text("preferred_disciplines").array(),
   mentoringTopics: text("mentoring_topics").array(),

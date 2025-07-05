@@ -154,6 +154,8 @@ Changelog:
 - July 1, 2025. Removed "Sign language interpretation upon request" from Program Accommodations section as this service is not available for volunteer-based program
 - July 1, 2025. Fixed button text visibility issue on student registration step 3: added proper text color classes (hover:text-gray-900 and text-gray-700) to Academic Disciplines and Mentoring Topics buttons to prevent text from disappearing on hover
 - July 5, 2025. Enhanced student registration form: LinkedIn URL field already exists and is now mandatory, made all Step 1 fields mandatory (Full Name, Email, LinkedIn URL, Phone Number, University Name, Academic Program, Year of Study) with comprehensive validation at both step transition and final submission
+- July 5, 2025. Enhanced mentor registration form: added mandatory phone number field to database schema and form, made company/organization and location fields mandatory with comprehensive validation for all Step 1 required fields (Full Name, Current Job Title, Company, Location, Phone Number) before progression to preferences step
+- July 5, 2025. Improved icon contrast across platform: increased background opacity from 10% to 20% for circular icon backgrounds in Home page (process steps and features sections) and About page (vision section) for better visual accessibility and readability
 
 ## User Preferences
 
