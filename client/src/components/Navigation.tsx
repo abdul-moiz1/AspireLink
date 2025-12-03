@@ -8,9 +8,9 @@ import { useAuth } from "@/hooks/useAuth";
 import logoPath from "@assets/AspireLink-Favicon_1751236188567.png";
 
 export default function Navigation() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
 
   const navItems = [
     { href: "/", label: "Home" },
@@ -26,11 +26,16 @@ export default function Navigation() {
   };
 
   const getDashboardLink = () => {
-    const userRole = (user as any)?.role;
+    const userRole = user?.role;
     if (userRole === 'admin') return '/admin/dashboard';
     if (userRole === 'mentor') return '/dashboard/mentor';
     if (userRole === 'student') return '/dashboard/student';
     return '/dashboard/student';
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setLocation("/");
   };
 
   return (
@@ -100,17 +105,15 @@ export default function Navigation() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <a href="/api/logout" className="flex items-center cursor-pointer text-red-600">
+                  <DropdownMenuItem onClick={handleLogout} className="flex items-center cursor-pointer text-red-600">
                       <LogOut className="w-4 h-4 mr-2" />
                       Log out
-                    </a>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <Button asChild className="bg-primary-custom hover:bg-primary-dark">
-                <a href="/api/login">Log in</a>
+                <Link href="/signin">Log in</Link>
               </Button>
             )}
           </div>
@@ -156,21 +159,22 @@ export default function Navigation() {
                           <LayoutDashboard className="w-4 h-4 inline mr-2" />
                           Dashboard
                         </Link>
-                        <a
-                          href="/api/logout"
-                          className="block px-3 py-2 text-base font-medium text-red-600 hover:text-red-700"
+                        <button
+                          onClick={() => { handleLogout(); setIsOpen(false); }}
+                          className="block w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:text-red-700"
                         >
                           <LogOut className="w-4 h-4 inline mr-2" />
                           Log out
-                        </a>
+                        </button>
                       </>
                     ) : (
-                      <a
-                        href="/api/login"
+                      <Link
+                        href="/signin"
+                        onClick={() => setIsOpen(false)}
                         className="block px-3 py-2 text-base font-medium text-primary-custom hover:text-primary-dark"
                       >
                         Log in
-                      </a>
+                      </Link>
                     )}
                   </div>
                 </div>

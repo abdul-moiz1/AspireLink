@@ -1,25 +1,57 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, isAdmin, isMentor, isStudent } from "./replitAuth";
+import { setupAuth, isAuthenticated, isAdmin, isMentor, isStudent } from "./firebaseAuth";
 import { insertContactSchema, insertMentorRegistrationSchema, insertStudentRegistrationSchema, studentRegistrations, mentorRegistrations } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Replit Auth
+  // Setup Firebase Auth
   await setupAuth(app);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const userId = req.user.uid;
+      let user = await storage.getUser(userId);
+      
+      if (!user) {
+        user = await storage.upsertUser({
+          id: userId,
+          email: req.user.email,
+          firstName: req.user.displayName?.split(' ')[0] || null,
+          lastName: req.user.displayName?.split(' ').slice(1).join(' ') || null,
+          profileImageUrl: null,
+        });
+      }
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Auth registration endpoint
+  app.post('/api/auth/register', isAuthenticated, async (req: any, res) => {
+    try {
+      const { email, displayName } = req.body;
+      const userId = req.user.uid;
+      
+      const user = await storage.upsertUser({
+        id: userId,
+        email: email,
+        firstName: displayName?.split(' ')[0] || null,
+        lastName: displayName?.split(' ').slice(1).join(' ') || null,
+        profileImageUrl: null,
+      });
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Error registering user:", error);
+      res.status(500).json({ message: "Failed to register user" });
     }
   });
 
@@ -53,7 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mentor registration submission endpoint
   app.post("/api/mentor-registration", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.uid;
       const registrationData = insertMentorRegistrationSchema.parse({
         ...req.body,
         userId
@@ -88,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Student registration submission endpoint
   app.post("/api/student-registration", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.uid;
       const registrationData = insertStudentRegistrationSchema.parse({
         ...req.body,
         userId
@@ -293,7 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create session (mentor only)
   app.post("/api/sessions", isAuthenticated, isMentor, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.uid;
       const session = await storage.createSession({
         ...req.body,
         createdBy: userId
@@ -343,7 +375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get mentor's assignments
   app.get("/api/mentor/assignments", isAuthenticated, isMentor, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.uid;
       const assignments = await storage.getAssignmentsByMentorUserId(userId);
       
       // Enrich with student details and cohort info
@@ -369,7 +401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get mentor's cohorts
   app.get("/api/mentor/cohorts", isAuthenticated, isMentor, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.uid;
       const cohortList = await storage.getUserCohorts(userId);
       res.json(cohortList);
     } catch (error) {
@@ -383,7 +415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get student's assignments
   app.get("/api/student/assignments", isAuthenticated, isStudent, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.uid;
       const assignments = await storage.getAssignmentsByStudentUserId(userId);
       
       // Enrich with mentor details and cohort info
@@ -409,7 +441,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get student's cohorts
   app.get("/api/student/cohorts", isAuthenticated, isStudent, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.uid;
       const cohortList = await storage.getUserCohorts(userId);
       res.json(cohortList);
     } catch (error) {
