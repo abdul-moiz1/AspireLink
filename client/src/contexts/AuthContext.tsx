@@ -123,16 +123,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "Welcome to AspireLink.",
       });
     } catch (error: any) {
+      let title = "Registration failed";
       let message = "Failed to create account.";
       if (error.code === "auth/email-already-in-use") {
-        message = "An account with this email already exists.";
+        title = "Account Already Exists";
+        message = "An account with this email already exists. Please sign in instead.";
       } else if (error.code === "auth/weak-password") {
         message = "Password should be at least 6 characters.";
       } else if (error.code === "auth/invalid-email") {
         message = "Invalid email address.";
       }
       toast({
-        title: "Registration failed",
+        title,
         description: message,
         variant: "destructive",
       });

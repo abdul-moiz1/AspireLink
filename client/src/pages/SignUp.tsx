@@ -67,12 +67,14 @@ export default function SignUp() {
   const onSubmit = async (data: SignUpFormValues) => {
     setIsSubmitting(true);
     try {
+      // Check for existing registration but don't block - just show personalized message
       const registrationCheck = await checkEmailRegistration(data.email);
       if (registrationCheck?.exists) {
-        setIsSubmitting(false);
-        return;
+        setRegistrationInfo(registrationCheck);
       }
       
+      // Always proceed with signup - this creates the Firebase account
+      // The backend will automatically assign the proper role based on existing form data
       await register(data.email, data.password, data.displayName);
       setLocation("/");
     } catch (error) {
@@ -93,16 +95,13 @@ export default function SignUp() {
         </CardHeader>
         <CardContent>
           {registrationInfo?.exists && (
-            <Alert className="mb-4 border-blue-200 bg-blue-50">
-              <UserCheck className="h-4 w-4 text-blue-600" />
-              <AlertTitle className="text-blue-800">
-                {registrationInfo.type === 'student' ? 'Student Registration Found' : 'Mentor Registration Found'}
+            <Alert className="mb-4 border-green-200 bg-green-50">
+              <UserCheck className="h-4 w-4 text-green-600" />
+              <AlertTitle className="text-green-800">
+                {registrationInfo.type === 'student' ? 'Welcome, Student!' : 'Welcome, Mentor!'}
               </AlertTitle>
-              <AlertDescription className="text-blue-700">
-                {registrationInfo.message}
-                <Link href="/signin" className="block mt-2 text-primary-custom hover:underline font-medium">
-                  Click here to sign in
-                </Link>
+              <AlertDescription className="text-green-700">
+                We found your {registrationInfo.type} application. Complete your account setup below and you'll be automatically connected to your {registrationInfo.type} profile.
               </AlertDescription>
             </Alert>
           )}

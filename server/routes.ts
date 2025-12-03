@@ -13,16 +13,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.uid;
+      const userEmail = req.user.email;
       let user = await storage.getUser(userId);
       
       if (!user) {
+        // Create new user
         user = await storage.upsertUser({
           id: userId,
-          email: req.user.email,
+          email: userEmail,
           firstName: req.user.displayName?.split(' ')[0] || null,
           lastName: req.user.displayName?.split(' ').slice(1).join(' ') || null,
           profileImageUrl: null,
         });
+      }
+      
+      // Check if user has a role assigned - if not, check for existing registrations
+      if (!user.role && userEmail) {
+        // Priority 1: Check for admin first (highest priority)
+        const adminRecord = await storage.getAdminByEmail(userEmail);
+        if (adminRecord) {
+          user = await storage.updateUserRole(userId, 'admin');
+          console.log(`Assigned admin role to user ${userEmail}`);
+        } else {
+          // Priority 2: Check for student and mentor registrations
+          const studentRegistration = await storage.getStudentByEmail(userEmail);
+          const mentorRegistration = await storage.getMentorByEmail(userEmail);
+          
+          // Handle dual registration case - warn and prefer the most recent
+          if (studentRegistration && mentorRegistration) {
+            console.warn(`User ${userEmail} has both student and mentor registrations. Using the most recent one.`);
+            const studentDate = studentRegistration.createdAt ? new Date(studentRegistration.createdAt) : new Date(0);
+            const mentorDate = mentorRegistration.createdAt ? new Date(mentorRegistration.createdAt) : new Date(0);
+            
+            if (mentorDate > studentDate) {
+              user = await storage.updateUserRole(userId, 'mentor', mentorRegistration.id);
+              console.log(`Assigned mentor role to user ${userEmail} based on more recent registration ${mentorRegistration.id}`);
+            } else {
+              user = await storage.updateUserRole(userId, 'student', studentRegistration.id);
+              console.log(`Assigned student role to user ${userEmail} based on more recent registration ${studentRegistration.id}`);
+            }
+          } else if (studentRegistration) {
+            user = await storage.updateUserRole(userId, 'student', studentRegistration.id);
+            console.log(`Assigned student role to user ${userEmail} based on registration ${studentRegistration.id}`);
+          } else if (mentorRegistration) {
+            user = await storage.updateUserRole(userId, 'mentor', mentorRegistration.id);
+            console.log(`Assigned mentor role to user ${userEmail} based on registration ${mentorRegistration.id}`);
+          }
+        }
       }
       
       res.json(user);
