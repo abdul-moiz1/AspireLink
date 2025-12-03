@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -134,25 +133,25 @@ function AnimatedStatCard({
   }, [value, delay]);
 
   return (
-    <Card className="card-hover hover-lift overflow-hidden">
-      <CardContent className="p-6 relative">
+    <Card className="card-hover hover-lift overflow-visible">
+      <CardContent className="p-6 relative overflow-visible">
         <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-10`} style={{ backgroundColor: color }} />
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-4">
-            <div className={`p-3 rounded-xl`} style={{ backgroundColor: `${color}20` }}>
-              <Icon className="w-6 h-6" style={{ color }} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">{title}</p>
-              <p className="text-3xl font-bold text-foreground animate-countUp">{displayValue}</p>
-            </div>
+        <div className="flex items-start gap-3">
+          <div className={`p-3 rounded-xl flex-shrink-0`} style={{ backgroundColor: `${color}20` }}>
+            <Icon className="w-6 h-6" style={{ color }} />
           </div>
-          {trend && trendValue && (
-            <div className={`flex items-center gap-1 text-sm ${trend === 'up' ? 'text-green-600' : 'text-red-500'}`}>
-              {trend === 'up' ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-              <span>{trendValue}</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-sm font-medium text-muted-foreground">{title}</p>
+              {trend && trendValue && (
+                <div className={`flex items-center gap-0.5 text-xs whitespace-nowrap ${trend === 'up' ? 'text-green-600' : 'text-red-500'}`}>
+                  {trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                  <span>{trendValue}</span>
+                </div>
+              )}
             </div>
-          )}
+            <p className="text-3xl font-bold text-foreground animate-countUp">{displayValue}</p>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -286,15 +285,37 @@ function StatusDistributionChart({ stats }: { stats: DashboardStats | undefined 
 }
 
 function AssignmentActivityChart({ assignments }: { assignments: Assignment[] }) {
-  const weeklyData = [
-    { day: 'Mon', assignments: 3 },
-    { day: 'Tue', assignments: 5 },
-    { day: 'Wed', assignments: 2 },
-    { day: 'Thu', assignments: 7 },
-    { day: 'Fri', assignments: 4 },
-    { day: 'Sat', assignments: 1 },
-    { day: 'Sun', assignments: assignments?.length ? 2 : 0 },
-  ];
+  const weeklyData = (() => {
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const counts: Record<string, number> = {
+      Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0
+    };
+    
+    if (assignments && assignments.length > 0) {
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      assignments.forEach(assignment => {
+        if (assignment.assignedAt) {
+          const assignedDate = new Date(assignment.assignedAt);
+          if (assignedDate >= oneWeekAgo && assignedDate <= now) {
+            const dayName = dayNames[assignedDate.getDay()];
+            counts[dayName]++;
+          }
+        }
+      });
+    }
+    
+    return [
+      { day: 'Mon', assignments: counts.Mon },
+      { day: 'Tue', assignments: counts.Tue },
+      { day: 'Wed', assignments: counts.Wed },
+      { day: 'Thu', assignments: counts.Thu },
+      { day: 'Fri', assignments: counts.Fri },
+      { day: 'Sat', assignments: counts.Sat },
+      { day: 'Sun', assignments: counts.Sun },
+    ];
+  })();
 
   return (
     <Card className="card-hover">
@@ -388,8 +409,6 @@ function RecentActivityFeed({ students, mentors }: { students: Student[]; mentor
 export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
-  const [selectedAssignments, setSelectedAssignments] = useState<number[]>([]);
-  const [bulkActionMode, setBulkActionMode] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -463,27 +482,6 @@ export default function AdminDashboard() {
     }
   });
 
-  const deleteAssignmentMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return apiRequest(`/api/admin/assignments/${id}`, "DELETE");
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/assignments"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
-      toast({
-        title: "Assignment Deleted",
-        description: "Assignment deleted successfully.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Delete Failed",
-        description: "Failed to delete assignment. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
-
   const { logout } = useAuth();
   
   const handleLogout = async () => {
@@ -500,80 +498,6 @@ export default function AdminDashboard() {
   const handleDelete = (type: "student" | "mentor", id: number, name: string) => {
     if (window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
       deleteUserMutation.mutate({ type, id });
-    }
-  };
-
-  const handleDeleteAssignment = (id: number, mentorName: string, studentName: string) => {
-    if (window.confirm(`Are you sure you want to delete the assignment between ${mentorName} and ${studentName}?`)) {
-      deleteAssignmentMutation.mutate(id);
-    }
-  };
-
-  const handleSelectAssignment = (assignmentId: number) => {
-    setSelectedAssignments(prev => 
-      prev.includes(assignmentId) 
-        ? prev.filter(id => id !== assignmentId)
-        : [...prev, assignmentId]
-    );
-  };
-
-  const handleSelectAllAssignments = () => {
-    if (selectedAssignments.length === assignments?.length) {
-      setSelectedAssignments([]);
-    } else {
-      setSelectedAssignments(assignments?.map((a: Assignment) => a.id) || []);
-    }
-  };
-
-  const bulkDeleteMutation = useMutation({
-    mutationFn: async (assignmentIds: number[]) => {
-      return apiRequest("/api/admin/assignments/bulk-delete", "POST", { assignmentIds });
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Success",
-        description: data.message,
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/assignments"] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete assignments",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleBulkDeleteAssignments = () => {
-    if (selectedAssignments.length === 0) return;
-    
-    const assignmentNames = selectedAssignments
-      .map(id => {
-        const assignment = assignments?.find((a: Assignment) => a.id === id);
-        return assignment ? `${assignment.mentorName} - ${assignment.studentName}` : 'Unknown';
-      })
-      .join(', ');
-
-    if (window.confirm(`Are you sure you want to delete ${selectedAssignments.length} assignment(s)?\n\n${assignmentNames}`)) {
-      bulkDeleteMutation.mutate(selectedAssignments);
-      setSelectedAssignments([]);
-      setBulkActionMode(false);
-    }
-  };
-
-  const handleBulkToggleStatus = (newStatus: boolean) => {
-    if (selectedAssignments.length === 0) return;
-    
-    const statusText = newStatus ? 'activate' : 'deactivate';
-    
-    if (window.confirm(`Are you sure you want to ${statusText} ${selectedAssignments.length} assignment(s)?`)) {
-      toast({
-        title: "Bulk Status Update",
-        description: `Would ${statusText} ${selectedAssignments.length} assignments. Feature ready for implementation.`,
-      });
-      setSelectedAssignments([]);
-      setBulkActionMode(false);
     }
   };
 
@@ -723,10 +647,9 @@ export default function AdminDashboard() {
         </Card>
 
         <Tabs defaultValue="students" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="students" data-testid="tab-students">Students ({filterUsers(students || []).length})</TabsTrigger>
             <TabsTrigger value="mentors" data-testid="tab-mentors">Mentors ({filterUsers(mentors || []).length})</TabsTrigger>
-            <TabsTrigger value="assignments" data-testid="tab-assignments">Assignments ({assignments?.length || 0})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="students">
@@ -890,128 +813,6 @@ export default function AdminDashboard() {
                     <div className="text-center py-12 text-muted-foreground">
                       <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
                       <p>No mentors found matching your criteria.</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="assignments">
-            <Card className="card-hover">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-4 flex-wrap">
-                    <span>Mentor-Student Assignments</span>
-                    {bulkActionMode && selectedAssignments.length > 0 && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
-                          {selectedAssignments.length} selected
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={handleBulkDeleteAssignments}
-                          className="hover-lift"
-                          data-testid="button-bulk-delete"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete Selected
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setBulkActionMode(!bulkActionMode);
-                        setSelectedAssignments([]);
-                      }}
-                      className="hover-lift"
-                      data-testid="button-bulk-mode"
-                    >
-                      {bulkActionMode ? "Cancel" : "Bulk Actions"}
-                    </Button>
-                    <Button 
-                      className="bg-accent-custom hover:bg-accent-dark hover-lift text-white"
-                      onClick={() => setLocation("/admin/create-assignment")}
-                      data-testid="button-create-assignment"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Assignment
-                    </Button>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {bulkActionMode && assignments && assignments.length > 0 && (
-                  <div className="mb-4 p-3 bg-muted rounded-lg flex items-center gap-3">
-                    <Checkbox
-                      checked={selectedAssignments.length === assignments.length}
-                      onCheckedChange={handleSelectAllAssignments}
-                      data-testid="checkbox-select-all"
-                    />
-                    <span className="text-sm text-muted-foreground">Select All</span>
-                  </div>
-                )}
-                <div className="space-y-3">
-                  {assignments?.map((assignment: Assignment, index: number) => (
-                    <div 
-                      key={assignment.id} 
-                      className="flex items-center justify-between p-4 border rounded-lg hover-lift bg-background"
-                      style={{ animationDelay: `${index * 50}ms` }}
-                      data-testid={`card-assignment-${assignment.id}`}
-                    >
-                      {bulkActionMode && (
-                        <Checkbox
-                          checked={selectedAssignments.includes(assignment.id)}
-                          onCheckedChange={() => handleSelectAssignment(assignment.id)}
-                          className="mr-4"
-                          data-testid={`checkbox-assignment-${assignment.id}`}
-                        />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-4 flex-wrap">
-                          <div className="flex items-center gap-2">
-                            <div className="p-2 bg-pink-100 rounded-full">
-                              <Users className="w-4 h-4 text-pink-600" />
-                            </div>
-                            <span className="font-medium truncate">{assignment.mentorName}</span>
-                          </div>
-                          <LinkIcon className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex items-center gap-2">
-                            <div className="p-2 bg-blue-100 rounded-full">
-                              <GraduationCap className="w-4 h-4 text-blue-600" />
-                            </div>
-                            <span className="font-medium truncate">{assignment.studentName}</span>
-                          </div>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Assigned: {assignment.assignedAt ? new Date(assignment.assignedAt).toLocaleDateString() : 'N/A'}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 ml-4">
-                        <Badge variant={assignment.isActive ? "default" : "secondary"}>
-                          {assignment.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="text-destructive hover:text-destructive hover-lift"
-                          onClick={() => handleDeleteAssignment(assignment.id, assignment.mentorName, assignment.studentName)}
-                          data-testid={`button-delete-assignment-${assignment.id}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  {(!assignments || assignments.length === 0) && (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <LinkIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>No assignments found. Create your first mentor-student assignment.</p>
                     </div>
                   )}
                 </div>
