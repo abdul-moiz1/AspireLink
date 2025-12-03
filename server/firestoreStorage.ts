@@ -329,34 +329,71 @@ export class FirestoreStorage implements IStorage {
     await this.getDb().collection('cohorts').doc(id.toString()).delete();
   }
 
-  // Cohort member operations
+  // Cohort member operations - DERIVED FROM ASSIGNMENTS
+  // Members are now automatically derived from assignments, no separate collection needed
+  
   async addCohortMember(member: InsertCohortMember): Promise<CohortMember> {
-    const nextId = await this.getNextId('cohortMembers');
-    const docRef = this.getDb().collection('cohortMembers').doc(nextId.toString());
-    const data = {
-      ...member,
-      id: nextId,
+    // DEPRECATED: Members are now derived from assignments automatically
+    // This method is kept for backward compatibility but does NOT persist data
+    // To add a member to a cohort, create an assignment instead
+    console.warn('DEPRECATED: addCohortMember no longer persists. Members are derived from assignments. Create an assignment to add members.');
+    return {
+      id: Date.now(), // Unique ID for this call
+      cohortId: member.cohortId,
+      userId: member.userId,
+      role: member.role,
       isActive: member.isActive ?? true,
       joinedAt: new Date(),
-    };
-    await docRef.set(data);
-    return data as CohortMember;
+    } as CohortMember;
   }
 
   async getCohortMembers(cohortId: number): Promise<CohortMember[]> {
-    const snapshot = await this.getDb().collection('cohortMembers').where('cohortId', '==', cohortId).get();
-    return snapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        ...data,
-        joinedAt: data?.joinedAt?.toDate?.() || data?.joinedAt
-      } as CohortMember;
-    });
+    // Derive members from assignments - get all mentors and students in this cohort
+    const assignments = await this.getAssignmentsByCohort(cohortId);
+    
+    // Build unique member list from assignments with unique IDs
+    const memberMap = new Map<string, CohortMember>();
+    let idCounter = 1;
+    
+    for (const assignment of assignments) {
+      // Add mentor if not already in map
+      if (!memberMap.has(assignment.mentorUserId)) {
+        memberMap.set(assignment.mentorUserId, {
+          id: idCounter++,
+          cohortId: cohortId,
+          userId: assignment.mentorUserId,
+          role: 'mentor',
+          isActive: assignment.isActive,
+          joinedAt: assignment.assignedAt
+        });
+      }
+      
+      // Add student if not already in map
+      if (!memberMap.has(assignment.studentUserId)) {
+        memberMap.set(assignment.studentUserId, {
+          id: idCounter++,
+          cohortId: cohortId,
+          userId: assignment.studentUserId,
+          role: 'student',
+          isActive: assignment.isActive,
+          joinedAt: assignment.assignedAt
+        });
+      }
+    }
+    
+    return Array.from(memberMap.values());
   }
 
   async getUserCohorts(userId: string): Promise<Cohort[]> {
-    const membersSnapshot = await this.getDb().collection('cohortMembers').where('userId', '==', userId).get();
-    const cohortIds = membersSnapshot.docs.map(doc => doc.data().cohortId);
+    // Derive cohorts from assignments - find all cohorts where user is mentor or student
+    const mentorAssignments = await this.getAssignmentsByMentor(userId);
+    const studentAssignments = await this.getAssignmentsByStudent(userId);
+    
+    // Combine and get unique cohort IDs
+    const allAssignments = [...mentorAssignments, ...studentAssignments];
+    const cohortIdSet = new Set(allAssignments.map(a => a.cohortId));
+    const cohortIds = Array.from(cohortIdSet);
+    
     if (cohortIds.length === 0) return [];
     
     const cohorts: Cohort[] = [];
@@ -368,14 +405,11 @@ export class FirestoreStorage implements IStorage {
   }
 
   async removeCohortMember(cohortId: number, userId: string): Promise<void> {
-    const snapshot = await this.getDb().collection('cohortMembers')
-      .where('cohortId', '==', cohortId)
-      .where('userId', '==', userId)
-      .get();
-    
-    const batch = this.getDb().batch();
-    snapshot.docs.forEach(doc => batch.delete(doc.ref));
-    await batch.commit();
+    // DEPRECATED: Members are now derived from assignments automatically
+    // This method is kept for backward compatibility but does NOT remove data
+    // To remove a member from a cohort, delete their assignments instead
+    console.warn(`DEPRECATED: removeCohortMember no longer removes data. Members are derived from assignments. Delete assignments to remove members. (cohortId: ${cohortId}, userId: ${userId})`);
+    // No-op since members are derived from assignments
   }
 
   // Assignment operations

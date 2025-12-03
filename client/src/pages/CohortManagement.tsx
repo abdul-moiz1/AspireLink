@@ -19,7 +19,6 @@ import {
   Edit, 
   Trash2, 
   ArrowLeft,
-  UserPlus,
   Link as LinkIcon,
   Clock,
   GraduationCap,
@@ -33,7 +32,6 @@ export default function CohortManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isAddMemberDialogOpen, setIsAddMemberDialogOpen] = useState(false);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [selectedCohort, setSelectedCohort] = useState<any>(null);
   const [cohortForm, setCohortForm] = useState({
@@ -43,10 +41,6 @@ export default function CohortManagement() {
     endDate: '',
     sessionsPerMonth: 2,
     sessionDurationMinutes: 30
-  });
-  const [memberForm, setMemberForm] = useState({
-    registrationId: '',
-    role: 'student'
   });
   const [assignForm, setAssignForm] = useState({
     mentorId: '',
@@ -136,28 +130,6 @@ export default function CohortManagement() {
     }
   });
 
-  const addMemberMutation = useMutation({
-    mutationFn: async ({ cohortId, userId, role }: { cohortId: number; userId: string; role: string }) => {
-      return await apiRequest(`/api/cohorts/${cohortId}/members`, 'POST', { userId, role });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/cohorts/${selectedCohort?.id}/members`] });
-      setIsAddMemberDialogOpen(false);
-      setMemberForm({ registrationId: '', role: 'student' });
-      toast({
-        title: "Member Added",
-        description: "The member has been added to the cohort.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to add member. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
-
   const createAssignmentMutation = useMutation({
     mutationFn: async ({ cohortId, mentorId, studentId }: { cohortId: number; mentorId: number; studentId: number }) => {
       return await apiRequest(`/api/cohorts/${cohortId}/assignments`, 'POST', { mentorId, studentId });
@@ -194,29 +166,6 @@ export default function CohortManagement() {
     if (window.confirm(`Are you sure you want to delete cohort "${cohort.name}"?`)) {
       deleteCohortMutation.mutate(cohort.id);
     }
-  };
-
-  const handleAddMember = () => {
-    if (!selectedCohort || !memberForm.registrationId) return;
-    
-    const registration = memberForm.role === 'student' 
-      ? (students as any[])?.find(s => s.id === parseInt(memberForm.registrationId))
-      : (mentors as any[])?.find(m => m.id === parseInt(memberForm.registrationId));
-    
-    if (!registration?.userId) {
-      toast({
-        title: "Error",
-        description: "Selected user doesn't have an account. They need to register first.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    addMemberMutation.mutate({
-      cohortId: selectedCohort.id,
-      userId: registration.userId,
-      role: memberForm.role
-    });
   };
 
   const handleCreateAssignment = () => {
@@ -359,10 +308,6 @@ export default function CohortManagement() {
                 students={students as any[]}
                 mentors={mentors as any[]}
                 onDelete={() => handleDeleteCohort(cohort)}
-                onSelectForMember={() => {
-                  setSelectedCohort(cohort);
-                  setIsAddMemberDialogOpen(true);
-                }}
                 onSelectForAssignment={() => {
                   setSelectedCohort(cohort);
                   setIsAssignDialogOpen(true);
@@ -371,58 +316,6 @@ export default function CohortManagement() {
             ))}
           </div>
         )}
-
-        {/* Add Member Dialog */}
-        <Dialog open={isAddMemberDialogOpen} onOpenChange={setIsAddMemberDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Member to {selectedCohort?.name}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div>
-                <Label>Role</Label>
-                <Select value={memberForm.role} onValueChange={(value) => setMemberForm(prev => ({ ...prev, role: value, registrationId: '' }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="student">Student</SelectItem>
-                    <SelectItem value="mentor">Mentor</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>{memberForm.role === 'student' ? 'Student' : 'Mentor'}</Label>
-                <Select value={memberForm.registrationId} onValueChange={(value) => setMemberForm(prev => ({ ...prev, registrationId: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={`Select ${memberForm.role}`} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {memberForm.role === 'student' 
-                      ? (students as any[])?.filter(s => s.isActive).map((s: any) => (
-                          <SelectItem key={s.id} value={s.id.toString()}>
-                            {s.fullName} - {s.universityName}
-                          </SelectItem>
-                        ))
-                      : (mentors as any[])?.filter(m => m.isActive).map((m: any) => (
-                          <SelectItem key={m.id} value={m.id.toString()}>
-                            {m.fullName} - {m.company}
-                          </SelectItem>
-                        ))
-                    }
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button 
-                className="w-full" 
-                onClick={handleAddMember}
-                disabled={!memberForm.registrationId || addMemberMutation.isPending}
-              >
-                {addMemberMutation.isPending ? 'Adding...' : 'Add Member'}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {/* Create Assignment Dialog */}
         <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
@@ -476,12 +369,11 @@ export default function CohortManagement() {
   );
 }
 
-function CohortCard({ cohort, students, mentors, onDelete, onSelectForMember, onSelectForAssignment }: { 
+function CohortCard({ cohort, students, mentors, onDelete, onSelectForAssignment }: { 
   cohort: any; 
   students: any[];
   mentors: any[];
   onDelete: () => void;
-  onSelectForMember: () => void;
   onSelectForAssignment: () => void;
 }) {
   const { data: members } = useQuery({
@@ -560,20 +452,19 @@ function CohortCard({ cohort, students, mentors, onDelete, onSelectForMember, on
                     {mentorMembers.length} Mentors
                   </span>
                 </div>
-                <Button size="sm" onClick={onSelectForMember}>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Add Member
-                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Members are automatically added when assignments are created
+                </p>
               </div>
               
               {memberList.length === 0 ? (
                 <div className="text-center py-6 text-gray-500">
-                  No members added to this cohort yet.
+                  No members yet. Create an assignment to add members to this cohort.
                 </div>
               ) : (
                 <div className="grid md:grid-cols-2 gap-4">
                   {memberList.map((member: any) => (
-                    <div key={member.id} className="p-3 border rounded-lg flex items-center justify-between">
+                    <div key={member.userId} className="p-3 border rounded-lg flex items-center justify-between" data-testid={`member-${member.userId}`}>
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-full ${member.role === 'mentor' ? 'bg-blue-100' : 'bg-green-100'}`}>
                           {member.role === 'mentor' ? (
