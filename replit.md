@@ -95,6 +95,8 @@ Preferred communication style: Simple, everyday language.
 - `/accessibility` - Accessibility statement
     
 ### Firestore Collections
+
+**Active Collections (used by the app):**
 - **users**: Stores user accounts with linked profile data and roles (student/mentor/admin).
 - **studentRegistration**: Pending student applications with status tracking (pending/linked).
 - **mentorRegistration**: Pending mentor applications with status tracking (pending/linked).
@@ -104,6 +106,10 @@ Preferred communication style: Simple, everyday language.
 - **mentoringSessions**: Scheduled sessions between mentors and students.
 - **contacts**: Contact form submissions.
 - **counters**: Auto-increment ID counters for numeric IDs.
+
+**Orphaned Collections (CAN BE DELETED from Firebase Console):**
+- **adminUsers**: Not used in code - admins are stored in `users` with `role: 'admin'`
+- **mentorRegistrations** (with 's'): Duplicate collection name - app uses `mentorRegistration` (no 's')
 
 ### Feature Specifications
 - **Mentorship Program**: Structured 4-month program, 100% free, 1:1 matching, 24/7 support.
