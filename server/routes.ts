@@ -106,8 +106,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Map frontend field names to schema field names
       const { emailAddress, ...rest } = req.body;
+      
+      // Preprocess LinkedIn URL - add https:// if missing
+      let linkedinUrl = rest.linkedinUrl;
+      if (linkedinUrl && typeof linkedinUrl === 'string' && linkedinUrl.trim()) {
+        linkedinUrl = linkedinUrl.trim();
+        if (!linkedinUrl.startsWith('http://') && !linkedinUrl.startsWith('https://')) {
+          linkedinUrl = 'https://' + linkedinUrl;
+        }
+      }
+      
       const registrationData = insertMentorSchema.parse({
         ...rest,
+        linkedinUrl,
         email: emailAddress || rest.email,
         role: 'mentor'
       });
@@ -150,11 +161,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Map frontend field names to schema field names
       const { emailAddress, ...rest } = req.body;
-      const registrationData = insertStudentSchema.parse({
+      
+      // Preprocess LinkedIn URL - add https:// if missing
+      let linkedinUrl = rest.linkedinUrl;
+      if (linkedinUrl && typeof linkedinUrl === 'string' && linkedinUrl.trim()) {
+        linkedinUrl = linkedinUrl.trim();
+        if (!linkedinUrl.startsWith('http://') && !linkedinUrl.startsWith('https://')) {
+          linkedinUrl = 'https://' + linkedinUrl;
+        }
+      }
+      
+      const dataToValidate = {
         ...rest,
+        linkedinUrl,
         email: emailAddress || rest.email,
         role: 'student'
-      });
+      };
+      
+      const registrationData = insertStudentSchema.parse(dataToValidate);
       
       // Check if user already exists
       let user = await storage.getUserByEmail(registrationData.email);
@@ -181,6 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true, id: user.id });
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error("Student registration Zod validation errors:", JSON.stringify(error.errors, null, 2));
         res.status(400).json({ error: "Invalid registration data", details: error.errors });
       } else {
         console.error("Error creating student registration:", error);
