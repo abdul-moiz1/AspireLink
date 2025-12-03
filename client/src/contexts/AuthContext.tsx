@@ -15,10 +15,12 @@ interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  needsProfileCompletion: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -163,16 +165,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return getIdToken();
   };
 
+  const refreshUser = async () => {
+    const currentUser = auth?.currentUser;
+    if (currentUser) {
+      const token = await currentUser.getIdToken(true);
+      try {
+        const response = await fetch("/api/auth/user", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          setUser({
+            uid: currentUser.uid,
+            email: currentUser.email,
+            displayName: currentUser.displayName,
+            photoURL: currentUser.photoURL,
+            role: userData.role,
+            registrationId: userData.registrationId,
+          });
+        }
+      } catch (error) {
+        console.error("Error refreshing user:", error);
+      }
+    }
+  };
+
+  const needsProfileCompletion = !!user && !user.role;
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoading,
         isAuthenticated: !!user,
+        needsProfileCompletion,
         login,
         register,
         logout,
         getToken,
+        refreshUser,
       }}
     >
       {children}

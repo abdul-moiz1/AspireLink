@@ -76,7 +76,16 @@ export default function SignUp() {
       // Always proceed with signup - this creates the Firebase account
       // The backend will automatically assign the proper role based on existing form data
       await register(data.email, data.password, data.displayName);
-      setLocation("/");
+      
+      // If they had an existing registration, they'll get auto-assigned a role
+      // If not, redirect to complete-profile to choose their role
+      if (registrationCheck?.exists) {
+        // They have a role assigned, go to home (they'll be redirected to their dashboard)
+        setLocation("/");
+      } else {
+        // No existing registration - need to choose role
+        setLocation("/complete-profile");
+      }
     } catch (error) {
     } finally {
       setIsSubmitting(false);

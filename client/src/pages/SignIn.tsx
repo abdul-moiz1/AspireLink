@@ -36,7 +36,21 @@ export default function SignIn() {
     setIsSubmitting(true);
     try {
       await login(data.email, data.password);
-      setLocation("/");
+      // Check if user has a registration by querying the API
+      const checkResponse = await fetch('/api/check-email-registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email }),
+      });
+      const checkData = await checkResponse.json();
+      
+      if (checkData.exists) {
+        // User has a registration, they'll be auto-assigned a role
+        setLocation("/");
+      } else {
+        // No registration found, redirect to complete profile
+        setLocation("/complete-profile");
+      }
     } catch (error) {
     } finally {
       setIsSubmitting(false);

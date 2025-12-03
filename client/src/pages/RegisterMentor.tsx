@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Linkedin, 
   User, 
@@ -72,6 +74,8 @@ const getEmptyLinkedInData = (): LinkedInData => ({
 
 export default function RegisterMentor() {
   const { toast } = useToast();
+  const [, setLocationPath] = useLocation();
+  const { user, refreshUser } = useAuth();
   const [step, setStep] = useState(1);
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [linkedinData, setLinkedinData] = useState<LinkedInData | null>(getEmptyLinkedInData());
@@ -83,6 +87,20 @@ export default function RegisterMentor() {
   const [agreedToCommitment, setAgreedToCommitment] = useState(false);
   const [consentToContact, setConsentToContact] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Check if user is completing their profile (came from /complete-profile)
+  const isCompletingProfile = typeof window !== 'undefined' && window.location.search.includes('complete=true');
+
+  // Pre-fill user data if authenticated (only run once when user data is available)
+  useEffect(() => {
+    if (user && isCompletingProfile) {
+      setLinkedinData(prev => prev ? ({
+        ...prev,
+        fullName: user.displayName || prev.fullName,
+        emailAddress: user.email || prev.emailAddress,
+      }) : prev);
+    }
+  }, [user, isCompletingProfile]);
 
   const autoFillMutation = useMutation({
     mutationFn: async (url: string) => {
@@ -102,6 +120,9 @@ export default function RegisterMentor() {
         description: "LinkedIn auto-fill requires API integration. Please fill out the form manually.",
         variant: "destructive",
       });
+    },
+    onSettled: () => {
+      setIsAutoFilling(false);
     }
   });
 
@@ -109,12 +130,20 @@ export default function RegisterMentor() {
     mutationFn: async (data: any) => {
       return apiRequest("/api/mentor-registration", "POST", data);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       setIsSubmitted(true);
       toast({
         title: "Registration Successful",
         description: "Thank you for registering as a mentor! We'll be in touch soon.",
       });
+      
+      // If user is completing their profile, refresh user data and redirect to dashboard
+      if (isCompletingProfile && user) {
+        await refreshUser();
+        setTimeout(() => {
+          setLocationPath("/dashboard/mentor");
+        }, 2000);
+      }
     },
     onError: () => {
       toast({
@@ -146,7 +175,6 @@ export default function RegisterMentor() {
 
     setIsAutoFilling(true);
     autoFillMutation.mutate(linkedinUrl);
-    setIsAutoFilling(false);
   };
 
   const handleSkipAutoFill = () => {

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   User, 
   GraduationCap, 
@@ -45,8 +47,13 @@ const yearOfStudyOptions = [
 
 export default function RegisterStudent() {
   const { toast } = useToast();
+  const [, setLocationPath] = useLocation();
+  const { user, refreshUser } = useAuth();
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  
+  // Check if user is completing their profile (came from /complete-profile)
+  const isCompletingProfile = typeof window !== 'undefined' && window.location.search.includes('complete=true');
 
   const [studentData, setStudentData] = useState({
     fullName: "",
@@ -66,16 +73,35 @@ export default function RegisterStudent() {
     consentToContact: false,
   });
 
+  // Pre-fill user data if authenticated
+  useEffect(() => {
+    if (user && isCompletingProfile) {
+      setStudentData(prev => ({
+        ...prev,
+        fullName: user.displayName || prev.fullName,
+        emailAddress: user.email || prev.emailAddress,
+      }));
+    }
+  }, [user, isCompletingProfile]);
+
   const registrationMutation = useMutation({
     mutationFn: async (data: any) => {
       return apiRequest("/api/student-registration", "POST", data);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       setIsSubmitted(true);
       toast({
         title: "Registration Successful",
         description: "Thank you for applying to AspireLink's mentorship program!",
       });
+      
+      // If user is completing their profile, refresh user data and redirect to dashboard
+      if (isCompletingProfile && user) {
+        await refreshUser();
+        setTimeout(() => {
+          setLocationPath("/dashboard/student");
+        }, 2000);
+      }
     },
     onError: () => {
       toast({
