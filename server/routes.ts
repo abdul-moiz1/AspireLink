@@ -515,12 +515,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/mentor/assignments", isAuthenticated, isMentor, async (req: any, res) => {
     try {
       const userId = req.user.uid;
-      const assignments = await storage.getAssignmentsByMentorUserId(userId);
+      
+      // First try to get assignments by Firebase userId
+      let assignments = await storage.getAssignmentsByMentorUserId(userId);
+      
+      // If no assignments found by userId, try by mentorId (registration ID)
+      if (assignments.length === 0) {
+        const user = await storage.getUser(userId);
+        if (user?.mentorRegistrationId) {
+          assignments = await storage.getAssignmentsByMentor(user.mentorRegistrationId);
+          
+          // Update these assignments to have the correct mentorUserId for future queries
+          // Use Promise.allSettled to continue even if some updates fail
+          await Promise.allSettled(assignments.map(async (assignment) => {
+            if (!assignment.mentorUserId) {
+              try {
+                await storage.updateAssignment(assignment.id, { mentorUserId: userId });
+              } catch (e) {
+                console.warn(`Failed to update assignment ${assignment.id} with mentorUserId:`, e);
+              }
+            }
+          }));
+        }
+      }
       
       // Enrich with student details and cohort info
-      const enrichedAssignments = await Promise.all(assignments.map(async (assignment) => {
+      // Use Promise.allSettled to continue even if some enrichments fail
+      const enrichmentResults = await Promise.allSettled(assignments.map(async (assignment) => {
         const student = await storage.getStudentRegistration(assignment.studentId);
-        const cohort = await storage.getCohort(assignment.cohortId);
+        const cohort = assignment.cohortId ? await storage.getCohort(assignment.cohortId) : null;
         const sessions = await storage.getSessionsByAssignment(assignment.id);
         return {
           ...assignment,
@@ -529,6 +552,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sessions
         };
       }));
+      
+      const enrichedAssignments = enrichmentResults
+        .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled')
+        .map(result => result.value);
       
       res.json(enrichedAssignments);
     } catch (error) {
@@ -555,12 +582,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/student/assignments", isAuthenticated, isStudent, async (req: any, res) => {
     try {
       const userId = req.user.uid;
-      const assignments = await storage.getAssignmentsByStudentUserId(userId);
+      
+      // First try to get assignments by Firebase userId
+      let assignments = await storage.getAssignmentsByStudentUserId(userId);
+      
+      // If no assignments found by userId, try by studentId (registration ID)
+      if (assignments.length === 0) {
+        const user = await storage.getUser(userId);
+        if (user?.studentRegistrationId) {
+          assignments = await storage.getAssignmentsByStudent(user.studentRegistrationId);
+          
+          // Update these assignments to have the correct studentUserId for future queries
+          // Use Promise.allSettled to continue even if some updates fail
+          await Promise.allSettled(assignments.map(async (assignment) => {
+            if (!assignment.studentUserId) {
+              try {
+                await storage.updateAssignment(assignment.id, { studentUserId: userId });
+              } catch (e) {
+                console.warn(`Failed to update assignment ${assignment.id} with studentUserId:`, e);
+              }
+            }
+          }));
+        }
+      }
       
       // Enrich with mentor details and cohort info
-      const enrichedAssignments = await Promise.all(assignments.map(async (assignment) => {
+      // Use Promise.allSettled to continue even if some enrichments fail
+      const enrichmentResults = await Promise.allSettled(assignments.map(async (assignment) => {
         const mentor = await storage.getMentorRegistration(assignment.mentorId);
-        const cohort = await storage.getCohort(assignment.cohortId);
+        const cohort = assignment.cohortId ? await storage.getCohort(assignment.cohortId) : null;
         const sessions = await storage.getSessionsByAssignment(assignment.id);
         return {
           ...assignment,
@@ -569,6 +619,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sessions
         };
       }));
+      
+      const enrichedAssignments = enrichmentResults
+        .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled')
+        .map(result => result.value);
       
       res.json(enrichedAssignments);
     } catch (error) {

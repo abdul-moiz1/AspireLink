@@ -75,6 +75,7 @@ export interface IStorage {
   getAssignmentsByStudent(studentId: number): Promise<MentorStudentAssignment[]>;
   getAssignmentsByMentorUserId(userId: string): Promise<MentorStudentAssignment[]>;
   getAssignmentsByStudentUserId(userId: string): Promise<MentorStudentAssignment[]>;
+  updateAssignment(id: number, updates: Partial<MentorStudentAssignment>): Promise<MentorStudentAssignment | null>;
   deleteAssignment(id: number): Promise<void>;
   
   // Session operations

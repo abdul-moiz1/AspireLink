@@ -347,6 +347,17 @@ export class FirestoreStorage implements IStorage {
     return snapshot.docs.map(doc => doc.data()) as MentorStudentAssignment[];
   }
 
+  async updateAssignment(id: number, updates: Partial<MentorStudentAssignment>): Promise<MentorStudentAssignment | null> {
+    const docRef = this.getDb().collection('assignments').doc(id.toString());
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      return null;
+    }
+    await docRef.update(updates);
+    const updatedDoc = await docRef.get();
+    return updatedDoc.data() as MentorStudentAssignment;
+  }
+
   async deleteAssignment(id: number): Promise<void> {
     await this.getDb().collection('assignments').doc(id.toString()).delete();
   }
