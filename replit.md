@@ -25,6 +25,11 @@ Preferred communication style: Simple, everyday language.
 - **Storage**: FirestoreStorage implementation with auto-increment counters for numeric IDs.
 - **Authentication**: Firebase Authentication for user management, Admin login with hardcoded credentials for program management.
 - **Session Management**: Memory-based session store (sessions expire on server restart).
+- **Role Selection Flow**: 
+    - Users with existing student/mentor registrations who sign up get auto-assigned roles based on their registration type.
+    - Users who sign up directly without pre-registration are redirected to `/complete-profile` to choose their role (Student or Mentor).
+    - After role selection, users are directed to the appropriate registration form to complete their profile.
+    - A global RoleGuard ensures users without roles cannot access protected areas of the app until they complete their profile.
 
 ### Feature Specifications
 - **Mentorship Program**: Structured 4-month program, 100% free, 1:1 matching, 24/7 support.
