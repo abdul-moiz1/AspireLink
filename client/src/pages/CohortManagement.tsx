@@ -54,13 +54,26 @@ export default function CohortManagement() {
   });
 
   useEffect(() => {
-    if (!authLoading && (!isAuthenticated || (user as any)?.role !== 'admin')) {
-      const token = localStorage.getItem("adminToken");
-      if (!token) {
-        setLocation("/admin/login");
-      }
+    if (!authLoading && !isAuthenticated) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to access cohort management.",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+    } else if (!authLoading && isAuthenticated && (user as any)?.role !== 'admin') {
+      toast({
+        title: "Access Denied",
+        description: "This page is only for administrators.",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 500);
     }
-  }, [authLoading, isAuthenticated, user, setLocation]);
+  }, [authLoading, isAuthenticated, user, toast]);
 
   const { data: cohorts, isLoading: cohortsLoading } = useQuery({
     queryKey: ["/api/cohorts"],

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, isAdmin, isMentor } from "./replitAuth";
+import { setupAuth, isAuthenticated, isAdmin, isMentor, isStudent } from "./replitAuth";
 import { insertContactSchema, insertMentorRegistrationSchema, insertStudentRegistrationSchema, studentRegistrations, mentorRegistrations } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -133,8 +133,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all cohorts
-  app.get("/api/cohorts", async (req, res) => {
+  // Get all cohorts (admin only)
+  app.get("/api/cohorts", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const cohortList = await storage.getAllCohorts();
       res.json(cohortList);
@@ -144,8 +144,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get single cohort
-  app.get("/api/cohorts/:id", async (req, res) => {
+  // Get single cohort (admin only)
+  app.get("/api/cohorts/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const cohort = await storage.getCohort(parseInt(req.params.id));
       if (!cohort) {
@@ -180,8 +180,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get cohort members
-  app.get("/api/cohorts/:id/members", async (req, res) => {
+  // Get cohort members (admin only)
+  app.get("/api/cohorts/:id/members", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const members = await storage.getCohortMembers(parseInt(req.params.id));
       
@@ -236,8 +236,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get cohort assignments
-  app.get("/api/cohorts/:id/assignments", async (req, res) => {
+  // Get cohort assignments (admin only)
+  app.get("/api/cohorts/:id/assignments", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const assignments = await storage.getAssignmentsByCohort(parseInt(req.params.id));
       
@@ -291,7 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============ SESSION ROUTES ============
   
   // Create session (mentor only)
-  app.post("/api/sessions", isAuthenticated, async (req: any, res) => {
+  app.post("/api/sessions", isAuthenticated, isMentor, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const session = await storage.createSession({
@@ -341,7 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============ MENTOR DASHBOARD ROUTES ============
   
   // Get mentor's assignments
-  app.get("/api/mentor/assignments", isAuthenticated, async (req: any, res) => {
+  app.get("/api/mentor/assignments", isAuthenticated, isMentor, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const assignments = await storage.getAssignmentsByMentorUserId(userId);
@@ -367,7 +367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get mentor's cohorts
-  app.get("/api/mentor/cohorts", isAuthenticated, async (req: any, res) => {
+  app.get("/api/mentor/cohorts", isAuthenticated, isMentor, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const cohortList = await storage.getUserCohorts(userId);
@@ -381,7 +381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============ STUDENT DASHBOARD ROUTES ============
   
   // Get student's assignments
-  app.get("/api/student/assignments", isAuthenticated, async (req: any, res) => {
+  app.get("/api/student/assignments", isAuthenticated, isStudent, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const assignments = await storage.getAssignmentsByStudentUserId(userId);
@@ -407,7 +407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get student's cohorts
-  app.get("/api/student/cohorts", isAuthenticated, async (req: any, res) => {
+  app.get("/api/student/cohorts", isAuthenticated, isStudent, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const cohortList = await storage.getUserCohorts(userId);

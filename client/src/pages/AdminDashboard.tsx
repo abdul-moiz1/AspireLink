@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { 
   Users, 
   GraduationCap, 
@@ -20,7 +20,8 @@ import {
   UserCheck, 
   UserX,
   Plus,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Calendar
 } from "lucide-react";
 
 interface DashboardStats {
@@ -290,10 +291,18 @@ export default function AdminDashboard() {
             <div className="flex items-center space-x-4">
               <h1 className="text-2xl font-bold text-charcoal-custom">AspireLink Admin</h1>
             </div>
-            <Button onClick={handleLogout} variant="outline" className="flex items-center space-x-2">
-              <LogOut className="w-4 h-4" />
-              <span>Logout</span>
-            </Button>
+            <div className="flex items-center space-x-3">
+              <Link href="/admin/cohorts">
+                <Button variant="outline" className="flex items-center space-x-2">
+                  <Calendar className="w-4 h-4" />
+                  <span>Manage Cohorts</span>
+                </Button>
+              </Link>
+              <Button onClick={handleLogout} variant="outline" className="flex items-center space-x-2">
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

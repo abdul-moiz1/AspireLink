@@ -67,18 +67,24 @@ export class FirestoreStorage implements IStorage {
 
   // Contact operations
   async createContact(insertContact: InsertContact): Promise<Contact> {
-    const docRef = this.getDb().collection('contacts').doc();
+    const counterRef = this.getDb().collection('counters').doc('contacts');
+    const counterDoc = await counterRef.get();
+    const nextId = (counterDoc.exists ? counterDoc.data()?.count || 0 : 0) + 1;
+    await counterRef.set({ count: nextId });
+
+    const docRef = this.getDb().collection('contacts').doc(nextId.toString());
     const data = {
       ...insertContact,
+      id: nextId,
       createdAt: new Date(),
     };
     await docRef.set(data);
-    return { id: parseInt(docRef.id) || Date.now(), ...data } as Contact;
+    return data as Contact;
   }
 
   async getAllContacts(): Promise<Contact[]> {
     const snapshot = await this.getDb().collection('contacts').orderBy('createdAt', 'desc').get();
-    return snapshot.docs.map(doc => ({ id: parseInt(doc.id) || Date.now(), ...doc.data() })) as Contact[];
+    return snapshot.docs.map(doc => doc.data()) as Contact[];
   }
 
   // Mentor registration operations
@@ -176,17 +182,23 @@ export class FirestoreStorage implements IStorage {
     const snapshot = await this.getDb().collection('adminUsers').where('email', '==', email).limit(1).get();
     if (snapshot.empty) return undefined;
     const doc = snapshot.docs[0];
-    return { id: parseInt(doc.id) || Date.now(), ...doc.data() } as AdminUser;
+    return doc.data() as AdminUser;
   }
 
   async createAdmin(admin: InsertAdminUser): Promise<AdminUser> {
-    const docRef = this.getDb().collection('adminUsers').doc();
+    const counterRef = this.getDb().collection('counters').doc('adminUsers');
+    const counterDoc = await counterRef.get();
+    const nextId = (counterDoc.exists ? counterDoc.data()?.count || 0 : 0) + 1;
+    await counterRef.set({ count: nextId });
+
+    const docRef = this.getDb().collection('adminUsers').doc(nextId.toString());
     const data = {
       ...admin,
+      id: nextId,
       createdAt: new Date(),
     };
     await docRef.set(data);
-    return { id: parseInt(docRef.id) || Date.now(), ...data } as AdminUser;
+    return data as AdminUser;
   }
 
   // Cohort operations

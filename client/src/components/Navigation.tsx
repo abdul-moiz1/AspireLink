@@ -2,12 +2,15 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Menu, User, LogOut, LayoutDashboard } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import logoPath from "@assets/AspireLink-Favicon_1751236188567.png";
 
 export default function Navigation() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   const navItems = [
     { href: "/", label: "Home" },
@@ -20,6 +23,14 @@ export default function Navigation() {
 
   const isActive = (href: string) => {
     return location === href || (href !== "/" && location.startsWith(href));
+  };
+
+  const getDashboardLink = () => {
+    const userRole = (user as any)?.role;
+    if (userRole === 'admin') return '/admin/dashboard';
+    if (userRole === 'mentor') return '/dashboard/mentor';
+    if (userRole === 'student') return '/dashboard/student';
+    return '/dashboard/student';
   };
 
   return (
@@ -57,7 +68,52 @@ export default function Navigation() {
             </div>
           </div>
 
-
+          {/* Auth Buttons - Desktop */}
+          <div className="hidden md:flex items-center space-x-4">
+            {isLoading ? (
+              <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
+            ) : isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    {(user as any)?.profileImageUrl ? (
+                      <img 
+                        src={(user as any).profileImageUrl} 
+                        alt="Profile" 
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-primary-custom flex items-center justify-center text-white">
+                        <User className="w-4 h-4" />
+                      </div>
+                    )}
+                    <span className="text-sm font-medium">
+                      {(user as any)?.firstName || 'Account'}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link href={getDashboardLink()} className="flex items-center cursor-pointer">
+                      <LayoutDashboard className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <a href="/api/logout" className="flex items-center cursor-pointer text-red-600">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Log out
+                    </a>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button asChild className="bg-primary-custom hover:bg-primary-dark">
+                <a href="/api/login">Log in</a>
+              </Button>
+            )}
+          </div>
 
           {/* Mobile menu button */}
           <div className="md:hidden">
@@ -83,7 +139,40 @@ export default function Navigation() {
                       {item.label}
                     </Link>
                   ))}
-
+                  
+                  {/* Mobile Auth */}
+                  <div className="border-t pt-4 mt-4">
+                    {isLoading ? (
+                      <div className="px-3 py-2">
+                        <div className="w-full h-10 bg-gray-200 rounded animate-pulse"></div>
+                      </div>
+                    ) : isAuthenticated ? (
+                      <>
+                        <Link
+                          href={getDashboardLink()}
+                          onClick={() => setIsOpen(false)}
+                          className="block px-3 py-2 text-base font-medium text-charcoal-custom hover:text-primary-custom"
+                        >
+                          <LayoutDashboard className="w-4 h-4 inline mr-2" />
+                          Dashboard
+                        </Link>
+                        <a
+                          href="/api/logout"
+                          className="block px-3 py-2 text-base font-medium text-red-600 hover:text-red-700"
+                        >
+                          <LogOut className="w-4 h-4 inline mr-2" />
+                          Log out
+                        </a>
+                      </>
+                    ) : (
+                      <a
+                        href="/api/login"
+                        className="block px-3 py-2 text-base font-medium text-primary-custom hover:text-primary-dark"
+                      >
+                        Log in
+                      </a>
+                    )}
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>

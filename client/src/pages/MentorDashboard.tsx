@@ -36,8 +36,17 @@ export default function MentorDashboard() {
       setTimeout(() => {
         window.location.href = "/api/login";
       }, 500);
+    } else if (!authLoading && isAuthenticated && (user as any)?.role !== 'mentor') {
+      toast({
+        title: "Access Denied",
+        description: "This dashboard is only for mentors.",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 500);
     }
-  }, [authLoading, isAuthenticated, toast]);
+  }, [authLoading, isAuthenticated, user, toast]);
 
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({
     queryKey: ["/api/mentor/assignments"],
