@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, UserCheck } from "lucide-react";
 import logoPath from "@assets/AspireLink-Favicon_1751236188567.png";
 
 const signUpSchema = z.object({
@@ -23,12 +24,19 @@ const signUpSchema = z.object({
 
 type SignUpFormValues = z.infer<typeof signUpSchema>;
 
+interface RegistrationCheck {
+  exists: boolean;
+  type?: 'student' | 'mentor';
+  message?: string;
+}
+
 export default function SignUp() {
   const [, setLocation] = useLocation();
   const { register } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [registrationInfo, setRegistrationInfo] = useState<RegistrationCheck | null>(null);
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
@@ -40,9 +48,31 @@ export default function SignUp() {
     },
   });
 
+  const checkEmailRegistration = async (email: string) => {
+    try {
+      const response = await fetch('/api/check-email-registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json();
+      setRegistrationInfo(data);
+      return data;
+    } catch (error) {
+      console.error('Error checking email registration:', error);
+      return null;
+    }
+  };
+
   const onSubmit = async (data: SignUpFormValues) => {
     setIsSubmitting(true);
     try {
+      const registrationCheck = await checkEmailRegistration(data.email);
+      if (registrationCheck?.exists) {
+        setIsSubmitting(false);
+        return;
+      }
+      
       await register(data.email, data.password, data.displayName);
       setLocation("/");
     } catch (error) {
@@ -62,6 +92,20 @@ export default function SignUp() {
           <CardDescription>Join AspireLink and start your mentorship journey</CardDescription>
         </CardHeader>
         <CardContent>
+          {registrationInfo?.exists && (
+            <Alert className="mb-4 border-blue-200 bg-blue-50">
+              <UserCheck className="h-4 w-4 text-blue-600" />
+              <AlertTitle className="text-blue-800">
+                {registrationInfo.type === 'student' ? 'Student Registration Found' : 'Mentor Registration Found'}
+              </AlertTitle>
+              <AlertDescription className="text-blue-700">
+                {registrationInfo.message}
+                <Link href="/signin" className="block mt-2 text-primary-custom hover:underline font-medium">
+                  Click here to sign in
+                </Link>
+              </AlertDescription>
+            </Alert>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField

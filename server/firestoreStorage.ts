@@ -167,6 +167,18 @@ export class FirestoreStorage implements IStorage {
     return snapshot.docs[0].data() as StudentRegistration;
   }
 
+  async getStudentByEmail(email: string): Promise<StudentRegistration | undefined> {
+    const snapshot = await this.getDb().collection('studentRegistrations').where('emailAddress', '==', email).limit(1).get();
+    if (snapshot.empty) return undefined;
+    return snapshot.docs[0].data() as StudentRegistration;
+  }
+
+  async getMentorByEmail(email: string): Promise<MentorRegistration | undefined> {
+    const snapshot = await this.getDb().collection('mentorRegistrations').where('emailAddress', '==', email).limit(1).get();
+    if (snapshot.empty) return undefined;
+    return snapshot.docs[0].data() as MentorRegistration;
+  }
+
   async updateStudentRegistration(id: number, updates: Partial<StudentRegistration>): Promise<StudentRegistration> {
     await this.getDb().collection('studentRegistrations').doc(id.toString()).update(updates);
     const student = await this.getStudentRegistration(id);

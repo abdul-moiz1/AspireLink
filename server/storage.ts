@@ -54,8 +54,12 @@ export interface IStorage {
   getAllStudentRegistrations(): Promise<StudentRegistration[]>;
   getStudentRegistration(id: number): Promise<StudentRegistration | undefined>;
   getStudentByUserId(userId: string): Promise<StudentRegistration | undefined>;
+  getStudentByEmail(email: string): Promise<StudentRegistration | undefined>;
   updateStudentRegistration(id: number, updates: Partial<StudentRegistration>): Promise<StudentRegistration>;
   deleteStudentRegistration(id: number): Promise<void>;
+  
+  // Mentor registration email lookup
+  getMentorByEmail(email: string): Promise<MentorRegistration | undefined>;
   
   // Admin operations
   getAdminByEmail(email: string): Promise<AdminUser | undefined>;
@@ -208,6 +212,16 @@ export class DatabaseStorage implements IStorage {
   async getStudentByUserId(userId: string): Promise<StudentRegistration | undefined> {
     const [student] = await db.select().from(studentRegistrations).where(eq(studentRegistrations.userId, userId));
     return student || undefined;
+  }
+
+  async getStudentByEmail(email: string): Promise<StudentRegistration | undefined> {
+    const [student] = await db.select().from(studentRegistrations).where(eq(studentRegistrations.emailAddress, email));
+    return student || undefined;
+  }
+
+  async getMentorByEmail(email: string): Promise<MentorRegistration | undefined> {
+    const [mentor] = await db.select().from(mentorRegistrations).where(eq(mentorRegistrations.emailAddress, email));
+    return mentor || undefined;
   }
 
   async updateStudentRegistration(id: number, updates: Partial<StudentRegistration>): Promise<StudentRegistration> {

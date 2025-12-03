@@ -55,6 +55,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if email is already registered as student or mentor
+  app.post("/api/check-email-registration", async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+
+      const studentRegistration = await storage.getStudentByEmail(email);
+      const mentorRegistration = await storage.getMentorByEmail(email);
+
+      if (studentRegistration) {
+        return res.json({ 
+          exists: true, 
+          type: 'student',
+          message: "This email is already registered as a student. Please sign in to access your student dashboard."
+        });
+      }
+
+      if (mentorRegistration) {
+        return res.json({ 
+          exists: true, 
+          type: 'mentor',
+          message: "This email is already registered as a mentor. Please sign in to access your mentor dashboard."
+        });
+      }
+
+      return res.json({ exists: false });
+    } catch (error) {
+      console.error("Error checking email registration:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Contact form submission endpoint
   app.post("/api/contact", async (req, res) => {
     try {

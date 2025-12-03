@@ -44,6 +44,7 @@ const availabilityOptions = [
 
 interface LinkedInData {
   fullName: string;
+  emailAddress: string;
   currentJobTitle: string;
   company: string;
   yearsExperience: number;
@@ -57,6 +58,7 @@ interface LinkedInData {
 
 const getEmptyLinkedInData = (): LinkedInData => ({
   fullName: "",
+  emailAddress: "",
   currentJobTitle: "",
   company: "",
   yearsExperience: 0,
@@ -172,6 +174,25 @@ export default function RegisterMentor() {
       return;
     }
 
+    if (!linkedinData.emailAddress?.trim()) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address to complete registration.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(linkedinData.emailAddress)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!linkedinData.currentJobTitle?.trim()) {
       toast({
         title: "Job Title Required",
@@ -229,6 +250,7 @@ export default function RegisterMentor() {
     const registrationData = {
       linkedinUrl: linkedinUrl || null,
       fullName: linkedinData.fullName,
+      emailAddress: linkedinData.emailAddress || null,
       currentJobTitle: linkedinData.currentJobTitle || null,
       company: linkedinData.company || null,
       yearsExperience: linkedinData.yearsExperience || null,
@@ -330,6 +352,17 @@ export default function RegisterMentor() {
                     value={linkedinData?.fullName || ""}
                     onChange={(e) => setLinkedinData(prev => prev ? {...prev, fullName: e.target.value} : {...getEmptyLinkedInData(), fullName: e.target.value})}
                     placeholder="Your full name"
+                    className="mt-2"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="emailAddress">Email Address *</Label>
+                  <Input
+                    id="emailAddress"
+                    type="email"
+                    value={linkedinData?.emailAddress || ""}
+                    onChange={(e) => setLinkedinData(prev => prev ? {...prev, emailAddress: e.target.value} : {...getEmptyLinkedInData(), emailAddress: e.target.value})}
+                    placeholder="you@example.com"
                     className="mt-2"
                   />
                 </div>
