@@ -286,9 +286,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.uid;
       const userEmail = req.user.email;
+      const { registrationId, registrationType, email } = req.body || {};
       
-      // Check for student registration
-      const studentReg = await storage.getStudentRegistrationByEmail(userEmail);
+      // Use the email from request body if provided, otherwise fall back to token email
+      const lookupEmail = email || userEmail;
+      
+      // Check for student registration (use registrationId if provided for exact match)
+      let studentReg = null;
+      if (registrationType === 'student' && registrationId) {
+        studentReg = await storage.getStudentRegistration(registrationId);
+        // Verify the registration belongs to this email
+        if (studentReg && studentReg.email !== lookupEmail) {
+          studentReg = null; // Don't use if email doesn't match
+        }
+      }
+      // Fall back to email lookup if no exact match
+      if (!studentReg) {
+        studentReg = await storage.getStudentRegistrationByEmail(lookupEmail);
+      }
+      
       if (studentReg && studentReg.status === 'pending') {
         // Create/update user with student data
         const user = await storage.upsertUser({
@@ -324,8 +340,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Check for mentor registration
-      const mentorReg = await storage.getMentorRegistrationByEmail(userEmail);
+      // Check for mentor registration (use registrationId if provided for exact match)
+      let mentorReg = null;
+      if (registrationType === 'mentor' && registrationId) {
+        mentorReg = await storage.getMentorRegistration(registrationId);
+        // Verify the registration belongs to this email
+        if (mentorReg && mentorReg.email !== lookupEmail) {
+          mentorReg = null; // Don't use if email doesn't match
+        }
+      }
+      // Fall back to email lookup if no exact match
+      if (!mentorReg) {
+        mentorReg = await storage.getMentorRegistrationByEmail(lookupEmail);
+      }
+      
       if (mentorReg && mentorReg.status === 'pending') {
         // Create/update user with mentor data
         const user = await storage.upsertUser({

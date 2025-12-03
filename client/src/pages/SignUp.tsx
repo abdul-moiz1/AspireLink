@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, Eye, EyeOff, UserCheck, GraduationCap, Users } from "lucide-react";
 import logoPath from "@assets/AspireLink-Favicon_1751236188567.png";
@@ -36,6 +37,7 @@ interface RegistrationCheck {
 export default function SignUp() {
   const [, setLocation] = useLocation();
   const { register } = useAuth();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -137,11 +139,20 @@ export default function SignUp() {
           }
         } catch (linkError) {
           console.error('Error linking registration:', linkError);
-          // Continue to complete-profile as fallback
+          // Show user feedback about the failure
+          toast({
+            title: "Account Created",
+            description: "We found your application but couldn't link it automatically. Please complete your profile setup.",
+            variant: "default",
+          });
         }
       }
       
       // No existing registration found or linking failed - redirect to complete profile
+      toast({
+        title: "Account Created Successfully",
+        description: "Complete your profile to get started.",
+      });
       setTimeout(() => {
         setLocation("/complete-profile?new=true");
       }, 500);
