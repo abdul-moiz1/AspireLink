@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, Eye, EyeOff, UserCheck } from "lucide-react";
+import { Loader2, Eye, EyeOff, UserCheck, GraduationCap, Users } from "lucide-react";
 import logoPath from "@assets/AspireLink-Favicon_1751236188567.png";
 
 const signUpSchema = z.object({
@@ -37,6 +37,11 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registrationInfo, setRegistrationInfo] = useState<RegistrationCheck | null>(null);
+  
+  // Check for URL params indicating pre-registration
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const preRegisteredRole = urlParams?.get('role') as 'student' | 'mentor' | null;
+  const isPreRegistered = urlParams?.get('registered') === 'true';
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
@@ -77,11 +82,11 @@ export default function SignUp() {
       // The backend will automatically assign the proper role based on existing form data
       await register(data.email, data.password, data.displayName);
       
-      // If they had an existing registration, they'll get auto-assigned a role
-      // If not, redirect to complete-profile to choose their role
-      if (registrationCheck?.exists) {
-        // They have a role assigned, go to home (they'll be redirected to their dashboard)
-        setLocation("/");
+      // If they had an existing registration (either from URL params or email check), redirect to login
+      if (registrationCheck?.exists || isPreRegistered) {
+        // They have a role assigned - redirect to login with success message
+        const role = registrationCheck?.type || preRegisteredRole || 'user';
+        setLocation(`/signin?welcome=true&role=${role}`);
       } else {
         // No existing registration - need to choose role
         setLocation("/complete-profile");
@@ -103,7 +108,22 @@ export default function SignUp() {
           <CardDescription>Join AspireLink and start your mentorship journey</CardDescription>
         </CardHeader>
         <CardContent>
-          {registrationInfo?.exists && (
+          {isPreRegistered && preRegisteredRole && (
+            <Alert className="mb-4 border-green-200 bg-green-50">
+              {preRegisteredRole === 'student' ? (
+                <GraduationCap className="h-4 w-4 text-green-600" />
+              ) : (
+                <Users className="h-4 w-4 text-green-600" />
+              )}
+              <AlertTitle className="text-green-800">
+                Welcome, {preRegisteredRole === 'student' ? 'Future Student' : 'Future Mentor'}!
+              </AlertTitle>
+              <AlertDescription className="text-green-700">
+                Your {preRegisteredRole} application has been received! Create your account below to access your dashboard and track your application status.
+              </AlertDescription>
+            </Alert>
+          )}
+          {registrationInfo?.exists && !isPreRegistered && (
             <Alert className="mb-4 border-green-200 bg-green-50">
               <UserCheck className="h-4 w-4 text-green-600" />
               <AlertTitle className="text-green-800">

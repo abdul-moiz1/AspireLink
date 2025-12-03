@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, CheckCircle, GraduationCap, Users } from "lucide-react";
 import logoPath from "@assets/AspireLink-Favicon_1751236188567.png";
 
 const signInSchema = z.object({
@@ -23,6 +24,11 @@ export default function SignIn() {
   const { login } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Check for URL params indicating new account was created
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const isWelcome = urlParams?.get('welcome') === 'true';
+  const welcomeRole = urlParams?.get('role') as 'student' | 'mentor' | null;
 
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
@@ -45,8 +51,18 @@ export default function SignIn() {
       const checkData = await checkResponse.json();
       
       if (checkData.exists) {
-        // User has a registration, they'll be auto-assigned a role
-        setLocation("/");
+        // User has a registration - redirect to their specific dashboard
+        const role = checkData.type;
+        if (role === 'student') {
+          setLocation("/dashboard/student");
+        } else if (role === 'mentor') {
+          setLocation("/dashboard/mentor");
+        } else if (role === 'admin') {
+          setLocation("/admin/dashboard");
+        } else {
+          // Fallback to home if role is unclear
+          setLocation("/");
+        }
       } else {
         // No registration found, redirect to complete profile
         setLocation("/complete-profile");
@@ -68,6 +84,23 @@ export default function SignIn() {
           <CardDescription>Sign in to your AspireLink account</CardDescription>
         </CardHeader>
         <CardContent>
+          {isWelcome && (
+            <Alert className="mb-4 border-green-200 bg-green-50">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertTitle className="text-green-800">
+                Account Created Successfully!
+              </AlertTitle>
+              <AlertDescription className="text-green-700">
+                {welcomeRole === 'student' ? (
+                  <>Your student account is ready! Sign in with your credentials to access your dashboard.</>
+                ) : welcomeRole === 'mentor' ? (
+                  <>Your mentor account is ready! Sign in with your credentials to access your dashboard.</>
+                ) : (
+                  <>Your account is ready! Sign in with your credentials to get started.</>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
