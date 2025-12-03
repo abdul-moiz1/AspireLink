@@ -28,6 +28,17 @@ export async function setupAuth(app: Express) {
   app.use(getSession());
 }
 
+function decodeJwtPayload(token: string): any {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = Buffer.from(parts[1], 'base64').toString('utf8');
+    return JSON.parse(payload);
+  } catch {
+    return null;
+  }
+}
+
 async function verifyFirebaseToken(authHeader: string | undefined) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null;
@@ -39,11 +50,27 @@ async function verifyFirebaseToken(authHeader: string | undefined) {
   }
 
   try {
-    if (!isFirebaseEnabled()) {
-      throw new Error('Firebase not enabled');
+    if (isFirebaseEnabled()) {
+      const decodedToken = await admin.auth().verifyIdToken(token);
+      return decodedToken;
+    } else {
+      const payload = decodeJwtPayload(token);
+      if (!payload || !payload.user_id) {
+        return null;
+      }
+      
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp < now) {
+        return null;
+      }
+      
+      return {
+        uid: payload.user_id || payload.sub,
+        email: payload.email,
+        name: payload.name,
+        email_verified: payload.email_verified,
+      };
     }
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    return decodedToken;
   } catch (error) {
     console.error('Error verifying Firebase token:', error);
     return null;
