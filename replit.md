@@ -28,11 +28,20 @@ Preferred communication style: Simple, everyday language.
 - **Storage**: FirestoreStorage implementation with auto-increment counters for numeric IDs.
 - **Authentication**: Firebase Authentication for user management, Admin login with hardcoded credentials for program management.
 - **Session Management**: Memory-based session store (sessions expire on server restart).
-- **Role Selection Flow**: 
-    - Users with existing student/mentor registrations who sign up get auto-assigned roles based on their registration type.
-    - Users who sign up directly without pre-registration are redirected to `/complete-profile` to choose their role (Student or Mentor).
-    - After role selection, users are directed to the appropriate registration form to complete their profile.
-    - A global RoleGuard ensures users without roles cannot access protected areas of the app until they complete their profile.
+- **Registration-First Flow**: 
+    - Users fill out student or mentor registration forms WITHOUT needing to create an account first.
+    - Registration data is stored in separate Firestore collections: `studentRegistration` and `mentorRegistration`.
+    - After form submission, users are prompted to create an account to access their dashboard.
+    - On signup, the system checks for existing registrations matching the user's email.
+    - If a matching registration is found, it's automatically linked to the new account and the user is assigned the appropriate role.
+    - Users who sign up without a prior registration are redirected to `/complete-profile` to choose their role and fill out the appropriate form.
+    - A global RoleGuard ensures users without roles cannot access protected areas of the app.
+    
+### Firestore Collections
+- **users**: Stores user accounts with linked profile data and roles (student/mentor/admin).
+- **studentRegistration**: Pending student applications with status tracking (pending/linked).
+- **mentorRegistration**: Pending mentor applications with status tracking (pending/linked).
+- **cohort**: Mentorship cohort data and assignments.
 
 ### Feature Specifications
 - **Mentorship Program**: Structured 4-month program, 100% free, 1:1 matching, 24/7 support.

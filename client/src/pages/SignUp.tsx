@@ -26,7 +26,10 @@ type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 interface RegistrationCheck {
   exists: boolean;
+  hasAccount?: boolean;
   type?: 'student' | 'mentor';
+  registrationId?: string;
+  fullName?: string;
   message?: string;
 }
 
@@ -76,26 +79,74 @@ export default function SignUp() {
       const registrationCheck = await checkEmailRegistration(data.email);
       if (registrationCheck?.exists) {
         setRegistrationInfo(registrationCheck);
+        
+        // If they already have an account, redirect to login
+        if (registrationCheck.hasAccount) {
+          setLocation('/signin?message=account_exists');
+          return;
+        }
       }
       
-      // Always proceed with signup - this creates the Firebase account
-      // The backend will automatically assign the proper role based on existing form data
+      // Create Firebase account
       await register(data.email, data.password, data.displayName);
       
-      // If they had an existing registration (either from URL params or email check), redirect to login
-      if (registrationCheck?.exists || isPreRegistered) {
-        // They have a role assigned - redirect to login with success message
-        const role = registrationCheck?.type || preRegisteredRole || 'user';
-        setLocation(`/signin?welcome=true&role=${role}`);
-      } else {
-        // No existing registration - need to choose role
-        // Add a small delay to allow auth state to update before redirect
-        // This prevents the complete-profile page from seeing null user
-        setTimeout(() => {
-          setLocation("/complete-profile?new=true");
-        }, 500);
+      // Wait for auth state to stabilize
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Try to link registration if one exists
+      const shouldTryLink = (registrationCheck?.exists && !registrationCheck.hasAccount) || 
+                            (isPreRegistered && preRegisteredRole);
+      
+      if (shouldTryLink) {
+        try {
+          // Get the token from Firebase with retries
+          const { getIdToken } = await import('@/lib/firebase');
+          let token = null;
+          let retries = 3;
+          
+          while (!token && retries > 0) {
+            token = await getIdToken();
+            if (!token) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+              retries--;
+            }
+          }
+          
+          if (token) {
+            const linkResponse = await fetch('/api/auth/link-registration', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                email: data.email,
+                registrationId: registrationCheck?.registrationId || null,
+                registrationType: registrationCheck?.type || preRegisteredRole || null
+              })
+            });
+            
+            const linkResult = await linkResponse.json();
+            
+            if (linkResult.success && linkResult.role) {
+              // Successfully linked - redirect to role-specific dashboard
+              const dashboard = linkResult.role === 'student' ? '/dashboard/student' : '/dashboard/mentor';
+              setLocation(dashboard);
+              return;
+            }
+          }
+        } catch (linkError) {
+          console.error('Error linking registration:', linkError);
+          // Continue to complete-profile as fallback
+        }
       }
+      
+      // No existing registration found or linking failed - redirect to complete profile
+      setTimeout(() => {
+        setLocation("/complete-profile?new=true");
+      }, 500);
     } catch (error) {
+      console.error('Signup error:', error);
     } finally {
       setIsSubmitting(false);
     }

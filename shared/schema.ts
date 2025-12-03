@@ -1,5 +1,140 @@
 import { z } from "zod";
 
+// ============ REGISTRATION TYPES (No Auth Required) ============
+
+// Student Registration - submitted without signup
+export interface StudentRegistration {
+  id: string;
+  email: string;
+  fullName: string;
+  phoneNumber: string | null;
+  linkedinUrl: string | null;
+  universityName: string;
+  academicProgram: string | null;
+  yearOfStudy: string | null;
+  nominatedBy: string | null;
+  professorEmail: string | null;
+  careerInterests: string | null;
+  mentorshipGoals: string | null;
+  preferredDisciplines: string[] | null;
+  mentoringTopics: string[] | null;
+  agreedToCommitment: boolean;
+  consentToContact: boolean;
+  status: 'pending' | 'linked';
+  linkedUserId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Mentor Registration - submitted without signup
+export interface MentorRegistration {
+  id: string;
+  email: string;
+  fullName: string;
+  phoneNumber: string | null;
+  linkedinUrl: string | null;
+  currentJobTitle: string;
+  company: string;
+  yearsExperience: number | null;
+  education: string | null;
+  skills: string[] | null;
+  location: string | null;
+  timeZone: string | null;
+  profileSummary: string | null;
+  availability: string[] | null;
+  motivation: string | null;
+  preferredDisciplines: string[] | null;
+  mentoringTopics: string[] | null;
+  agreedToCommitment: boolean;
+  consentToContact: boolean;
+  status: 'pending' | 'linked';
+  linkedUserId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Insert types for registrations
+export interface InsertStudentRegistration {
+  email: string;
+  fullName: string;
+  phoneNumber?: string | null;
+  linkedinUrl?: string | null;
+  universityName: string;
+  academicProgram?: string | null;
+  yearOfStudy?: string | null;
+  nominatedBy?: string | null;
+  professorEmail?: string | null;
+  careerInterests?: string | null;
+  mentorshipGoals?: string | null;
+  preferredDisciplines?: string[] | null;
+  mentoringTopics?: string[] | null;
+  agreedToCommitment: boolean;
+  consentToContact: boolean;
+}
+
+export interface InsertMentorRegistration {
+  email: string;
+  fullName: string;
+  phoneNumber?: string | null;
+  linkedinUrl?: string | null;
+  currentJobTitle: string;
+  company: string;
+  yearsExperience?: number | null;
+  education?: string | null;
+  skills?: string[] | null;
+  location?: string | null;
+  timeZone?: string | null;
+  profileSummary?: string | null;
+  availability?: string[] | null;
+  motivation?: string | null;
+  preferredDisciplines?: string[] | null;
+  mentoringTopics?: string[] | null;
+  agreedToCommitment: boolean;
+  consentToContact: boolean;
+}
+
+// Zod schemas for registration validation
+export const insertStudentRegistrationSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  fullName: z.string().min(1, "Full name is required"),
+  phoneNumber: z.string().nullable().optional(),
+  linkedinUrl: z.string().url().nullable().optional().or(z.literal('')),
+  universityName: z.string().min(1, "University name is required"),
+  academicProgram: z.string().nullable().optional(),
+  yearOfStudy: z.string().nullable().optional(),
+  nominatedBy: z.string().nullable().optional(),
+  professorEmail: z.string().email().nullable().optional().or(z.literal('')),
+  careerInterests: z.string().nullable().optional(),
+  mentorshipGoals: z.string().nullable().optional(),
+  preferredDisciplines: z.array(z.string()).nullable().optional(),
+  mentoringTopics: z.array(z.string()).nullable().optional(),
+  agreedToCommitment: z.boolean().refine(val => val === true, "You must agree to the commitment"),
+  consentToContact: z.boolean().refine(val => val === true, "You must consent to contact"),
+});
+
+export const insertMentorRegistrationSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  fullName: z.string().min(1, "Full name is required"),
+  phoneNumber: z.string().nullable().optional(),
+  linkedinUrl: z.string().url().nullable().optional().or(z.literal('')),
+  currentJobTitle: z.string().min(1, "Job title is required"),
+  company: z.string().min(1, "Company is required"),
+  yearsExperience: z.number().nullable().optional(),
+  education: z.string().nullable().optional(),
+  skills: z.array(z.string()).nullable().optional(),
+  location: z.string().nullable().optional(),
+  timeZone: z.string().nullable().optional(),
+  profileSummary: z.string().nullable().optional(),
+  availability: z.array(z.string()).nullable().optional(),
+  motivation: z.string().nullable().optional(),
+  preferredDisciplines: z.array(z.string()).nullable().optional(),
+  mentoringTopics: z.array(z.string()).nullable().optional(),
+  agreedToCommitment: z.boolean().refine(val => val === true, "You must agree to the commitment"),
+  consentToContact: z.boolean().refine(val => val === true, "You must consent to contact"),
+});
+
+// ============ USER TYPES (After Signup with Auth) ============
+
 // Unified User type - handles admin, mentor, and student roles
 export interface User {
   id: string;

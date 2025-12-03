@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, isMentor, isStudent } from "./firebaseAuth";
-import { insertContactSchema, insertMentorSchema, insertStudentSchema, insertCohortSchema, insertAssignmentSchema, insertMentoringSessionSchema } from "@shared/schema";
+import { insertContactSchema, insertCohortSchema, insertAssignmentSchema, insertMentoringSessionSchema, insertStudentRegistrationSchema, insertMentorRegistrationSchema } from "@shared/schema";
 import { z } from "zod";
 
 // Helper to normalize LinkedIn URLs - adds https:// if missing
@@ -59,7 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Check if email is already registered
+  // Check if email has existing registration or user account
   app.post("/api/check-email-registration", async (req, res) => {
     try {
       const { email } = req.body;
@@ -67,19 +67,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Email is required" });
       }
 
+      // First check if user already has an account
       const user = await storage.getUserByEmail(email);
-      
       if (user && user.role) {
         return res.json({ 
           exists: true, 
+          hasAccount: true,
           type: user.role,
           message: `This email is already registered as a ${user.role}. Please sign in to access your dashboard.`
         });
       }
 
-      return res.json({ exists: false });
+      // Check for pending student registration
+      const studentReg = await storage.getStudentRegistrationByEmail(email);
+      if (studentReg) {
+        return res.json({ 
+          exists: true, 
+          hasAccount: false,
+          type: 'student',
+          registrationId: studentReg.id,
+          fullName: studentReg.fullName,
+          message: `We found your student application! Complete your signup to access your dashboard.`
+        });
+      }
+
+      // Check for pending mentor registration
+      const mentorReg = await storage.getMentorRegistrationByEmail(email);
+      if (mentorReg) {
+        return res.json({ 
+          exists: true, 
+          hasAccount: false,
+          type: 'mentor',
+          registrationId: mentorReg.id,
+          fullName: mentorReg.fullName,
+          message: `We found your mentor application! Complete your signup to access your dashboard.`
+        });
+      }
+
+      return res.json({ exists: false, hasAccount: false });
     } catch (error) {
       console.error("Error checking email registration:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  
+  // Get registration status by email (for signup flow)
+  app.get("/api/registration-status", async (req, res) => {
+    try {
+      const email = req.query.email as string;
+      if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+
+      // Check for student registration
+      const studentReg = await storage.getStudentRegistrationByEmail(email);
+      if (studentReg && studentReg.status === 'pending') {
+        return res.json({ 
+          found: true, 
+          type: 'student',
+          registrationId: studentReg.id,
+          fullName: studentReg.fullName,
+          email: studentReg.email
+        });
+      }
+
+      // Check for mentor registration
+      const mentorReg = await storage.getMentorRegistrationByEmail(email);
+      if (mentorReg && mentorReg.status === 'pending') {
+        return res.json({ 
+          found: true, 
+          type: 'mentor',
+          registrationId: mentorReg.id,
+          fullName: mentorReg.fullName,
+          email: mentorReg.email
+        });
+      }
+
+      return res.json({ found: false });
+    } catch (error) {
+      console.error("Error checking registration status:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -112,7 +178,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============ USER REGISTRATION ROUTES ============
   
-  // Mentor registration (creates or updates user with mentor role)
+  // Mentor registration (saves to mentorRegistration collection - NO AUTH REQUIRED)
   app.post("/api/mentor-registration", async (req: any, res) => {
     try {
       // Map frontend field names to schema field names
@@ -121,36 +187,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Normalize LinkedIn URL (handles both field names and adds https:// if missing)
       const linkedinUrl = normalizeLinkedInUrl(rawLinkedinUrl || linkedin);
       
-      const registrationData = insertMentorSchema.parse({
-        ...rest,
-        linkedinUrl,
-        email: emailAddress || rest.email,
-        role: 'mentor'
-      });
+      const email = emailAddress || rest.email;
       
-      // Check if user already exists
-      let user = await storage.getUserByEmail(registrationData.email);
-      
-      if (user) {
-        if (user.role) {
-          return res.status(400).json({ 
-            error: `Email already registered as ${user.role}` 
-          });
-        }
-        // Update existing user with mentor data
-        user = await storage.updateUser(user.id, {
-          ...registrationData,
-          role: 'mentor'
-        });
-      } else {
-        // Create new user with mentor data
-        user = await storage.upsertUser({
-          ...registrationData,
-          role: 'mentor'
+      // Check if already has a user account
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser && existingUser.role) {
+        return res.status(400).json({ 
+          error: `Email already registered as ${existingUser.role}. Please sign in.` 
         });
       }
       
-      res.json({ success: true, id: user.id });
+      // Check if already has a pending registration
+      const existingReg = await storage.getMentorRegistrationByEmail(email);
+      if (existingReg) {
+        return res.status(400).json({ 
+          error: `You have already submitted a mentor application. Please sign up to complete your registration.` 
+        });
+      }
+      
+      const registrationData = insertMentorRegistrationSchema.parse({
+        ...rest,
+        linkedinUrl,
+        email
+      });
+      
+      // Save to mentorRegistration collection (NOT users)
+      const registration = await storage.createMentorRegistration(registrationData);
+      
+      res.json({ 
+        success: true, 
+        id: registration.id,
+        message: "Your mentor application has been submitted! Please sign up to complete your registration."
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ error: "Invalid registration data", details: error.errors });
@@ -161,7 +229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Student registration (creates or updates user with student role)
+  // Student registration (saves to studentRegistration collection - NO AUTH REQUIRED)
   app.post("/api/student-registration", async (req: any, res) => {
     try {
       // Map frontend field names to schema field names
@@ -170,38 +238,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Normalize LinkedIn URL (handles both field names and adds https:// if missing)
       const linkedinUrl = normalizeLinkedInUrl(rawLinkedinUrl || linkedin);
       
-      const dataToValidate = {
-        ...rest,
-        linkedinUrl,
-        email: emailAddress || rest.email,
-        role: 'student'
-      };
+      const email = emailAddress || rest.email;
       
-      const registrationData = insertStudentSchema.parse(dataToValidate);
-      
-      // Check if user already exists
-      let user = await storage.getUserByEmail(registrationData.email);
-      
-      if (user) {
-        if (user.role) {
-          return res.status(400).json({ 
-            error: `Email already registered as ${user.role}` 
-          });
-        }
-        // Update existing user with student data
-        user = await storage.updateUser(user.id, {
-          ...registrationData,
-          role: 'student'
-        });
-      } else {
-        // Create new user with student data
-        user = await storage.upsertUser({
-          ...registrationData,
-          role: 'student'
+      // Check if already has a user account
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser && existingUser.role) {
+        return res.status(400).json({ 
+          error: `Email already registered as ${existingUser.role}. Please sign in.` 
         });
       }
       
-      res.json({ success: true, id: user.id });
+      // Check if already has a pending registration
+      const existingReg = await storage.getStudentRegistrationByEmail(email);
+      if (existingReg) {
+        return res.status(400).json({ 
+          error: `You have already submitted a student application. Please sign up to complete your registration.` 
+        });
+      }
+      
+      const registrationData = insertStudentRegistrationSchema.parse({
+        ...rest,
+        linkedinUrl,
+        email
+      });
+      
+      // Save to studentRegistration collection (NOT users)
+      const registration = await storage.createStudentRegistration(registrationData);
+      
+      res.json({ 
+        success: true, 
+        id: registration.id,
+        message: "Your student application has been submitted! Please sign up to complete your registration."
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error("Student registration Zod validation errors:", JSON.stringify(error.errors, null, 2));
@@ -210,6 +278,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Error creating student registration:", error);
         res.status(500).json({ error: "Internal server error" });
       }
+    }
+  });
+  
+  // Link registration to user account (called after signup)
+  app.post("/api/auth/link-registration", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.uid;
+      const userEmail = req.user.email;
+      
+      // Check for student registration
+      const studentReg = await storage.getStudentRegistrationByEmail(userEmail);
+      if (studentReg && studentReg.status === 'pending') {
+        // Create/update user with student data
+        const user = await storage.upsertUser({
+          id: userId,
+          email: userEmail,
+          role: 'student',
+          fullName: studentReg.fullName,
+          phoneNumber: studentReg.phoneNumber,
+          linkedinUrl: studentReg.linkedinUrl,
+          universityName: studentReg.universityName,
+          academicProgram: studentReg.academicProgram,
+          yearOfStudy: studentReg.yearOfStudy,
+          nominatedBy: studentReg.nominatedBy,
+          professorEmail: studentReg.professorEmail,
+          careerInterests: studentReg.careerInterests,
+          mentorshipGoals: studentReg.mentorshipGoals,
+          preferredDisciplines: studentReg.preferredDisciplines,
+          mentoringTopics: studentReg.mentoringTopics,
+          agreedToCommitment: studentReg.agreedToCommitment,
+          consentToContact: studentReg.consentToContact,
+        });
+        
+        // Mark registration as linked
+        await storage.updateStudentRegistration(studentReg.id, {
+          status: 'linked',
+          linkedUserId: userId
+        });
+        
+        return res.json({ 
+          success: true, 
+          role: 'student',
+          user 
+        });
+      }
+      
+      // Check for mentor registration
+      const mentorReg = await storage.getMentorRegistrationByEmail(userEmail);
+      if (mentorReg && mentorReg.status === 'pending') {
+        // Create/update user with mentor data
+        const user = await storage.upsertUser({
+          id: userId,
+          email: userEmail,
+          role: 'mentor',
+          fullName: mentorReg.fullName,
+          phoneNumber: mentorReg.phoneNumber,
+          linkedinUrl: mentorReg.linkedinUrl,
+          currentJobTitle: mentorReg.currentJobTitle,
+          company: mentorReg.company,
+          yearsExperience: mentorReg.yearsExperience,
+          education: mentorReg.education,
+          skills: mentorReg.skills,
+          location: mentorReg.location,
+          timeZone: mentorReg.timeZone,
+          profileSummary: mentorReg.profileSummary,
+          availability: mentorReg.availability,
+          motivation: mentorReg.motivation,
+          preferredDisciplines: mentorReg.preferredDisciplines,
+          mentoringTopics: mentorReg.mentoringTopics,
+          agreedToCommitment: mentorReg.agreedToCommitment,
+          consentToContact: mentorReg.consentToContact,
+        });
+        
+        // Mark registration as linked
+        await storage.updateMentorRegistration(mentorReg.id, {
+          status: 'linked',
+          linkedUserId: userId
+        });
+        
+        return res.json({ 
+          success: true, 
+          role: 'mentor',
+          user 
+        });
+      }
+      
+      // No registration found - user signed up without filling form first
+      return res.json({ 
+        success: false, 
+        message: "No pending registration found for this email. Please complete the student or mentor application form first."
+      });
+    } catch (error) {
+      console.error("Error linking registration:", error);
+      res.status(500).json({ error: "Failed to link registration" });
     }
   });
 

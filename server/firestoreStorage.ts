@@ -11,7 +11,11 @@ import type {
   Assignment, 
   InsertAssignment,
   MentoringSession,
-  InsertMentoringSession
+  InsertMentoringSession,
+  StudentRegistration,
+  InsertStudentRegistration,
+  MentorRegistration,
+  InsertMentorRegistration
 } from '@shared/schema';
 import type { IStorage } from './storage';
 
@@ -112,6 +116,120 @@ export class FirestoreStorage implements IStorage {
 
   async deleteUser(id: string): Promise<void> {
     await this.getDb().collection('users').doc(id).delete();
+  }
+
+  // Student Registration operations
+  async createStudentRegistration(data: InsertStudentRegistration): Promise<StudentRegistration> {
+    const id = this.getDb().collection('studentRegistration').doc().id;
+    const now = new Date();
+    const registrationData = {
+      ...data,
+      id,
+      status: 'pending' as const,
+      linkedUserId: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    await this.getDb().collection('studentRegistration').doc(id).set(registrationData);
+    return registrationData as StudentRegistration;
+  }
+
+  async getStudentRegistrationByEmail(email: string): Promise<StudentRegistration | undefined> {
+    const snapshot = await this.getDb().collection('studentRegistration').where('email', '==', email).limit(1).get();
+    if (snapshot.empty) return undefined;
+    const doc = snapshot.docs[0];
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
+      updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
+    } as StudentRegistration;
+  }
+
+  async updateStudentRegistration(id: string, updates: Partial<StudentRegistration>): Promise<StudentRegistration> {
+    await this.getDb().collection('studentRegistration').doc(id).update({
+      ...updates,
+      updatedAt: new Date()
+    });
+    const doc = await this.getDb().collection('studentRegistration').doc(id).get();
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
+      updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
+    } as StudentRegistration;
+  }
+
+  async getAllStudentRegistrations(): Promise<StudentRegistration[]> {
+    const snapshot = await this.getDb().collection('studentRegistration').orderBy('createdAt', 'desc').get();
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
+        updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
+      } as StudentRegistration;
+    });
+  }
+
+  // Mentor Registration operations
+  async createMentorRegistration(data: InsertMentorRegistration): Promise<MentorRegistration> {
+    const id = this.getDb().collection('mentorRegistration').doc().id;
+    const now = new Date();
+    const registrationData = {
+      ...data,
+      id,
+      status: 'pending' as const,
+      linkedUserId: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    await this.getDb().collection('mentorRegistration').doc(id).set(registrationData);
+    return registrationData as MentorRegistration;
+  }
+
+  async getMentorRegistrationByEmail(email: string): Promise<MentorRegistration | undefined> {
+    const snapshot = await this.getDb().collection('mentorRegistration').where('email', '==', email).limit(1).get();
+    if (snapshot.empty) return undefined;
+    const doc = snapshot.docs[0];
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
+      updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
+    } as MentorRegistration;
+  }
+
+  async updateMentorRegistration(id: string, updates: Partial<MentorRegistration>): Promise<MentorRegistration> {
+    await this.getDb().collection('mentorRegistration').doc(id).update({
+      ...updates,
+      updatedAt: new Date()
+    });
+    const doc = await this.getDb().collection('mentorRegistration').doc(id).get();
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
+      updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
+    } as MentorRegistration;
+  }
+
+  async getAllMentorRegistrations(): Promise<MentorRegistration[]> {
+    const snapshot = await this.getDb().collection('mentorRegistration').orderBy('createdAt', 'desc').get();
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
+        updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
+      } as MentorRegistration;
+    });
   }
 
   // Contact operations

@@ -10,7 +10,11 @@ import {
   type Assignment,
   type InsertAssignment,
   type MentoringSession,
-  type InsertMentoringSession
+  type InsertMentoringSession,
+  type StudentRegistration,
+  type InsertStudentRegistration,
+  type MentorRegistration,
+  type InsertMentorRegistration
 } from "@shared/schema";
 
 export interface IStorage {
@@ -22,6 +26,18 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   getUsersByRole(role: 'admin' | 'mentor' | 'student'): Promise<User[]>;
   deleteUser(id: string): Promise<void>;
+  
+  // Student Registration operations (no auth required)
+  createStudentRegistration(data: InsertStudentRegistration): Promise<StudentRegistration>;
+  getStudentRegistrationByEmail(email: string): Promise<StudentRegistration | undefined>;
+  updateStudentRegistration(id: string, updates: Partial<StudentRegistration>): Promise<StudentRegistration>;
+  getAllStudentRegistrations(): Promise<StudentRegistration[]>;
+  
+  // Mentor Registration operations (no auth required)
+  createMentorRegistration(data: InsertMentorRegistration): Promise<MentorRegistration>;
+  getMentorRegistrationByEmail(email: string): Promise<MentorRegistration | undefined>;
+  updateMentorRegistration(id: string, updates: Partial<MentorRegistration>): Promise<MentorRegistration>;
+  getAllMentorRegistrations(): Promise<MentorRegistration[]>;
   
   // Contact operations
   createContact(contact: InsertContact): Promise<Contact>;
