@@ -175,8 +175,8 @@ export const insertMentorSchema = insertUserSchema.extend({
 export const insertStudentSchema = insertUserSchema.extend({
   fullName: z.string().min(1, "Full name is required"),
   universityName: z.string().min(1, "University name is required"),
-  nominatedBy: z.string().min(1, "Nominator name is required"),
-  professorEmail: z.string().email("Invalid professor email"),
+  nominatedBy: z.string().nullable().optional(),
+  professorEmail: z.string().email("Invalid professor email").nullable().optional().or(z.literal('')),
   agreedToCommitment: z.boolean().refine(val => val === true, "You must agree to the commitment"),
   consentToContact: z.boolean().refine(val => val === true, "You must consent to contact"),
 });

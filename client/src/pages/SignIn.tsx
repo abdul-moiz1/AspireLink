@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,14 +21,23 @@ type SignInFormValues = z.infer<typeof signInSchema>;
 
 export default function SignIn() {
   const [, setLocation] = useLocation();
-  const { login } = useAuth();
+  const { login, refreshUser, user, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [pendingRedirect, setPendingRedirect] = useState<string | null>(null);
   
   // Check for URL params indicating new account was created
   const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const isWelcome = urlParams?.get('welcome') === 'true';
   const welcomeRole = urlParams?.get('role') as 'student' | 'mentor' | null;
+
+  // Handle redirect after user state is fully updated
+  useEffect(() => {
+    if (pendingRedirect && user && !isLoading) {
+      setLocation(pendingRedirect);
+      setPendingRedirect(null);
+    }
+  }, [pendingRedirect, user, isLoading, setLocation]);
 
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
@@ -42,6 +51,11 @@ export default function SignIn() {
     setIsSubmitting(true);
     try {
       await login(data.email, data.password);
+      
+      // Wait a bit for auth state to settle, then refresh user data
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await refreshUser();
+      
       // Check if user has a registration by querying the API
       const checkResponse = await fetch('/api/check-email-registration', {
         method: 'POST',
@@ -54,18 +68,17 @@ export default function SignIn() {
         // User has a registration - redirect to their specific dashboard
         const role = checkData.type;
         if (role === 'student') {
-          setLocation("/dashboard/student");
+          setPendingRedirect("/dashboard/student");
         } else if (role === 'mentor') {
-          setLocation("/dashboard/mentor");
+          setPendingRedirect("/dashboard/mentor");
         } else if (role === 'admin') {
-          setLocation("/admin/dashboard");
+          setPendingRedirect("/admin/dashboard");
         } else {
-          // Fallback to home if role is unclear
-          setLocation("/");
+          setPendingRedirect("/");
         }
       } else {
         // No registration found, redirect to complete profile
-        setLocation("/complete-profile");
+        setPendingRedirect("/complete-profile");
       }
     } catch (error) {
     } finally {

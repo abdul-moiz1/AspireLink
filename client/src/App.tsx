@@ -33,7 +33,7 @@ import MentorDashboard from "@/pages/MentorDashboard";
 import CohortManagement from "@/pages/CohortManagement";
 import CompleteProfile from "@/pages/CompleteProfile";
 
-// Pages that don't require role completion redirect
+// Pages that don't require role completion redirect (auth/onboarding routes only)
 const ALLOWED_PATHS_WITHOUT_ROLE = [
   '/complete-profile',
   '/register-student',
@@ -46,6 +46,16 @@ const ALLOWED_PATHS_WITHOUT_ROLE = [
   '/accessibility'
 ];
 
+// Public pages that anyone can access (no auth required)
+const PUBLIC_PAGES = [
+  '/',
+  '/about',
+  '/students',
+  '/mentors',
+  '/faq',
+  '/contact'
+];
+
 function RoleGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoading, needsProfileCompletion } = useAuth();
   const [location, setLocation] = useLocation();
@@ -53,6 +63,14 @@ function RoleGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Don't redirect while loading
     if (isLoading) return;
+
+    // Check if on a public page (no auth/profile required)
+    const isPublicPage = PUBLIC_PAGES.some(path => 
+      location === path || location.startsWith(path + '?')
+    );
+    
+    // Skip profile completion check for public pages
+    if (isPublicPage) return;
 
     // Check if user needs to complete profile and is not on an allowed path
     if (user && needsProfileCompletion) {
