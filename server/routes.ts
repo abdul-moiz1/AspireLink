@@ -2,9 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, isMentor, isStudent } from "./firebaseAuth";
-import { insertContactSchema, insertMentorRegistrationSchema, insertStudentRegistrationSchema, studentRegistrations, mentorRegistrations } from "@shared/schema";
-import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { insertContactSchema, insertMentorRegistrationSchema, insertStudentRegistrationSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -627,9 +625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { isActive } = req.body;
       
-      await db.update(studentRegistrations)
-        .set({ isActive })
-        .where(eq(studentRegistrations.id, parseInt(id)));
+      await storage.updateStudentRegistration(parseInt(id), { isActive });
       
       res.json({ success: true });
     } catch (error) {
@@ -644,9 +640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { isActive } = req.body;
       
-      await db.update(mentorRegistrations)
-        .set({ isActive })
-        .where(eq(mentorRegistrations.id, parseInt(id)));
+      await storage.updateMentorRegistration(parseInt(id), { isActive });
       
       res.json({ success: true });
     } catch (error) {
@@ -660,8 +654,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       
-      await db.delete(studentRegistrations)
-        .where(eq(studentRegistrations.id, parseInt(id)));
+      await storage.deleteStudentRegistration(parseInt(id));
       
       res.json({ success: true });
     } catch (error) {
@@ -675,8 +668,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       
-      await db.delete(mentorRegistrations)
-        .where(eq(mentorRegistrations.id, parseInt(id)));
+      await storage.deleteMentorRegistration(parseInt(id));
       
       res.json({ success: true });
     } catch (error) {

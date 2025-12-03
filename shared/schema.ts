@@ -1,213 +1,254 @@
-import { sql } from 'drizzle-orm';
-import { pgTable, text, serial, integer, boolean, timestamp, varchar, jsonb, index } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Session storage table for Replit Auth
-export const sessions = pgTable(
-  "sessions",
-  {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
-  },
-  (table) => [index("IDX_session_expire").on(table.expire)],
-);
+// User type for Firebase Auth
+export interface User {
+  id: string;
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  profileImageUrl: string | null;
+  role: string | null;
+  mentorRegistrationId: number | null;
+  studentRegistrationId: number | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+}
 
-// User storage table for Replit Auth
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique(),
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
-  profileImageUrl: varchar("profile_image_url"),
-  role: varchar("role").default("student"), // 'student', 'mentor', 'admin'
-  mentorRegistrationId: integer("mentor_registration_id"),
-  studentRegistrationId: integer("student_registration_id"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+export interface UpsertUser {
+  id?: string;
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  profileImageUrl?: string | null;
+  role?: string | null;
+  mentorRegistrationId?: number | null;
+  studentRegistrationId?: number | null;
+  createdAt?: Date | null;
+  updatedAt?: Date | null;
+}
+
+export interface Contact {
+  id: number;
+  name: string;
+  email: string;
+  subject: string | null;
+  message: string;
+  createdAt: Date;
+}
+
+export interface MentorRegistration {
+  id: number;
+  userId: string | null;
+  emailAddress: string | null;
+  linkedinUrl: string | null;
+  fullName: string;
+  currentJobTitle: string | null;
+  company: string | null;
+  yearsExperience: number | null;
+  education: string | null;
+  skills: string[] | null;
+  location: string | null;
+  timeZone: string | null;
+  profileSummary: string | null;
+  phoneNumber: string | null;
+  preferredDisciplines: string[] | null;
+  mentoringTopics: string[] | null;
+  availability: string[] | null;
+  motivation: string | null;
+  agreedToCommitment: boolean | null;
+  consentToContact: boolean | null;
+  isActive: boolean | null;
+  createdAt: Date;
+}
+
+export interface StudentRegistration {
+  id: number;
+  userId: string | null;
+  fullName: string;
+  emailAddress: string;
+  linkedinUrl: string | null;
+  phoneNumber: string | null;
+  universityName: string | null;
+  academicProgram: string | null;
+  yearOfStudy: string | null;
+  nominatedBy: string;
+  professorEmail: string;
+  careerInterests: string | null;
+  preferredDisciplines: string[] | null;
+  mentoringTopics: string[] | null;
+  mentorshipGoals: string | null;
+  agreedToCommitment: boolean | null;
+  consentToContact: boolean | null;
+  isActive: boolean | null;
+  createdAt: Date;
+}
+
+export interface Cohort {
+  id: number;
+  name: string;
+  description: string | null;
+  startDate: Date;
+  endDate: Date;
+  sessionsPerMonth: number | null;
+  sessionDurationMinutes: number | null;
+  isActive: boolean | null;
+  createdAt: Date;
+}
+
+export interface CohortMember {
+  id: number;
+  cohortId: number;
+  userId: string;
+  role: string;
+  isActive: boolean | null;
+  joinedAt: Date;
+}
+
+export interface MentorStudentAssignment {
+  id: number;
+  cohortId: number;
+  mentorId: number;
+  studentId: number;
+  mentorUserId: string | null;
+  studentUserId: string | null;
+  isActive: boolean | null;
+  assignedAt: Date;
+}
+
+export interface MentoringSession {
+  id: number;
+  assignmentId: number;
+  cohortId: number;
+  scheduledDate: Date;
+  scheduledTime: string;
+  durationMinutes: number | null;
+  status: string | null;
+  meetingLink: string | null;
+  notes: string | null;
+  createdBy: string | null;
+  createdAt: Date;
+  updatedAt: Date | null;
+}
+
+export interface AdminUser {
+  id: number;
+  email: string;
+  password: string;
+  createdAt: Date;
+}
+
+// Zod schemas for validation
+export const insertUserSchema = z.object({
+  id: z.string().optional(),
+  email: z.string().email().nullable().optional(),
+  firstName: z.string().nullable().optional(),
+  lastName: z.string().nullable().optional(),
+  profileImageUrl: z.string().url().nullable().optional(),
+  role: z.string().nullable().optional(),
+  mentorRegistrationId: z.number().nullable().optional(),
+  studentRegistrationId: z.number().nullable().optional(),
 });
 
-export const contacts = pgTable("contacts", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull(),
-  subject: text("subject"),
-  message: text("message").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+export const insertContactSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  subject: z.string().nullable().optional(),
+  message: z.string().min(1, "Message is required"),
 });
 
-export const mentorRegistrations = pgTable("mentor_registrations", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id),
-  emailAddress: text("email_address"),
-  linkedinUrl: text("linkedin_url"),
-  fullName: text("full_name").notNull(),
-  currentJobTitle: text("current_job_title"),
-  company: text("company"),
-  yearsExperience: integer("years_experience"),
-  education: text("education"),
-  skills: text("skills").array(),
-  location: text("location"),
-  timeZone: text("time_zone"),
-  profileSummary: text("profile_summary"),
-  phoneNumber: text("phone_number"),
-  preferredDisciplines: text("preferred_disciplines").array(),
-  mentoringTopics: text("mentoring_topics").array(),
-  availability: text("availability").array(),
-  motivation: text("motivation"),
-  agreedToCommitment: boolean("agreed_to_commitment").default(false),
-  consentToContact: boolean("consent_to_contact").default(false),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+export const insertMentorRegistrationSchema = z.object({
+  userId: z.string().nullable().optional(),
+  emailAddress: z.string().email().nullable().optional(),
+  linkedinUrl: z.string().url().nullable().optional(),
+  fullName: z.string().min(1, "Full name is required"),
+  currentJobTitle: z.string().nullable().optional(),
+  company: z.string().nullable().optional(),
+  yearsExperience: z.number().nullable().optional(),
+  education: z.string().nullable().optional(),
+  skills: z.array(z.string()).nullable().optional(),
+  location: z.string().nullable().optional(),
+  timeZone: z.string().nullable().optional(),
+  profileSummary: z.string().nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+  preferredDisciplines: z.array(z.string()).nullable().optional(),
+  mentoringTopics: z.array(z.string()).nullable().optional(),
+  availability: z.array(z.string()).nullable().optional(),
+  motivation: z.string().nullable().optional(),
+  agreedToCommitment: z.boolean().nullable().optional(),
+  consentToContact: z.boolean().nullable().optional(),
+  isActive: z.boolean().nullable().optional(),
 });
 
-export const studentRegistrations = pgTable("student_registrations", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id),
-  fullName: text("full_name").notNull(),
-  emailAddress: text("email_address").notNull(),
-  linkedinUrl: text("linkedin_url"),
-  phoneNumber: text("phone_number"),
-  universityName: text("university_name"),
-  academicProgram: text("academic_program"),
-  yearOfStudy: text("year_of_study"),
-  nominatedBy: text("nominated_by").notNull(),
-  professorEmail: text("professor_email").notNull(),
-  careerInterests: text("career_interests"),
-  preferredDisciplines: text("preferred_disciplines").array(),
-  mentoringTopics: text("mentoring_topics").array(),
-  mentorshipGoals: text("mentorship_goals"),
-  agreedToCommitment: boolean("agreed_to_commitment").default(false),
-  consentToContact: boolean("consent_to_contact").default(false),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+export const insertStudentRegistrationSchema = z.object({
+  userId: z.string().nullable().optional(),
+  fullName: z.string().min(1, "Full name is required"),
+  emailAddress: z.string().email("Invalid email address"),
+  linkedinUrl: z.string().url().nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+  universityName: z.string().nullable().optional(),
+  academicProgram: z.string().nullable().optional(),
+  yearOfStudy: z.string().nullable().optional(),
+  nominatedBy: z.string().min(1, "Nominator name is required"),
+  professorEmail: z.string().email("Invalid professor email"),
+  careerInterests: z.string().nullable().optional(),
+  preferredDisciplines: z.array(z.string()).nullable().optional(),
+  mentoringTopics: z.array(z.string()).nullable().optional(),
+  mentorshipGoals: z.string().nullable().optional(),
+  agreedToCommitment: z.boolean().nullable().optional(),
+  consentToContact: z.boolean().nullable().optional(),
+  isActive: z.boolean().nullable().optional(),
 });
 
-// Cohorts table
-export const cohorts = pgTable("cohorts", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  startDate: timestamp("start_date").notNull(),
-  endDate: timestamp("end_date").notNull(),
-  sessionsPerMonth: integer("sessions_per_month").default(2),
-  sessionDurationMinutes: integer("session_duration_minutes").default(30),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+export const insertCohortSchema = z.object({
+  name: z.string().min(1, "Cohort name is required"),
+  description: z.string().nullable().optional(),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
+  sessionsPerMonth: z.number().nullable().optional(),
+  sessionDurationMinutes: z.number().nullable().optional(),
+  isActive: z.boolean().nullable().optional(),
 });
 
-// Cohort members (students and mentors assigned to cohorts)
-export const cohortMembers = pgTable("cohort_members", {
-  id: serial("id").primaryKey(),
-  cohortId: integer("cohort_id").notNull().references(() => cohorts.id),
-  userId: varchar("user_id").notNull().references(() => users.id),
-  role: varchar("role").notNull(), // 'student' or 'mentor'
-  isActive: boolean("is_active").default(true),
-  joinedAt: timestamp("joined_at").defaultNow().notNull(),
+export const insertCohortMemberSchema = z.object({
+  cohortId: z.number(),
+  userId: z.string(),
+  role: z.string(),
+  isActive: z.boolean().nullable().optional(),
 });
 
-// Mentor-Student assignments within cohorts
-export const mentorStudentAssignments = pgTable("mentor_student_assignments", {
-  id: serial("id").primaryKey(),
-  cohortId: integer("cohort_id").notNull().references(() => cohorts.id),
-  mentorId: integer("mentor_id").notNull().references(() => mentorRegistrations.id),
-  studentId: integer("student_id").notNull().references(() => studentRegistrations.id),
-  mentorUserId: varchar("mentor_user_id").references(() => users.id),
-  studentUserId: varchar("student_user_id").references(() => users.id),
-  isActive: boolean("is_active").default(true),
-  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+export const insertMentorStudentAssignmentSchema = z.object({
+  cohortId: z.number(),
+  mentorId: z.number(),
+  studentId: z.number(),
+  mentorUserId: z.string().nullable().optional(),
+  studentUserId: z.string().nullable().optional(),
+  isActive: z.boolean().nullable().optional(),
 });
 
-// Mentoring sessions
-export const mentoringSessions = pgTable("mentoring_sessions", {
-  id: serial("id").primaryKey(),
-  assignmentId: integer("assignment_id").notNull().references(() => mentorStudentAssignments.id),
-  cohortId: integer("cohort_id").notNull().references(() => cohorts.id),
-  scheduledDate: timestamp("scheduled_date").notNull(),
-  scheduledTime: text("scheduled_time").notNull(),
-  durationMinutes: integer("duration_minutes").default(30),
-  status: varchar("status").default("scheduled"), // 'scheduled', 'completed', 'cancelled', 'rescheduled'
-  meetingLink: text("meeting_link"),
-  notes: text("notes"),
-  createdBy: varchar("created_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+export const insertMentoringSessionSchema = z.object({
+  assignmentId: z.number(),
+  cohortId: z.number(),
+  scheduledDate: z.coerce.date(),
+  scheduledTime: z.string(),
+  durationMinutes: z.number().nullable().optional(),
+  status: z.string().nullable().optional(),
+  meetingLink: z.string().url().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  createdBy: z.string().nullable().optional(),
 });
 
-// Admin users table (keeping for backwards compatibility)
-export const adminUsers = pgTable("admin_users", {
-  id: serial("id").primaryKey(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+export const insertAdminUserSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-// Insert schemas
-export const insertUserSchema = createInsertSchema(users).omit({
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertContactSchema = createInsertSchema(contacts).pick({
-  name: true,
-  email: true,
-  subject: true,
-  message: true,
-});
-
-export const insertMentorRegistrationSchema = createInsertSchema(mentorRegistrations).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertStudentRegistrationSchema = createInsertSchema(studentRegistrations).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertCohortSchema = createInsertSchema(cohorts).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertCohortMemberSchema = createInsertSchema(cohortMembers).omit({
-  id: true,
-  joinedAt: true,
-});
-
-export const insertMentorStudentAssignmentSchema = createInsertSchema(mentorStudentAssignments).omit({
-  id: true,
-  assignedAt: true,
-});
-
-export const insertMentoringSessionSchema = createInsertSchema(mentoringSessions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
-  id: true,
-  createdAt: true,
-});
-
-// Types
-export type UpsertUser = typeof users.$inferInsert;
-export type User = typeof users.$inferSelect;
+// Insert types derived from Zod schemas
+export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertContact = z.infer<typeof insertContactSchema>;
-export type Contact = typeof contacts.$inferSelect;
 export type InsertMentorRegistration = z.infer<typeof insertMentorRegistrationSchema>;
-export type MentorRegistration = typeof mentorRegistrations.$inferSelect;
 export type InsertStudentRegistration = z.infer<typeof insertStudentRegistrationSchema>;
-export type StudentRegistration = typeof studentRegistrations.$inferSelect;
 export type InsertCohort = z.infer<typeof insertCohortSchema>;
-export type Cohort = typeof cohorts.$inferSelect;
 export type InsertCohortMember = z.infer<typeof insertCohortMemberSchema>;
-export type CohortMember = typeof cohortMembers.$inferSelect;
 export type InsertMentorStudentAssignment = z.infer<typeof insertMentorStudentAssignmentSchema>;
-export type MentorStudentAssignment = typeof mentorStudentAssignments.$inferSelect;
 export type InsertMentoringSession = z.infer<typeof insertMentoringSessionSchema>;
-export type MentoringSession = typeof mentoringSessions.$inferSelect;
 export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
-export type AdminUser = typeof adminUsers.$inferSelect;

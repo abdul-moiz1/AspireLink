@@ -31,7 +31,7 @@ if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY) {
     console.error('Firebase Admin initialization error:', error);
   }
 } else {
-  console.log('Firebase credentials not found, using PostgreSQL storage');
+  console.error('Firebase credentials not found. Please set FIREBASE_PROJECT_ID and FIREBASE_PRIVATE_KEY environment variables.');
 }
 
 export { admin, db };
