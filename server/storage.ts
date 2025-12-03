@@ -1,259 +1,144 @@
-import { users, contacts, mentorRegistrations, studentRegistrations, adminUsers, mentorStudentAssignments, type User, type InsertUser, type Contact, type InsertContact, type MentorRegistration, type InsertMentorRegistration, type StudentRegistration, type InsertStudentRegistration, type AdminUser, type InsertAdminUser, type MentorStudentAssignment, type InsertMentorStudentAssignment } from "@shared/schema";
+import { 
+  users, 
+  contacts, 
+  mentorRegistrations, 
+  studentRegistrations, 
+  adminUsers, 
+  mentorStudentAssignments,
+  cohorts,
+  cohortMembers,
+  mentoringSessions,
+  type User, 
+  type UpsertUser, 
+  type Contact, 
+  type InsertContact, 
+  type MentorRegistration, 
+  type InsertMentorRegistration, 
+  type StudentRegistration, 
+  type InsertStudentRegistration, 
+  type AdminUser, 
+  type InsertAdminUser, 
+  type MentorStudentAssignment, 
+  type InsertMentorStudentAssignment,
+  type Cohort,
+  type InsertCohort,
+  type CohortMember,
+  type InsertCohortMember,
+  type MentoringSession,
+  type InsertMentoringSession
+} from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
-// Storage interface with CRUD operations
 export interface IStorage {
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  // User operations (for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  updateUserRole(id: string, role: string, registrationId?: number): Promise<User>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  
+  // Contact operations
   createContact(contact: InsertContact): Promise<Contact>;
   getAllContacts(): Promise<Contact[]>;
+  
+  // Mentor registration operations
   createMentorRegistration(registration: InsertMentorRegistration): Promise<MentorRegistration>;
   getAllMentorRegistrations(): Promise<MentorRegistration[]>;
+  getMentorRegistration(id: number): Promise<MentorRegistration | undefined>;
+  getMentorByUserId(userId: string): Promise<MentorRegistration | undefined>;
   updateMentorRegistration(id: number, updates: Partial<MentorRegistration>): Promise<MentorRegistration>;
   deleteMentorRegistration(id: number): Promise<void>;
+  
+  // Student registration operations
   createStudentRegistration(registration: InsertStudentRegistration): Promise<StudentRegistration>;
   getAllStudentRegistrations(): Promise<StudentRegistration[]>;
+  getStudentRegistration(id: number): Promise<StudentRegistration | undefined>;
+  getStudentByUserId(userId: string): Promise<StudentRegistration | undefined>;
   updateStudentRegistration(id: number, updates: Partial<StudentRegistration>): Promise<StudentRegistration>;
   deleteStudentRegistration(id: number): Promise<void>;
-  // Admin authentication
+  
+  // Admin operations
   getAdminByEmail(email: string): Promise<AdminUser | undefined>;
   createAdmin(admin: InsertAdminUser): Promise<AdminUser>;
-  // Mentor-Student assignments
+  
+  // Cohort operations
+  createCohort(cohort: InsertCohort): Promise<Cohort>;
+  getAllCohorts(): Promise<Cohort[]>;
+  getCohort(id: number): Promise<Cohort | undefined>;
+  updateCohort(id: number, updates: Partial<Cohort>): Promise<Cohort>;
+  deleteCohort(id: number): Promise<void>;
+  
+  // Cohort member operations
+  addCohortMember(member: InsertCohortMember): Promise<CohortMember>;
+  getCohortMembers(cohortId: number): Promise<CohortMember[]>;
+  getUserCohorts(userId: string): Promise<Cohort[]>;
+  removeCohortMember(cohortId: number, userId: string): Promise<void>;
+  
+  // Assignment operations
   createAssignment(assignment: InsertMentorStudentAssignment): Promise<MentorStudentAssignment>;
   getAllAssignments(): Promise<MentorStudentAssignment[]>;
-  deleteAssignment(id: number): Promise<void>;
+  getAssignmentsByCohort(cohortId: number): Promise<MentorStudentAssignment[]>;
   getAssignmentsByMentor(mentorId: number): Promise<MentorStudentAssignment[]>;
   getAssignmentsByStudent(studentId: number): Promise<MentorStudentAssignment[]>;
-}
-
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private contacts: Map<number, Contact>;
-  private mentorRegistrations: Map<number, MentorRegistration>;
-  private studentRegistrations: Map<number, StudentRegistration>;
-  private currentUserId: number;
-  private currentContactId: number;
-  private currentMentorRegistrationId: number;
-  private currentStudentRegistrationId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.contacts = new Map();
-    this.mentorRegistrations = new Map();
-    this.studentRegistrations = new Map();
-    this.currentUserId = 1;
-    this.currentContactId = 1;
-    this.currentMentorRegistrationId = 1;
-    this.currentStudentRegistrationId = 1;
-  }
-
-  async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
-  }
-
-  async createContact(insertContact: InsertContact): Promise<Contact> {
-    const id = this.currentContactId++;
-    const contact: Contact = { 
-      ...insertContact,
-      subject: insertContact.subject || null,
-      id,
-      createdAt: new Date()
-    };
-    this.contacts.set(id, contact);
-    return contact;
-  }
-
-  async getAllContacts(): Promise<Contact[]> {
-    return Array.from(this.contacts.values()).sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-    );
-  }
-
-  async createMentorRegistration(insertRegistration: InsertMentorRegistration): Promise<MentorRegistration> {
-    const id = this.currentMentorRegistrationId++;
-    const registration: MentorRegistration = {
-      id,
-      linkedinUrl: insertRegistration.linkedinUrl || null,
-      fullName: insertRegistration.fullName,
-      currentJobTitle: insertRegistration.currentJobTitle || null,
-      company: insertRegistration.company || null,
-      yearsExperience: insertRegistration.yearsExperience || null,
-      education: insertRegistration.education || null,
-      skills: insertRegistration.skills || null,
-      location: insertRegistration.location || null,
-      timeZone: insertRegistration.timeZone || null,
-      profileSummary: insertRegistration.profileSummary || null,
-      preferredDisciplines: insertRegistration.preferredDisciplines || null,
-      mentoringTopics: insertRegistration.mentoringTopics || null,
-      availability: insertRegistration.availability || null,
-      motivation: insertRegistration.motivation || null,
-      agreedToCommitment: insertRegistration.agreedToCommitment || false,
-      consentToContact: insertRegistration.consentToContact || false,
-      isActive: insertRegistration.isActive ?? true,
-      createdAt: new Date()
-    };
-    this.mentorRegistrations.set(id, registration);
-    return registration;
-  }
-
-  async getAllMentorRegistrations(): Promise<MentorRegistration[]> {
-    return Array.from(this.mentorRegistrations.values()).sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-    );
-  }
-
-  async createStudentRegistration(insertRegistration: InsertStudentRegistration): Promise<StudentRegistration> {
-    const id = this.currentStudentRegistrationId++;
-    const registration: StudentRegistration = {
-      id,
-      fullName: insertRegistration.fullName,
-      emailAddress: insertRegistration.emailAddress,
-      phoneNumber: insertRegistration.phoneNumber || null,
-      universityName: insertRegistration.universityName,
-      academicProgram: insertRegistration.academicProgram,
-      yearOfStudy: insertRegistration.yearOfStudy,
-      nominatedBy: insertRegistration.nominatedBy,
-      professorEmail: insertRegistration.professorEmail,
-      careerInterests: insertRegistration.careerInterests || null,
-      preferredDisciplines: insertRegistration.preferredDisciplines || null,
-      mentoringTopics: insertRegistration.mentoringTopics || null,
-      mentorshipGoals: insertRegistration.mentorshipGoals || null,
-      agreedToCommitment: insertRegistration.agreedToCommitment || false,
-      consentToContact: insertRegistration.consentToContact || false,
-      isActive: insertRegistration.isActive ?? true,
-      createdAt: new Date()
-    };
-    this.studentRegistrations.set(id, registration);
-    return registration;
-  }
-
-  async getAllStudentRegistrations(): Promise<StudentRegistration[]> {
-    return Array.from(this.studentRegistrations.values()).sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-    );
-  }
-
-  async updateMentorRegistration(id: number, updates: Partial<MentorRegistration>): Promise<MentorRegistration> {
-    const registration = this.mentorRegistrations.get(id);
-    if (!registration) {
-      throw new Error("Mentor registration not found");
-    }
-    
-    const updatedRegistration = { ...registration, ...updates };
-    this.mentorRegistrations.set(id, updatedRegistration);
-    return updatedRegistration;
-  }
-
-  async deleteMentorRegistration(id: number): Promise<void> {
-    if (!this.mentorRegistrations.has(id)) {
-      throw new Error("Mentor registration not found");
-    }
-    this.mentorRegistrations.delete(id);
-  }
-
-  async updateStudentRegistration(id: number, updates: Partial<StudentRegistration>): Promise<StudentRegistration> {
-    const registration = this.studentRegistrations.get(id);
-    if (!registration) {
-      throw new Error("Student registration not found");
-    }
-    
-    const updatedRegistration = { ...registration, ...updates };
-    this.studentRegistrations.set(id, updatedRegistration);
-    return updatedRegistration;
-  }
-
-  async deleteStudentRegistration(id: number): Promise<void> {
-    if (!this.studentRegistrations.has(id)) {
-      throw new Error("Student registration not found");
-    }
-    this.studentRegistrations.delete(id);
-  }
-
-  async getAdminByEmail(email: string): Promise<AdminUser | undefined> {
-    if (email === "program.admin@aspirelink.org") {
-      return {
-        id: 1,
-        email: "program.admin@aspirelink.org",
-        passwordHash: "@sp1reLink",
-        isActive: true,
-        createdAt: new Date()
-      };
-    }
-    return undefined;
-  }
-
-  async createAdmin(admin: InsertAdminUser): Promise<AdminUser> {
-    const id = Date.now();
-    const newAdmin: AdminUser = {
-      ...admin,
-      id,
-      createdAt: new Date()
-    };
-    return newAdmin;
-  }
-
-  async createAssignment(assignment: InsertMentorStudentAssignment): Promise<MentorStudentAssignment> {
-    const id = Date.now();
-    const newAssignment: MentorStudentAssignment = {
-      ...assignment,
-      id,
-      isActive: true,
-      assignedAt: new Date()
-    };
-    return newAssignment;
-  }
-
-  async getAllAssignments(): Promise<MentorStudentAssignment[]> {
-    return [];
-  }
-
-  async deleteAssignment(id: number): Promise<void> {
-    // Demo implementation
-  }
-
-  async getAssignmentsByMentor(mentorId: number): Promise<MentorStudentAssignment[]> {
-    return [];
-  }
-
-  async getAssignmentsByStudent(studentId: number): Promise<MentorStudentAssignment[]> {
-    return [];
-  }
+  getAssignmentsByMentorUserId(userId: string): Promise<MentorStudentAssignment[]>;
+  getAssignmentsByStudentUserId(userId: string): Promise<MentorStudentAssignment[]>;
+  deleteAssignment(id: number): Promise<void>;
+  
+  // Session operations
+  createSession(session: InsertMentoringSession): Promise<MentoringSession>;
+  getSessionsByAssignment(assignmentId: number): Promise<MentoringSession[]>;
+  getSessionsByCohort(cohortId: number): Promise<MentoringSession[]>;
+  updateSession(id: number, updates: Partial<MentoringSession>): Promise<MentoringSession>;
+  deleteSession(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
-  async getUser(id: number): Promise<User | undefined> {
+  // User operations
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user || undefined;
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
-      .values(insertUser)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          updatedAt: new Date(),
+        },
+      })
       .returning();
     return user;
   }
 
+  async updateUserRole(id: string, role: string, registrationId?: number): Promise<User> {
+    const updateData: any = { role, updatedAt: new Date() };
+    if (role === 'mentor' && registrationId) {
+      updateData.mentorRegistrationId = registrationId;
+    } else if (role === 'student' && registrationId) {
+      updateData.studentRegistrationId = registrationId;
+    }
+    
+    const [user] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  // Contact operations
   async createContact(insertContact: InsertContact): Promise<Contact> {
     const [contact] = await db
       .insert(contacts)
@@ -266,6 +151,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(contacts);
   }
 
+  // Mentor registration operations
   async createMentorRegistration(insertRegistration: InsertMentorRegistration): Promise<MentorRegistration> {
     const [registration] = await db
       .insert(mentorRegistrations)
@@ -278,16 +164,14 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(mentorRegistrations);
   }
 
-  async createStudentRegistration(insertRegistration: InsertStudentRegistration): Promise<StudentRegistration> {
-    const [registration] = await db
-      .insert(studentRegistrations)
-      .values(insertRegistration)
-      .returning();
-    return registration;
+  async getMentorRegistration(id: number): Promise<MentorRegistration | undefined> {
+    const [mentor] = await db.select().from(mentorRegistrations).where(eq(mentorRegistrations.id, id));
+    return mentor || undefined;
   }
 
-  async getAllStudentRegistrations(): Promise<StudentRegistration[]> {
-    return await db.select().from(studentRegistrations);
+  async getMentorByUserId(userId: string): Promise<MentorRegistration | undefined> {
+    const [mentor] = await db.select().from(mentorRegistrations).where(eq(mentorRegistrations.userId, userId));
+    return mentor || undefined;
   }
 
   async updateMentorRegistration(id: number, updates: Partial<MentorRegistration>): Promise<MentorRegistration> {
@@ -303,6 +187,29 @@ export class DatabaseStorage implements IStorage {
     await db.delete(mentorRegistrations).where(eq(mentorRegistrations.id, id));
   }
 
+  // Student registration operations
+  async createStudentRegistration(insertRegistration: InsertStudentRegistration): Promise<StudentRegistration> {
+    const [registration] = await db
+      .insert(studentRegistrations)
+      .values(insertRegistration)
+      .returning();
+    return registration;
+  }
+
+  async getAllStudentRegistrations(): Promise<StudentRegistration[]> {
+    return await db.select().from(studentRegistrations);
+  }
+
+  async getStudentRegistration(id: number): Promise<StudentRegistration | undefined> {
+    const [student] = await db.select().from(studentRegistrations).where(eq(studentRegistrations.id, id));
+    return student || undefined;
+  }
+
+  async getStudentByUserId(userId: string): Promise<StudentRegistration | undefined> {
+    const [student] = await db.select().from(studentRegistrations).where(eq(studentRegistrations.userId, userId));
+    return student || undefined;
+  }
+
   async updateStudentRegistration(id: number, updates: Partial<StudentRegistration>): Promise<StudentRegistration> {
     const [updatedStudent] = await db
       .update(studentRegistrations)
@@ -316,17 +223,10 @@ export class DatabaseStorage implements IStorage {
     await db.delete(studentRegistrations).where(eq(studentRegistrations.id, id));
   }
 
+  // Admin operations
   async getAdminByEmail(email: string): Promise<AdminUser | undefined> {
-    if (email === "program.admin@aspirelink.org") {
-      return {
-        id: 1,
-        email: "program.admin@aspirelink.org",
-        passwordHash: "@sp1reLink",
-        isActive: true,
-        createdAt: new Date()
-      };
-    }
-    return undefined;
+    const [admin] = await db.select().from(adminUsers).where(eq(adminUsers.email, email));
+    return admin || undefined;
   }
 
   async createAdmin(admin: InsertAdminUser): Promise<AdminUser> {
@@ -337,6 +237,73 @@ export class DatabaseStorage implements IStorage {
     return newAdmin;
   }
 
+  // Cohort operations
+  async createCohort(insertCohort: InsertCohort): Promise<Cohort> {
+    const [cohort] = await db
+      .insert(cohorts)
+      .values(insertCohort)
+      .returning();
+    return cohort;
+  }
+
+  async getAllCohorts(): Promise<Cohort[]> {
+    return await db.select().from(cohorts);
+  }
+
+  async getCohort(id: number): Promise<Cohort | undefined> {
+    const [cohort] = await db.select().from(cohorts).where(eq(cohorts.id, id));
+    return cohort || undefined;
+  }
+
+  async updateCohort(id: number, updates: Partial<Cohort>): Promise<Cohort> {
+    const [updatedCohort] = await db
+      .update(cohorts)
+      .set(updates)
+      .where(eq(cohorts.id, id))
+      .returning();
+    return updatedCohort;
+  }
+
+  async deleteCohort(id: number): Promise<void> {
+    await db.delete(cohorts).where(eq(cohorts.id, id));
+  }
+
+  // Cohort member operations
+  async addCohortMember(member: InsertCohortMember): Promise<CohortMember> {
+    const [cohortMember] = await db
+      .insert(cohortMembers)
+      .values(member)
+      .returning();
+    return cohortMember;
+  }
+
+  async getCohortMembers(cohortId: number): Promise<CohortMember[]> {
+    return await db.select().from(cohortMembers).where(eq(cohortMembers.cohortId, cohortId));
+  }
+
+  async getUserCohorts(userId: string): Promise<Cohort[]> {
+    const members = await db.select().from(cohortMembers).where(eq(cohortMembers.userId, userId));
+    const cohortIds = members.map(m => m.cohortId);
+    if (cohortIds.length === 0) return [];
+    
+    const result: Cohort[] = [];
+    for (const cohortId of cohortIds) {
+      const cohort = await this.getCohort(cohortId);
+      if (cohort) result.push(cohort);
+    }
+    return result;
+  }
+
+  async removeCohortMember(cohortId: number, userId: string): Promise<void> {
+    await db.delete(cohortMembers).where(
+      and(
+        eq(cohortMembers.cohortId, cohortId),
+        eq(cohortMembers.userId, userId)
+      )
+    );
+  }
+
+  // Assignment operations
   async createAssignment(assignment: InsertMentorStudentAssignment): Promise<MentorStudentAssignment> {
     const [newAssignment] = await db
       .insert(mentorStudentAssignments)
@@ -349,8 +316,8 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(mentorStudentAssignments);
   }
 
-  async deleteAssignment(id: number): Promise<void> {
-    await db.delete(mentorStudentAssignments).where(eq(mentorStudentAssignments.id, id));
+  async getAssignmentsByCohort(cohortId: number): Promise<MentorStudentAssignment[]> {
+    return await db.select().from(mentorStudentAssignments).where(eq(mentorStudentAssignments.cohortId, cohortId));
   }
 
   async getAssignmentsByMentor(mentorId: number): Promise<MentorStudentAssignment[]> {
@@ -359,6 +326,48 @@ export class DatabaseStorage implements IStorage {
 
   async getAssignmentsByStudent(studentId: number): Promise<MentorStudentAssignment[]> {
     return await db.select().from(mentorStudentAssignments).where(eq(mentorStudentAssignments.studentId, studentId));
+  }
+
+  async getAssignmentsByMentorUserId(userId: string): Promise<MentorStudentAssignment[]> {
+    return await db.select().from(mentorStudentAssignments).where(eq(mentorStudentAssignments.mentorUserId, userId));
+  }
+
+  async getAssignmentsByStudentUserId(userId: string): Promise<MentorStudentAssignment[]> {
+    return await db.select().from(mentorStudentAssignments).where(eq(mentorStudentAssignments.studentUserId, userId));
+  }
+
+  async deleteAssignment(id: number): Promise<void> {
+    await db.delete(mentorStudentAssignments).where(eq(mentorStudentAssignments.id, id));
+  }
+
+  // Session operations
+  async createSession(session: InsertMentoringSession): Promise<MentoringSession> {
+    const [newSession] = await db
+      .insert(mentoringSessions)
+      .values(session)
+      .returning();
+    return newSession;
+  }
+
+  async getSessionsByAssignment(assignmentId: number): Promise<MentoringSession[]> {
+    return await db.select().from(mentoringSessions).where(eq(mentoringSessions.assignmentId, assignmentId));
+  }
+
+  async getSessionsByCohort(cohortId: number): Promise<MentoringSession[]> {
+    return await db.select().from(mentoringSessions).where(eq(mentoringSessions.cohortId, cohortId));
+  }
+
+  async updateSession(id: number, updates: Partial<MentoringSession>): Promise<MentoringSession> {
+    const [updatedSession] = await db
+      .update(mentoringSessions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(mentoringSessions.id, id))
+      .returning();
+    return updatedSession;
+  }
+
+  async deleteSession(id: number): Promise<void> {
+    await db.delete(mentoringSessions).where(eq(mentoringSessions.id, id));
   }
 }
 

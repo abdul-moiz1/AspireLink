@@ -1,12 +1,28 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated, isAdmin, isMentor } from "./replitAuth";
 import { insertContactSchema, insertMentorRegistrationSchema, insertStudentRegistrationSchema, studentRegistrations, mentorRegistrations } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup Replit Auth
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
   // Contact form submission endpoint
   app.post("/api/contact", async (req, res) => {
     try {
@@ -34,32 +50,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // LinkedIn auto-fill endpoint - requires actual LinkedIn data extraction
-  app.post("/api/linkedin-autofill", async (req, res) => {
-    try {
-      const { linkedinUrl } = req.body;
-      
-      if (!linkedinUrl || !linkedinUrl.includes('linkedin.com')) {
-        return res.status(400).json({ error: "Invalid LinkedIn URL" });
-      }
-
-      // Real LinkedIn data extraction would require LinkedIn API or web scraping
-      // For security and legal reasons, we cannot scrape LinkedIn profiles
-      res.status(501).json({ 
-        error: "LinkedIn auto-fill requires LinkedIn API integration",
-        message: "Please contact support to enable LinkedIn integration for your organization."
-      });
-    } catch (error) {
-      console.error("Error in LinkedIn auto-fill:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
   // Mentor registration submission endpoint
-  app.post("/api/mentor-registration", async (req, res) => {
+  app.post("/api/mentor-registration", isAuthenticated, async (req: any, res) => {
     try {
-      const registrationData = insertMentorRegistrationSchema.parse(req.body);
+      const userId = req.user.claims.sub;
+      const registrationData = insertMentorRegistrationSchema.parse({
+        ...req.body,
+        userId
+      });
       const registration = await storage.createMentorRegistration(registrationData);
+      
+      // Update user role to mentor
+      await storage.updateUserRole(userId, 'mentor', registration.id);
+      
       res.json({ success: true, id: registration.id });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -71,7 +74,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all mentor registrations (for admin purposes)
+  // Get all mentor registrations
   app.get("/api/mentor-registrations", async (req, res) => {
     try {
       const registrations = await storage.getAllMentorRegistrations();
@@ -83,10 +86,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Student registration submission endpoint
-  app.post("/api/student-registration", async (req, res) => {
+  app.post("/api/student-registration", isAuthenticated, async (req: any, res) => {
     try {
-      const registrationData = insertStudentRegistrationSchema.parse(req.body);
+      const userId = req.user.claims.sub;
+      const registrationData = insertStudentRegistrationSchema.parse({
+        ...req.body,
+        userId
+      });
       const registration = await storage.createStudentRegistration(registrationData);
+      
+      // Update user role to student
+      await storage.updateUserRole(userId, 'student', registration.id);
+      
       res.json({ success: true, id: registration.id });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -98,7 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all student registrations (for admin purposes)
+  // Get all student registrations
   app.get("/api/student-registrations", async (req, res) => {
     try {
       const registrations = await storage.getAllStudentRegistrations();
@@ -106,6 +117,343 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching student registrations:", error);
       res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // ============ COHORT ROUTES ============
+  
+  // Create cohort (admin only)
+  app.post("/api/cohorts", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const cohort = await storage.createCohort(req.body);
+      res.json(cohort);
+    } catch (error) {
+      console.error("Error creating cohort:", error);
+      res.status(500).json({ error: "Failed to create cohort" });
+    }
+  });
+
+  // Get all cohorts
+  app.get("/api/cohorts", async (req, res) => {
+    try {
+      const cohortList = await storage.getAllCohorts();
+      res.json(cohortList);
+    } catch (error) {
+      console.error("Error fetching cohorts:", error);
+      res.status(500).json({ error: "Failed to fetch cohorts" });
+    }
+  });
+
+  // Get single cohort
+  app.get("/api/cohorts/:id", async (req, res) => {
+    try {
+      const cohort = await storage.getCohort(parseInt(req.params.id));
+      if (!cohort) {
+        return res.status(404).json({ error: "Cohort not found" });
+      }
+      res.json(cohort);
+    } catch (error) {
+      console.error("Error fetching cohort:", error);
+      res.status(500).json({ error: "Failed to fetch cohort" });
+    }
+  });
+
+  // Update cohort (admin only)
+  app.put("/api/cohorts/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const cohort = await storage.updateCohort(parseInt(req.params.id), req.body);
+      res.json(cohort);
+    } catch (error) {
+      console.error("Error updating cohort:", error);
+      res.status(500).json({ error: "Failed to update cohort" });
+    }
+  });
+
+  // Delete cohort (admin only)
+  app.delete("/api/cohorts/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteCohort(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting cohort:", error);
+      res.status(500).json({ error: "Failed to delete cohort" });
+    }
+  });
+
+  // Get cohort members
+  app.get("/api/cohorts/:id/members", async (req, res) => {
+    try {
+      const members = await storage.getCohortMembers(parseInt(req.params.id));
+      
+      // Enrich with user details
+      const enrichedMembers = await Promise.all(members.map(async (member) => {
+        const user = await storage.getUser(member.userId);
+        let registration = null;
+        if (member.role === 'mentor') {
+          registration = await storage.getMentorByUserId(member.userId);
+        } else if (member.role === 'student') {
+          registration = await storage.getStudentByUserId(member.userId);
+        }
+        return {
+          ...member,
+          user,
+          registration
+        };
+      }));
+      
+      res.json(enrichedMembers);
+    } catch (error) {
+      console.error("Error fetching cohort members:", error);
+      res.status(500).json({ error: "Failed to fetch cohort members" });
+    }
+  });
+
+  // Add member to cohort (admin only)
+  app.post("/api/cohorts/:id/members", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userId, role } = req.body;
+      const member = await storage.addCohortMember({
+        cohortId: parseInt(req.params.id),
+        userId,
+        role,
+        isActive: true
+      });
+      res.json(member);
+    } catch (error) {
+      console.error("Error adding cohort member:", error);
+      res.status(500).json({ error: "Failed to add cohort member" });
+    }
+  });
+
+  // Remove member from cohort (admin only)
+  app.delete("/api/cohorts/:id/members/:userId", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.removeCohortMember(parseInt(req.params.id), req.params.userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing cohort member:", error);
+      res.status(500).json({ error: "Failed to remove cohort member" });
+    }
+  });
+
+  // Get cohort assignments
+  app.get("/api/cohorts/:id/assignments", async (req, res) => {
+    try {
+      const assignments = await storage.getAssignmentsByCohort(parseInt(req.params.id));
+      
+      // Enrich with mentor and student details
+      const enrichedAssignments = await Promise.all(assignments.map(async (assignment) => {
+        const mentor = await storage.getMentorRegistration(assignment.mentorId);
+        const student = await storage.getStudentRegistration(assignment.studentId);
+        return {
+          ...assignment,
+          mentorName: mentor?.fullName || 'Unknown Mentor',
+          studentName: student?.fullName || 'Unknown Student'
+        };
+      }));
+      
+      res.json(enrichedAssignments);
+    } catch (error) {
+      console.error("Error fetching cohort assignments:", error);
+      res.status(500).json({ error: "Failed to fetch cohort assignments" });
+    }
+  });
+
+  // Create assignment in cohort (admin only)
+  app.post("/api/cohorts/:id/assignments", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { mentorId, studentId } = req.body;
+      const cohortId = parseInt(req.params.id);
+      
+      const mentor = await storage.getMentorRegistration(mentorId);
+      const student = await storage.getStudentRegistration(studentId);
+      
+      if (!mentor || !student) {
+        return res.status(404).json({ error: "Mentor or student not found" });
+      }
+      
+      const assignment = await storage.createAssignment({
+        cohortId,
+        mentorId,
+        studentId,
+        mentorUserId: mentor.userId || undefined,
+        studentUserId: student.userId || undefined,
+        isActive: true
+      });
+      
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error creating assignment:", error);
+      res.status(500).json({ error: "Failed to create assignment" });
+    }
+  });
+
+  // ============ SESSION ROUTES ============
+  
+  // Create session (mentor only)
+  app.post("/api/sessions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const session = await storage.createSession({
+        ...req.body,
+        createdBy: userId
+      });
+      res.json(session);
+    } catch (error) {
+      console.error("Error creating session:", error);
+      res.status(500).json({ error: "Failed to create session" });
+    }
+  });
+
+  // Get sessions by assignment
+  app.get("/api/assignments/:id/sessions", isAuthenticated, async (req, res) => {
+    try {
+      const sessions = await storage.getSessionsByAssignment(parseInt(req.params.id));
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching sessions:", error);
+      res.status(500).json({ error: "Failed to fetch sessions" });
+    }
+  });
+
+  // Update session
+  app.put("/api/sessions/:id", isAuthenticated, async (req, res) => {
+    try {
+      const session = await storage.updateSession(parseInt(req.params.id), req.body);
+      res.json(session);
+    } catch (error) {
+      console.error("Error updating session:", error);
+      res.status(500).json({ error: "Failed to update session" });
+    }
+  });
+
+  // Delete session
+  app.delete("/api/sessions/:id", isAuthenticated, async (req, res) => {
+    try {
+      await storage.deleteSession(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting session:", error);
+      res.status(500).json({ error: "Failed to delete session" });
+    }
+  });
+
+  // ============ MENTOR DASHBOARD ROUTES ============
+  
+  // Get mentor's assignments
+  app.get("/api/mentor/assignments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const assignments = await storage.getAssignmentsByMentorUserId(userId);
+      
+      // Enrich with student details and cohort info
+      const enrichedAssignments = await Promise.all(assignments.map(async (assignment) => {
+        const student = await storage.getStudentRegistration(assignment.studentId);
+        const cohort = await storage.getCohort(assignment.cohortId);
+        const sessions = await storage.getSessionsByAssignment(assignment.id);
+        return {
+          ...assignment,
+          student,
+          cohort,
+          sessions
+        };
+      }));
+      
+      res.json(enrichedAssignments);
+    } catch (error) {
+      console.error("Error fetching mentor assignments:", error);
+      res.status(500).json({ error: "Failed to fetch mentor assignments" });
+    }
+  });
+
+  // Get mentor's cohorts
+  app.get("/api/mentor/cohorts", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const cohortList = await storage.getUserCohorts(userId);
+      res.json(cohortList);
+    } catch (error) {
+      console.error("Error fetching mentor cohorts:", error);
+      res.status(500).json({ error: "Failed to fetch mentor cohorts" });
+    }
+  });
+
+  // ============ STUDENT DASHBOARD ROUTES ============
+  
+  // Get student's assignments
+  app.get("/api/student/assignments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const assignments = await storage.getAssignmentsByStudentUserId(userId);
+      
+      // Enrich with mentor details and cohort info
+      const enrichedAssignments = await Promise.all(assignments.map(async (assignment) => {
+        const mentor = await storage.getMentorRegistration(assignment.mentorId);
+        const cohort = await storage.getCohort(assignment.cohortId);
+        const sessions = await storage.getSessionsByAssignment(assignment.id);
+        return {
+          ...assignment,
+          mentor,
+          cohort,
+          sessions
+        };
+      }));
+      
+      res.json(enrichedAssignments);
+    } catch (error) {
+      console.error("Error fetching student assignments:", error);
+      res.status(500).json({ error: "Failed to fetch student assignments" });
+    }
+  });
+
+  // Get student's cohorts
+  app.get("/api/student/cohorts", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const cohortList = await storage.getUserCohorts(userId);
+      res.json(cohortList);
+    } catch (error) {
+      console.error("Error fetching student cohorts:", error);
+      res.status(500).json({ error: "Failed to fetch student cohorts" });
+    }
+  });
+
+  // ============ ADMIN ROUTES ============
+  
+  // Set user role (admin only)
+  app.put("/api/admin/users/:id/role", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { role } = req.body;
+      const user = await storage.updateUserRole(req.params.id, role);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ error: "Failed to update user role" });
+    }
+  });
+
+  // Admin dashboard stats
+  app.get("/api/admin/stats", async (req, res) => {
+    try {
+      const students = await storage.getAllStudentRegistrations();
+      const mentors = await storage.getAllMentorRegistrations();
+      const assignments = await storage.getAllAssignments();
+      const cohortList = await storage.getAllCohorts();
+      
+      const stats = {
+        totalStudents: students.length,
+        totalMentors: mentors.length,
+        activeStudents: students.filter(s => s.isActive).length,
+        activeMentors: mentors.filter(m => m.isActive).length,
+        totalAssignments: assignments.length,
+        totalCohorts: cohortList.length,
+        activeCohorts: cohortList.filter(c => c.isActive).length
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Admin stats error:", error);
+      res.status(500).json({ success: false, error: "Failed to fetch stats" });
     }
   });
 
@@ -137,8 +485,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/students/:id", async (req, res) => {
     try {
       const studentId = parseInt(req.params.id);
-      const students = await storage.getAllStudentRegistrations();
-      const student = students.find(s => s.id === studentId);
+      const student = await storage.getStudentRegistration(studentId);
       
       if (!student) {
         return res.status(404).json({ error: "Student not found" });
@@ -155,8 +502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/mentors/:id", async (req, res) => {
     try {
       const mentorId = parseInt(req.params.id);
-      const mentors = await storage.getAllMentorRegistrations();
-      const mentor = mentors.find(m => m.id === mentorId);
+      const mentor = await storage.getMentorRegistration(mentorId);
       
       if (!mentor) {
         return res.status(404).json({ error: "Mentor not found" });
@@ -192,82 +538,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating mentor:", error);
       res.status(500).json({ error: "Failed to update mentor" });
-    }
-  });
-
-  // Admin create assignment endpoint
-  app.post("/api/admin/assignments", async (req, res) => {
-    try {
-      const { mentorId, studentId } = req.body;
-      
-      // Get mentor and student names for the assignment
-      const mentors = await storage.getAllMentorRegistrations();
-      const students = await storage.getAllStudentRegistrations();
-      
-      const mentor = mentors.find(m => m.id === mentorId);
-      const student = students.find(s => s.id === studentId);
-      
-      if (!mentor || !student) {
-        return res.status(404).json({ error: "Mentor or student not found" });
-      }
-      
-      const assignmentData = {
-        mentorId,
-        studentId,
-        mentorName: mentor.fullName,
-        studentName: student.fullName
-      };
-      
-      const newAssignment = await storage.createAssignment(assignmentData);
-      res.json(newAssignment);
-    } catch (error) {
-      console.error("Error creating assignment:", error);
-      res.status(500).json({ error: "Failed to create assignment" });
-    }
-  });
-
-  // Admin authentication endpoint
-  app.post("/api/admin/login", async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      
-
-      
-      // Check hardcoded admin credentials
-      if (email === "program.admin@aspirelink.org" && password === "@sp1reLink") {
-        // Simple token for demo purposes
-        const token = Buffer.from(`${email}:${Date.now()}`).toString('base64');
-
-        res.json({ success: true, token });
-      } else {
-
-        res.status(401).json({ success: false, error: "Invalid credentials" });
-      }
-    } catch (error) {
-      console.error("Admin login error:", error);
-      res.status(500).json({ success: false, error: "Login failed" });
-    }
-  });
-
-  // Admin dashboard stats
-  app.get("/api/admin/stats", async (req, res) => {
-    try {
-      const students = await storage.getAllStudentRegistrations();
-      const mentors = await storage.getAllMentorRegistrations();
-      const assignments = await storage.getAllAssignments();
-      
-      const stats = {
-        totalStudents: students.length,
-        totalMentors: mentors.length,
-        activeStudents: students.filter(s => s.isActive).length,
-        activeMentors: mentors.filter(m => m.isActive).length,
-        totalAssignments: assignments.length
-      };
-      
-      res.json(stats);
-    } catch (error) {
-      console.error("Admin stats error:", error);
-      res.status(500).json({ success: false, error: "Failed to fetch stats" });
     }
   });
 
@@ -363,16 +633,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const assignments = await storage.getAllAssignments();
       const mentors = await storage.getAllMentorRegistrations();
       const students = await storage.getAllStudentRegistrations();
+      const cohortList = await storage.getAllCohorts();
       
-      // Enrich assignments with mentor and student names
+      // Enrich assignments with mentor, student and cohort names
       const enrichedAssignments = assignments.map(assignment => {
         const mentor = mentors.find(m => m.id === assignment.mentorId);
         const student = students.find(s => s.id === assignment.studentId);
+        const cohort = cohortList.find(c => c.id === assignment.cohortId);
         
         return {
           ...assignment,
           mentorName: mentor?.fullName || 'Unknown Mentor',
-          studentName: student?.fullName || 'Unknown Student'
+          studentName: student?.fullName || 'Unknown Student',
+          cohortName: cohort?.name || 'Unknown Cohort'
         };
       });
       

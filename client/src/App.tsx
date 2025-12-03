@@ -25,6 +25,9 @@ import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import CodeOfConduct from "@/pages/CodeOfConduct";
 import Accessibility from "@/pages/Accessibility";
+import StudentDashboard from "@/pages/StudentDashboard";
+import MentorDashboard from "@/pages/MentorDashboard";
+import CohortManagement from "@/pages/CohortManagement";
 
 function Router() {
   return (
@@ -40,8 +43,11 @@ function Router() {
           <Route path="/register-student" component={RegisterStudent} />
           <Route path="/faq" component={FAQ} />
           <Route path="/contact" component={Contact} />
+          <Route path="/dashboard/student" component={StudentDashboard} />
+          <Route path="/dashboard/mentor" component={MentorDashboard} />
           <Route path="/admin/login" component={AdminLogin} />
           <Route path="/admin/dashboard" component={AdminDashboard} />
+          <Route path="/admin/cohorts" component={CohortManagement} />
           <Route path="/admin/create-student" component={CreateStudent} />
           <Route path="/admin/create-mentor" component={CreateMentor} />
           <Route path="/admin/create-assignment" component={CreateAssignment} />
