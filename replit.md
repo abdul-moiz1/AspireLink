@@ -20,10 +20,11 @@ Preferred communication style: Simple, everyday language.
 ### Technical Implementations
 - **Frontend**: Vite for fast development and optimized builds, Wouter for client-side routing, TanStack React Query for server state management.
 - **Backend**: Node.js with Express.js, TypeScript with ESM modules, RESTful API design with JSON responses.
-- **Database**: Drizzle ORM configured for PostgreSQL (Neon Database serverless), Drizzle Kit for migrations, centralized schema definitions.
+- **Database**: Firebase Firestore for all data storage (migrated from PostgreSQL). No SQL database required.
 - **Validation**: Zod for type-safe data handling and robust form validation (e.g., email format, mandatory fields for registration).
-- **Storage**: Pluggable `IStorage` interface with `MemStorage` for development and a database-backed solution for production.
-- **Authentication**: Admin login with hardcoded credentials for program management.
+- **Storage**: FirestoreStorage implementation with auto-increment counters for numeric IDs.
+- **Authentication**: Firebase Authentication for user management, Admin login with hardcoded credentials for program management.
+- **Session Management**: Memory-based session store (sessions expire on server restart).
 
 ### Feature Specifications
 - **Mentorship Program**: Structured 4-month program, 100% free, 1:1 matching, 24/7 support.
@@ -45,7 +46,8 @@ Preferred communication style: Simple, everyday language.
 -   **React Ecosystem**: React, React DOM, React Query.
 -   **UI Libraries**: Radix UI primitives, shadcn/ui, Lucide React icons.
 -   **Styling**: Tailwind CSS, class-variance-authority.
--   **Backend**: Express.js, Drizzle ORM, Neon Database client.
+-   **Backend**: Express.js, Firebase Admin SDK.
+-   **Firebase**: firebase, firebase-admin (for authentication and Firestore database).
 -   **Validation**: Zod.
 -   **Utilities**: date-fns, clsx.
 -   **Build Tools**: Vite, esbuild, tsx.
