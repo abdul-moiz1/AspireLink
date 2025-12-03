@@ -82,18 +82,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Mentor registration submission endpoint
-  app.post("/api/mentor-registration", isAuthenticated, async (req: any, res) => {
+  // Mentor registration submission endpoint (public - no auth required)
+  app.post("/api/mentor-registration", async (req: any, res) => {
     try {
-      const userId = req.user.uid;
       const registrationData = insertMentorRegistrationSchema.parse({
         ...req.body,
-        userId
+        userId: null
       });
       const registration = await storage.createMentorRegistration(registrationData);
-      
-      // Update user role to mentor
-      await storage.updateUserRole(userId, 'mentor', registration.id);
       
       res.json({ success: true, id: registration.id });
     } catch (error) {
@@ -117,18 +113,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Student registration submission endpoint
-  app.post("/api/student-registration", isAuthenticated, async (req: any, res) => {
+  // Student registration submission endpoint (public - no auth required)
+  app.post("/api/student-registration", async (req: any, res) => {
     try {
-      const userId = req.user.uid;
       const registrationData = insertStudentRegistrationSchema.parse({
         ...req.body,
-        userId
+        userId: null
       });
       const registration = await storage.createStudentRegistration(registrationData);
-      
-      // Update user role to student
-      await storage.updateUserRole(userId, 'student', registration.id);
       
       res.json({ success: true, id: registration.id });
     } catch (error) {
