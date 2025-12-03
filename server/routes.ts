@@ -5,6 +5,17 @@ import { setupAuth, isAuthenticated, isAdmin, isMentor, isStudent } from "./fire
 import { insertContactSchema, insertMentorSchema, insertStudentSchema, insertCohortSchema, insertAssignmentSchema, insertMentoringSessionSchema } from "@shared/schema";
 import { z } from "zod";
 
+// Helper to normalize LinkedIn URLs - adds https:// if missing
+function normalizeLinkedInUrl(url: string | null | undefined): string | null {
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  return 'https://' + trimmed;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
@@ -105,16 +116,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/mentor-registration", async (req: any, res) => {
     try {
       // Map frontend field names to schema field names
-      const { emailAddress, ...rest } = req.body;
+      const { emailAddress, linkedinUrl: rawLinkedinUrl, linkedin, ...rest } = req.body;
       
-      // Preprocess LinkedIn URL - add https:// if missing
-      let linkedinUrl = rest.linkedinUrl;
-      if (linkedinUrl && typeof linkedinUrl === 'string' && linkedinUrl.trim()) {
-        linkedinUrl = linkedinUrl.trim();
-        if (!linkedinUrl.startsWith('http://') && !linkedinUrl.startsWith('https://')) {
-          linkedinUrl = 'https://' + linkedinUrl;
-        }
-      }
+      // Normalize LinkedIn URL (handles both field names and adds https:// if missing)
+      const linkedinUrl = normalizeLinkedInUrl(rawLinkedinUrl || linkedin);
       
       const registrationData = insertMentorSchema.parse({
         ...rest,
@@ -160,16 +165,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/student-registration", async (req: any, res) => {
     try {
       // Map frontend field names to schema field names
-      const { emailAddress, ...rest } = req.body;
+      const { emailAddress, linkedinUrl: rawLinkedinUrl, linkedin, ...rest } = req.body;
       
-      // Preprocess LinkedIn URL - add https:// if missing
-      let linkedinUrl = rest.linkedinUrl;
-      if (linkedinUrl && typeof linkedinUrl === 'string' && linkedinUrl.trim()) {
-        linkedinUrl = linkedinUrl.trim();
-        if (!linkedinUrl.startsWith('http://') && !linkedinUrl.startsWith('https://')) {
-          linkedinUrl = 'https://' + linkedinUrl;
-        }
-      }
+      // Normalize LinkedIn URL (handles both field names and adds https:// if missing)
+      const linkedinUrl = normalizeLinkedInUrl(rawLinkedinUrl || linkedin);
       
       const dataToValidate = {
         ...rest,
