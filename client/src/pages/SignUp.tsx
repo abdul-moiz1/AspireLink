@@ -89,7 +89,11 @@ export default function SignUp() {
         setLocation(`/signin?welcome=true&role=${role}`);
       } else {
         // No existing registration - need to choose role
-        setLocation("/complete-profile");
+        // Add a small delay to allow auth state to update before redirect
+        // This prevents the complete-profile page from seeing null user
+        setTimeout(() => {
+          setLocation("/complete-profile?new=true");
+        }, 500);
       }
     } catch (error) {
     } finally {

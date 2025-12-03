@@ -9,6 +9,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Firebase Auth
   await setupAuth(app);
 
+  // Seed admin endpoint - creates admin user if not exists
+  app.post('/api/seed-admin', async (req, res) => {
+    try {
+      const { email, secretKey } = req.body;
+      
+      // Simple security check - in production, use environment variable
+      if (secretKey !== 'aspirelink-admin-seed-2025') {
+        return res.status(403).json({ error: 'Invalid secret key' });
+      }
+      
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+      
+      // Check if admin already exists
+      const existingAdmin = await storage.getAdminByEmail(email);
+      if (existingAdmin) {
+        return res.json({ message: 'Admin already exists', admin: existingAdmin });
+      }
+      
+      // Create the admin (password is a placeholder - actual auth uses Firebase)
+      const newAdmin = await storage.createAdmin({ 
+        email, 
+        password: 'firebase-auth-managed' 
+      });
+      console.log(`Created admin user: ${email}`);
+      
+      res.json({ message: 'Admin created successfully', admin: newAdmin });
+    } catch (error) {
+      console.error('Error creating admin:', error);
+      res.status(500).json({ error: 'Failed to create admin' });
+    }
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {

@@ -9,12 +9,28 @@ import logoPath from "@assets/AspireLink-Favicon_1751236188567.png";
 export default function CompleteProfile() {
   const [, setLocation] = useLocation();
   const { user, isLoading } = useAuth();
+  
+  // Check if this is a new signup (user just registered)
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const isNewSignup = urlParams?.get('new') === 'true';
 
   // Handle redirects in useEffect to avoid React state update during render
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        setLocation("/signin");
+        // If this is a new signup, wait a bit longer for auth state to settle
+        if (isNewSignup) {
+          // Don't immediately redirect - give auth state time to populate
+          const timeout = setTimeout(() => {
+            // Check again after delay
+            if (!user) {
+              setLocation("/signin");
+            }
+          }, 2000);
+          return () => clearTimeout(timeout);
+        } else {
+          setLocation("/signin");
+        }
       } else if (user.role) {
         if (user.role === "student") {
           setLocation("/dashboard/student");
@@ -25,7 +41,7 @@ export default function CompleteProfile() {
         }
       }
     }
-  }, [user, isLoading, setLocation]);
+  }, [user, isLoading, setLocation, isNewSignup]);
 
   if (isLoading) {
     return (
@@ -35,8 +51,17 @@ export default function CompleteProfile() {
     );
   }
 
-  // Show loading while redirecting
-  if (!user || user.role) {
+  // Show loading while redirecting or waiting for auth state (for new signups)
+  if ((!user && isNewSignup) || (user && user.role)) {
+    return (
+      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary-custom" />
+      </div>
+    );
+  }
+  
+  // If no user and not a new signup, the useEffect will redirect to signin
+  if (!user) {
     return (
       <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-gray-50">
         <Loader2 className="h-8 w-8 animate-spin text-primary-custom" />
