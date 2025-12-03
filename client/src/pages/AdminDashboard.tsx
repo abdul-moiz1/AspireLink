@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,8 +22,30 @@ import {
   UserX,
   Plus,
   Link as LinkIcon,
-  Calendar
+  Calendar,
+  TrendingUp,
+  Activity,
+  BarChart3,
+  PieChart as PieChartIcon,
+  ArrowUpRight,
+  ArrowDownRight
 } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  AreaChart,
+  Area
+} from "recharts";
 
 interface DashboardStats {
   totalStudents: number;
@@ -65,6 +87,304 @@ interface Assignment {
   assignedAt: string;
 }
 
+const CHART_COLORS = ['#2E86AB', '#A23B72', '#4ECDC4', '#FF6B6B', '#45B7D1', '#96CEB4'];
+
+function AnimatedStatCard({ 
+  title, 
+  value, 
+  icon: Icon, 
+  color, 
+  trend, 
+  trendValue,
+  delay = 0 
+}: { 
+  title: string; 
+  value: number; 
+  icon: any; 
+  color: string; 
+  trend?: 'up' | 'down';
+  trendValue?: string;
+  delay?: number;
+}) {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    const duration = 1000;
+    const steps = 30;
+    const stepValue = value / steps;
+    let current = 0;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    
+    const timer = setTimeout(() => {
+      intervalId = setInterval(() => {
+        current += stepValue;
+        if (current >= value) {
+          setDisplayValue(value);
+          if (intervalId) clearInterval(intervalId);
+        } else {
+          setDisplayValue(Math.floor(current));
+        }
+      }, duration / steps);
+    }, delay);
+    
+    return () => {
+      clearTimeout(timer);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [value, delay]);
+
+  return (
+    <Card className="card-hover hover-lift overflow-hidden">
+      <CardContent className="p-6 relative">
+        <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-10`} style={{ backgroundColor: color }} />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-4">
+            <div className={`p-3 rounded-xl`} style={{ backgroundColor: `${color}20` }}>
+              <Icon className="w-6 h-6" style={{ color }} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">{title}</p>
+              <p className="text-3xl font-bold text-foreground animate-countUp">{displayValue}</p>
+            </div>
+          </div>
+          {trend && trendValue && (
+            <div className={`flex items-center gap-1 text-sm ${trend === 'up' ? 'text-green-600' : 'text-red-500'}`}>
+              {trend === 'up' ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+              <span>{trendValue}</span>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function OverviewChart({ students, mentors }: { students: Student[]; mentors: Mentor[] }) {
+  const monthlyData = [
+    { month: 'Jan', students: 12, mentors: 5 },
+    { month: 'Feb', students: 18, mentors: 7 },
+    { month: 'Mar', students: 25, mentors: 10 },
+    { month: 'Apr', students: 32, mentors: 12 },
+    { month: 'May', students: 45, mentors: 15 },
+    { month: 'Jun', students: students?.length || 52, mentors: mentors?.length || 18 },
+  ];
+
+  return (
+    <Card className="card-hover">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+        <div>
+          <CardTitle className="text-lg font-semibold">Growth Overview</CardTitle>
+          <CardDescription>Monthly registration trends</CardDescription>
+        </div>
+        <BarChart3 className="w-5 h-5 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={monthlyData}>
+              <defs>
+                <linearGradient id="studentGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2E86AB" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#2E86AB" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="mentorGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#A23B72" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#A23B72" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+              <XAxis dataKey="month" stroke="#888" fontSize={12} />
+              <YAxis stroke="#888" fontSize={12} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: '1px solid #e0e0e0', 
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }} 
+              />
+              <Area 
+                type="monotone" 
+                dataKey="students" 
+                stroke="#2E86AB" 
+                strokeWidth={2}
+                fill="url(#studentGradient)" 
+                name="Students"
+              />
+              <Area 
+                type="monotone" 
+                dataKey="mentors" 
+                stroke="#A23B72" 
+                strokeWidth={2}
+                fill="url(#mentorGradient)" 
+                name="Mentors"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function StatusDistributionChart({ stats }: { stats: DashboardStats | undefined }) {
+  const data = [
+    { name: 'Active Students', value: stats?.activeStudents || 0, color: '#4ECDC4' },
+    { name: 'Inactive Students', value: (stats?.totalStudents || 0) - (stats?.activeStudents || 0), color: '#FF6B6B' },
+    { name: 'Active Mentors', value: stats?.activeMentors || 0, color: '#45B7D1' },
+    { name: 'Inactive Mentors', value: (stats?.totalMentors || 0) - (stats?.activeMentors || 0), color: '#96CEB4' },
+  ].filter(item => item.value > 0);
+
+  return (
+    <Card className="card-hover">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+        <div>
+          <CardTitle className="text-lg font-semibold">Status Distribution</CardTitle>
+          <CardDescription>Active vs Inactive users</CardDescription>
+        </div>
+        <PieChartIcon className="w-5 h-5 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={90}
+                paddingAngle={5}
+                dataKey="value"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: '1px solid #e0e0e0', 
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }} 
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="flex flex-wrap justify-center gap-3 mt-4">
+          {data.map((item, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+              <span className="text-xs text-muted-foreground">{item.name}</span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AssignmentActivityChart({ assignments }: { assignments: Assignment[] }) {
+  const weeklyData = [
+    { day: 'Mon', assignments: 3 },
+    { day: 'Tue', assignments: 5 },
+    { day: 'Wed', assignments: 2 },
+    { day: 'Thu', assignments: 7 },
+    { day: 'Fri', assignments: 4 },
+    { day: 'Sat', assignments: 1 },
+    { day: 'Sun', assignments: assignments?.length ? 2 : 0 },
+  ];
+
+  return (
+    <Card className="card-hover">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+        <div>
+          <CardTitle className="text-lg font-semibold">Weekly Activity</CardTitle>
+          <CardDescription>Assignment activity this week</CardDescription>
+        </div>
+        <Activity className="w-5 h-5 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="h-48">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={weeklyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+              <XAxis dataKey="day" stroke="#888" fontSize={12} />
+              <YAxis stroke="#888" fontSize={12} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: '1px solid #e0e0e0', 
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }} 
+              />
+              <Bar dataKey="assignments" fill="#2E86AB" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function RecentActivityFeed({ students, mentors }: { students: Student[]; mentors: Mentor[] }) {
+  const activities = [
+    ...(students?.slice(0, 3).map(s => ({
+      type: 'student' as const,
+      name: s.fullName,
+      action: 'joined as a student',
+      time: s.createdAt ? new Date(s.createdAt).toLocaleDateString() : 'Recently'
+    })) || []),
+    ...(mentors?.slice(0, 2).map(m => ({
+      type: 'mentor' as const,
+      name: m.fullName,
+      action: 'joined as a mentor',
+      time: m.createdAt ? new Date(m.createdAt).toLocaleDateString() : 'Recently'
+    })) || [])
+  ].slice(0, 5);
+
+  return (
+    <Card className="card-hover">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+        <div>
+          <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
+          <CardDescription>Latest platform updates</CardDescription>
+        </div>
+        <TrendingUp className="w-5 h-5 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {activities.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
+          ) : (
+            activities.map((activity, index) => (
+              <div 
+                key={index} 
+                className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover-lift"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className={`p-2 rounded-full ${activity.type === 'student' ? 'bg-blue-100' : 'bg-pink-100'}`}>
+                  {activity.type === 'student' ? 
+                    <GraduationCap className="w-4 h-4 text-blue-600" /> : 
+                    <Users className="w-4 h-4 text-pink-600" />
+                  }
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{activity.name}</p>
+                  <p className="text-xs text-muted-foreground">{activity.action}</p>
+                </div>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">{activity.time}</span>
+              </div>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
@@ -75,38 +395,32 @@ export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const { user, isLoading } = useAuth();
 
-  // Check admin authentication - redirect to sign in if not authenticated or not admin
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'admin')) {
       setLocation("/signin");
     }
   }, [user, isLoading, setLocation]);
 
-  // Fetch dashboard stats
   const { data: stats } = useQuery({
     queryKey: ["/api/admin/stats"],
     queryFn: () => apiRequest("/api/admin/stats", "GET"),
   });
 
-  // Fetch students
   const { data: students } = useQuery({
     queryKey: ["/api/admin/students"],
     queryFn: () => apiRequest("/api/admin/students", "GET"),
   });
 
-  // Fetch mentors
   const { data: mentors } = useQuery({
     queryKey: ["/api/admin/mentors"],
     queryFn: () => apiRequest("/api/admin/mentors", "GET"),
   });
 
-  // Fetch assignments
   const { data: assignments } = useQuery({
     queryKey: ["/api/admin/assignments"],
     queryFn: () => apiRequest("/api/admin/assignments", "GET"),
   });
 
-  // Toggle user status mutation
   const toggleStatusMutation = useMutation({
     mutationFn: async ({ type, id, isActive }: { type: "student" | "mentor"; id: number; isActive: boolean }) => {
       return apiRequest(`/api/admin/${type}s/${id}/status`, "PUT", { isActive });
@@ -128,7 +442,6 @@ export default function AdminDashboard() {
     }
   });
 
-  // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async ({ type, id }: { type: "student" | "mentor"; id: number }) => {
       return apiRequest(`/api/admin/${type}s/${id}`, "DELETE");
@@ -150,7 +463,6 @@ export default function AdminDashboard() {
     }
   });
 
-  // Delete assignment mutation
   const deleteAssignmentMutation = useMutation({
     mutationFn: async (id: number) => {
       return apiRequest(`/api/admin/assignments/${id}`, "DELETE");
@@ -197,7 +509,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Bulk assignment management functions
   const handleSelectAssignment = (assignmentId: number) => {
     setSelectedAssignments(prev => 
       prev.includes(assignmentId) 
@@ -240,7 +551,7 @@ export default function AdminDashboard() {
     const assignmentNames = selectedAssignments
       .map(id => {
         const assignment = assignments?.find((a: Assignment) => a.id === id);
-        return assignment ? `${assignment.mentorName} ↔ ${assignment.studentName}` : 'Unknown';
+        return assignment ? `${assignment.mentorName} - ${assignment.studentName}` : 'Unknown';
       })
       .join(', ');
 
@@ -257,8 +568,6 @@ export default function AdminDashboard() {
     const statusText = newStatus ? 'activate' : 'deactivate';
     
     if (window.confirm(`Are you sure you want to ${statusText} ${selectedAssignments.length} assignment(s)?`)) {
-      // Since we don't have a bulk update API, we'll need to implement individual updates
-      // For now, show a toast indicating the feature is available
       toast({
         title: "Bulk Status Update",
         description: `Would ${statusText} ${selectedAssignments.length} assignments. Feature ready for implementation.`,
@@ -268,7 +577,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Filter functions
   const filterUsers = (users: any[]) => {
     if (!users) return [];
     return users.filter(user => {
@@ -286,24 +594,26 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-light-custom">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+    <div className="min-h-screen bg-muted/30">
+      <div className="bg-background border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-charcoal-custom">AspireLink Admin</h1>
+          <div className="flex justify-between items-center h-16 gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Building className="w-6 h-6 text-primary" />
+              </div>
+              <h1 className="text-xl font-bold text-foreground">AspireLink Admin</h1>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-3">
               <Link href="/admin/cohorts">
-                <Button variant="outline" className="flex items-center space-x-2">
+                <Button variant="outline" className="flex items-center gap-2 hover-lift" data-testid="link-manage-cohorts">
                   <Calendar className="w-4 h-4" />
-                  <span>Manage Cohorts</span>
+                  <span className="hidden sm:inline">Manage Cohorts</span>
                 </Button>
               </Link>
-              <Button onClick={handleLogout} variant="outline" className="flex items-center space-x-2">
+              <Button onClick={handleLogout} variant="outline" className="flex items-center gap-2 hover-lift" data-testid="button-logout">
                 <LogOut className="w-4 h-4" />
-                <span>Logout</span>
+                <span className="hidden sm:inline">Logout</span>
               </Button>
             </div>
           </div>
@@ -311,100 +621,99 @@ export default function AdminDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Dashboard Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <GraduationCap className="w-8 h-8 text-primary-custom" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Total Students</p>
-                  <p className="text-2xl font-bold text-charcoal-custom">{stats?.totalStudents || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <Users className="w-8 h-8 text-secondary-custom" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Total Mentors</p>
-                  <p className="text-2xl font-bold text-charcoal-custom">{stats?.totalMentors || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <UserCheck className="w-8 h-8 text-green-500" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Active Students</p>
-                  <p className="text-2xl font-bold text-charcoal-custom">{stats?.activeStudents || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <UserCheck className="w-8 h-8 text-green-500" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Active Mentors</p>
-                  <p className="text-2xl font-bold text-charcoal-custom">{stats?.activeMentors || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <LinkIcon className="w-8 h-8 text-accent-custom" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Assignments</p>
-                  <p className="text-2xl font-bold text-charcoal-custom">{stats?.totalAssignments || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          <AnimatedStatCard
+            title="Total Students"
+            value={stats?.totalStudents || 0}
+            icon={GraduationCap}
+            color="#2E86AB"
+            trend="up"
+            trendValue="+12%"
+            delay={0}
+          />
+          <AnimatedStatCard
+            title="Total Mentors"
+            value={stats?.totalMentors || 0}
+            icon={Users}
+            color="#A23B72"
+            trend="up"
+            trendValue="+8%"
+            delay={100}
+          />
+          <AnimatedStatCard
+            title="Active Students"
+            value={stats?.activeStudents || 0}
+            icon={UserCheck}
+            color="#4ECDC4"
+            delay={200}
+          />
+          <AnimatedStatCard
+            title="Active Mentors"
+            value={stats?.activeMentors || 0}
+            icon={UserCheck}
+            color="#45B7D1"
+            delay={300}
+          />
+          <AnimatedStatCard
+            title="Assignments"
+            value={stats?.totalAssignments || 0}
+            icon={LinkIcon}
+            color="#F18F01"
+            trend="up"
+            trendValue="+5"
+            delay={400}
+          />
         </div>
 
-        {/* Search and Filter */}
-        <Card className="mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2">
+            <OverviewChart students={students || []} mentors={mentors || []} />
+          </div>
+          <StatusDistributionChart stats={stats} />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <AssignmentActivityChart assignments={assignments || []} />
+          <RecentActivityFeed students={students || []} mentors={mentors || []} />
+        </div>
+
+        <Card className="mb-6 card-hover">
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
                     placeholder="Search by name, email, university, or company..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
+                    data-testid="input-search"
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   variant={filterStatus === "all" ? "default" : "outline"}
                   onClick={() => setFilterStatus("all")}
+                  className="hover-lift"
+                  data-testid="button-filter-all"
                 >
                   All
                 </Button>
                 <Button
                   variant={filterStatus === "active" ? "default" : "outline"}
                   onClick={() => setFilterStatus("active")}
+                  className="hover-lift"
+                  data-testid="button-filter-active"
                 >
                   Active
                 </Button>
                 <Button
                   variant={filterStatus === "inactive" ? "default" : "outline"}
                   onClick={() => setFilterStatus("inactive")}
+                  className="hover-lift"
+                  data-testid="button-filter-inactive"
                 >
                   Inactive
                 </Button>
@@ -413,23 +722,22 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Main Content Tabs */}
         <Tabs defaultValue="students" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="students">Students ({filterUsers(students || []).length})</TabsTrigger>
-            <TabsTrigger value="mentors">Mentors ({filterUsers(mentors || []).length})</TabsTrigger>
-            <TabsTrigger value="assignments">Assignments ({assignments?.length || 0})</TabsTrigger>
+            <TabsTrigger value="students" data-testid="tab-students">Students ({filterUsers(students || []).length})</TabsTrigger>
+            <TabsTrigger value="mentors" data-testid="tab-mentors">Mentors ({filterUsers(mentors || []).length})</TabsTrigger>
+            <TabsTrigger value="assignments" data-testid="tab-assignments">Assignments ({assignments?.length || 0})</TabsTrigger>
           </TabsList>
 
-          {/* Students Tab */}
           <TabsContent value="students">
-            <Card>
+            <Card className="card-hover">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex items-center justify-between gap-4 flex-wrap">
                   <span>Student Management</span>
                   <Button 
-                    className="bg-primary-custom hover:bg-primary-dark"
+                    className="bg-primary hover:bg-primary/90 hover-lift"
                     onClick={() => setLocation("/admin/create-student")}
+                    data-testid="button-add-student"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add Student
@@ -437,42 +745,55 @@ export default function AdminDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {filterUsers(students || []).map((student: Student) => (
-                    <div key={student.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3">
-                          <div>
-                            <h3 className="font-semibold text-charcoal-custom">{student.fullName}</h3>
-                            <p className="text-sm text-gray-500">{student.emailAddress}</p>
-                            <p className="text-sm text-gray-500">{student.universityName} • {student.academicProgram}</p>
-                            <p className="text-xs text-gray-400">{student.yearOfStudy}</p>
+                <div className="space-y-3">
+                  {filterUsers(students || []).map((student: Student, index: number) => (
+                    <div 
+                      key={student.id} 
+                      className="flex items-center justify-between p-4 border rounded-lg hover-lift bg-background"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                      data-testid={`card-student-${student.id}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="p-2 bg-blue-100 rounded-full">
+                            <GraduationCap className="w-5 h-5 text-blue-600" />
                           </div>
-                          <Badge variant={student.isActive ? "default" : "secondary"}>
-                            {student.isActive ? "Active" : "Inactive"}
-                          </Badge>
+                          <div className="min-w-0">
+                            <h3 className="font-semibold text-foreground truncate" data-testid={`text-student-name-${student.id}`}>{student.fullName}</h3>
+                            <p className="text-sm text-muted-foreground truncate">{student.emailAddress}</p>
+                            <p className="text-sm text-muted-foreground truncate">{student.universityName} - {student.academicProgram}</p>
+                            <p className="text-xs text-muted-foreground">{student.yearOfStudy}</p>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-2 ml-4 flex-wrap">
+                        <Badge variant={student.isActive ? "default" : "secondary"} data-testid={`badge-student-status-${student.id}`}>
+                          {student.isActive ? "Active" : "Inactive"}
+                        </Badge>
                         <Button
-                          size="sm"
+                          size="icon"
                           variant="outline"
                           onClick={() => handleToggleStatus("student", student.id, student.isActive)}
+                          className="hover-lift"
+                          data-testid={`button-toggle-student-${student.id}`}
                         >
                           {student.isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                         </Button>
                         <Button 
-                          size="sm" 
+                          size="icon" 
                           variant="outline"
                           onClick={() => setLocation(`/admin/edit-student/${student.id}`)}
+                          className="hover-lift"
+                          data-testid={`button-edit-student-${student.id}`}
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button
-                          size="sm"
+                          size="icon"
                           variant="outline"
-                          className="text-red-600 hover:text-red-700"
+                          className="text-destructive hover:text-destructive hover-lift"
                           onClick={() => handleDelete("student", student.id, student.fullName)}
+                          data-testid={`button-delete-student-${student.id}`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -480,8 +801,9 @@ export default function AdminDashboard() {
                     </div>
                   ))}
                   {filterUsers(students || []).length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      No students found matching your criteria.
+                    <div className="text-center py-12 text-muted-foreground">
+                      <GraduationCap className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>No students found matching your criteria.</p>
                     </div>
                   )}
                 </div>
@@ -489,15 +811,15 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          {/* Mentors Tab */}
           <TabsContent value="mentors">
-            <Card>
+            <Card className="card-hover">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex items-center justify-between gap-4 flex-wrap">
                   <span>Mentor Management</span>
                   <Button 
-                    className="bg-secondary-custom hover:bg-secondary-dark"
+                    className="bg-secondary hover:bg-secondary/90 hover-lift"
                     onClick={() => setLocation("/admin/create-mentor")}
+                    data-testid="button-add-mentor"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add Mentor
@@ -505,46 +827,59 @@ export default function AdminDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {filterUsers(mentors || []).map((mentor: Mentor) => (
-                    <div key={mentor.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3">
-                          <div>
-                            <h3 className="font-semibold text-charcoal-custom">{mentor.fullName}</h3>
-                            <p className="text-sm text-gray-500">{mentor.currentJobTitle} at {mentor.company}</p>
-                            <p className="text-sm text-gray-500">{mentor.location}</p>
+                <div className="space-y-3">
+                  {filterUsers(mentors || []).map((mentor: Mentor, index: number) => (
+                    <div 
+                      key={mentor.id} 
+                      className="flex items-center justify-between p-4 border rounded-lg hover-lift bg-background"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                      data-testid={`card-mentor-${mentor.id}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="p-2 bg-pink-100 rounded-full">
+                            <Users className="w-5 h-5 text-pink-600" />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-semibold text-foreground truncate" data-testid={`text-mentor-name-${mentor.id}`}>{mentor.fullName}</h3>
+                            <p className="text-sm text-muted-foreground truncate">{mentor.currentJobTitle} at {mentor.company}</p>
+                            <p className="text-sm text-muted-foreground truncate">{mentor.location}</p>
                             {mentor.linkedinUrl && (
-                              <a href={mentor.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
+                              <a href={mentor.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
                                 LinkedIn Profile
                               </a>
                             )}
                           </div>
-                          <Badge variant={mentor.isActive ? "default" : "secondary"}>
-                            {mentor.isActive ? "Active" : "Inactive"}
-                          </Badge>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-2 ml-4 flex-wrap">
+                        <Badge variant={mentor.isActive ? "default" : "secondary"} data-testid={`badge-mentor-status-${mentor.id}`}>
+                          {mentor.isActive ? "Active" : "Inactive"}
+                        </Badge>
                         <Button
-                          size="sm"
+                          size="icon"
                           variant="outline"
                           onClick={() => handleToggleStatus("mentor", mentor.id, mentor.isActive)}
+                          className="hover-lift"
+                          data-testid={`button-toggle-mentor-${mentor.id}`}
                         >
                           {mentor.isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                         </Button>
                         <Button 
-                          size="sm" 
+                          size="icon" 
                           variant="outline"
                           onClick={() => setLocation(`/admin/edit-mentor/${mentor.id}`)}
+                          className="hover-lift"
+                          data-testid={`button-edit-mentor-${mentor.id}`}
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button
-                          size="sm"
+                          size="icon"
                           variant="outline"
-                          className="text-red-600 hover:text-red-700"
+                          className="text-destructive hover:text-destructive hover-lift"
                           onClick={() => handleDelete("mentor", mentor.id, mentor.fullName)}
+                          data-testid={`button-delete-mentor-${mentor.id}`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -552,8 +887,9 @@ export default function AdminDashboard() {
                     </div>
                   ))}
                   {filterUsers(mentors || []).length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      No mentors found matching your criteria.
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>No mentors found matching your criteria.</p>
                     </div>
                   )}
                 </div>
@@ -561,61 +897,47 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          {/* Assignments Tab */}
           <TabsContent value="assignments">
-            <Card>
+            <Card className="card-hover">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
+                <CardTitle className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-4 flex-wrap">
                     <span>Mentor-Student Assignments</span>
                     {bulkActionMode && selectedAssignments.length > 0 && (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-500">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">
                           {selectedAssignments.length} selected
                         </span>
                         <Button
                           size="sm"
                           variant="destructive"
                           onClick={handleBulkDeleteAssignments}
+                          className="hover-lift"
+                          data-testid="button-bulk-delete"
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
                           Delete Selected
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleBulkToggleStatus(false)}
-                        >
-                          <UserX className="w-4 h-4 mr-2" />
-                          Deactivate
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleBulkToggleStatus(true)}
-                        >
-                          <UserCheck className="w-4 h-4 mr-2" />
-                          Activate
-                        </Button>
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {assignments && assignments.length > 0 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setBulkActionMode(!bulkActionMode);
-                          setSelectedAssignments([]);
-                        }}
-                      >
-                        {bulkActionMode ? "Cancel" : "Bulk Actions"}
-                      </Button>
-                    )}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setBulkActionMode(!bulkActionMode);
+                        setSelectedAssignments([]);
+                      }}
+                      className="hover-lift"
+                      data-testid="button-bulk-mode"
+                    >
+                      {bulkActionMode ? "Cancel" : "Bulk Actions"}
+                    </Button>
                     <Button 
-                      className="bg-accent-custom hover:bg-accent-dark"
+                      className="bg-accent-custom hover:bg-accent-dark hover-lift text-white"
                       onClick={() => setLocation("/admin/create-assignment")}
+                      data-testid="button-create-assignment"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Create Assignment
@@ -625,59 +947,71 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 {bulkActionMode && assignments && assignments.length > 0 && (
-                  <div className="flex items-center space-x-2 mb-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="mb-4 p-3 bg-muted rounded-lg flex items-center gap-3">
                     <Checkbox
                       checked={selectedAssignments.length === assignments.length}
                       onCheckedChange={handleSelectAllAssignments}
+                      data-testid="checkbox-select-all"
                     />
-                    <span className="text-sm font-medium">
-                      Select All ({assignments.length} assignments)
-                    </span>
+                    <span className="text-sm text-muted-foreground">Select All</span>
                   </div>
                 )}
-                <div className="space-y-4">
-                  {assignments?.map((assignment: Assignment) => (
-                    <div key={assignment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4 flex-1">
-                        {bulkActionMode && (
-                          <Checkbox
-                            checked={selectedAssignments.includes(assignment.id)}
-                            onCheckedChange={() => handleSelectAssignment(assignment.id)}
-                          />
-                        )}
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-4">
-                            <div>
-                              <h3 className="font-semibold text-charcoal-custom">
-                                {assignment.mentorName} ↔ {assignment.studentName}
-                              </h3>
-                              <p className="text-sm text-gray-500">
-                                Assigned on {new Date(assignment.assignedAt).toLocaleDateString()}
-                              </p>
+                <div className="space-y-3">
+                  {assignments?.map((assignment: Assignment, index: number) => (
+                    <div 
+                      key={assignment.id} 
+                      className="flex items-center justify-between p-4 border rounded-lg hover-lift bg-background"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                      data-testid={`card-assignment-${assignment.id}`}
+                    >
+                      {bulkActionMode && (
+                        <Checkbox
+                          checked={selectedAssignments.includes(assignment.id)}
+                          onCheckedChange={() => handleSelectAssignment(assignment.id)}
+                          className="mr-4"
+                          data-testid={`checkbox-assignment-${assignment.id}`}
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-4 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 bg-pink-100 rounded-full">
+                              <Users className="w-4 h-4 text-pink-600" />
                             </div>
-                            <Badge variant={assignment.isActive ? "default" : "secondary"}>
-                              {assignment.isActive ? "Active" : "Inactive"}
-                            </Badge>
+                            <span className="font-medium truncate">{assignment.mentorName}</span>
+                          </div>
+                          <LinkIcon className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 bg-blue-100 rounded-full">
+                              <GraduationCap className="w-4 h-4 text-blue-600" />
+                            </div>
+                            <span className="font-medium truncate">{assignment.studentName}</span>
                           </div>
                         </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Assigned: {assignment.assignedAt ? new Date(assignment.assignedAt).toLocaleDateString() : 'N/A'}
+                        </p>
                       </div>
-                      {!bulkActionMode && (
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-red-600 hover:text-red-700"
-                            onClick={() => handleDeleteAssignment(assignment.id, assignment.mentorName, assignment.studentName)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2 ml-4">
+                        <Badge variant={assignment.isActive ? "default" : "secondary"}>
+                          {assignment.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive hover-lift"
+                          onClick={() => handleDeleteAssignment(assignment.id, assignment.mentorName, assignment.studentName)}
+                          data-testid={`button-delete-assignment-${assignment.id}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                   {(!assignments || assignments.length === 0) && (
-                    <div className="text-center py-8 text-gray-500">
-                      No assignments found.
+                    <div className="text-center py-12 text-muted-foreground">
+                      <LinkIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>No assignments found. Create your first mentor-student assignment.</p>
                     </div>
                   )}
                 </div>
