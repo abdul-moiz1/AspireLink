@@ -56,31 +56,32 @@ interface DashboardStats {
 }
 
 interface Student {
-  id: number;
-  fullName: string;
-  emailAddress: string;
-  universityName: string;
-  academicProgram: string;
-  yearOfStudy: string;
+  id: string;
+  fullName: string | null;
+  email: string;
+  universityName: string | null;
+  academicProgram: string | null;
+  yearOfStudy: string | null;
   isActive: boolean;
   createdAt: string;
 }
 
 interface Mentor {
-  id: number;
-  fullName: string;
-  linkedinUrl?: string;
-  currentJobTitle?: string;
-  company?: string;
-  location?: string;
+  id: string;
+  fullName: string | null;
+  email: string;
+  linkedinUrl?: string | null;
+  currentJobTitle?: string | null;
+  company?: string | null;
+  location?: string | null;
   isActive: boolean;
   createdAt: string;
 }
 
 interface Assignment {
   id: number;
-  mentorId: number;
-  studentId: number;
+  mentorUserId: string;
+  studentUserId: string;
   mentorName: string;
   studentName: string;
   isActive: boolean;
@@ -442,7 +443,7 @@ export default function AdminDashboard() {
   });
 
   const toggleStatusMutation = useMutation({
-    mutationFn: async ({ type, id, isActive }: { type: "student" | "mentor"; id: number; isActive: boolean }) => {
+    mutationFn: async ({ type, id, isActive }: { type: "student" | "mentor"; id: string; isActive: boolean }) => {
       return apiRequest(`/api/admin/${type}s/${id}/status`, "PUT", { isActive });
     },
     onSuccess: (_, { type }) => {
@@ -463,7 +464,7 @@ export default function AdminDashboard() {
   });
 
   const deleteUserMutation = useMutation({
-    mutationFn: async ({ type, id }: { type: "student" | "mentor"; id: number }) => {
+    mutationFn: async ({ type, id }: { type: "student" | "mentor"; id: string }) => {
       return apiRequest(`/api/admin/${type}s/${id}`, "DELETE");
     },
     onSuccess: (_, { type }) => {
@@ -490,14 +491,14 @@ export default function AdminDashboard() {
     setLocation("/");
   };
 
-  const handleToggleStatus = (type: "student" | "mentor", id: number, currentStatus: boolean) => {
+  const handleToggleStatus = (type: "student" | "mentor", id: string, currentStatus: boolean) => {
     if (window.confirm(`Are you sure you want to ${currentStatus ? "deactivate" : "activate"} this ${type}?`)) {
       toggleStatusMutation.mutate({ type, id, isActive: !currentStatus });
     }
   };
 
-  const handleDelete = (type: "student" | "mentor", id: number, name: string) => {
-    if (window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
+  const handleDelete = (type: "student" | "mentor", id: string, name: string | null) => {
+    if (window.confirm(`Are you sure you want to delete ${name || 'this user'}? This action cannot be undone.`)) {
       deleteUserMutation.mutate({ type, id });
     }
   };
@@ -505,10 +506,10 @@ export default function AdminDashboard() {
   const filterUsers = (users: any[]) => {
     if (!users) return [];
     return users.filter(user => {
-      const matchesSearch = user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           user.emailAddress?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           user.universityName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           user.company?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = (user.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (user.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (user.universityName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (user.company || '').toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesStatus = filterStatus === "all" || 
                            (filterStatus === "active" && user.isActive) ||
@@ -659,10 +660,10 @@ export default function AdminDashboard() {
                             <GraduationCap className="w-5 h-5 text-blue-600" />
                           </div>
                           <div className="min-w-0">
-                            <h3 className="font-semibold text-foreground truncate" data-testid={`text-student-name-${student.id}`}>{student.fullName}</h3>
-                            <p className="text-sm text-muted-foreground truncate">{student.emailAddress}</p>
-                            <p className="text-sm text-muted-foreground truncate">{student.universityName} - {student.academicProgram}</p>
-                            <p className="text-xs text-muted-foreground">{student.yearOfStudy}</p>
+                            <h3 className="font-semibold text-foreground truncate" data-testid={`text-student-name-${student.id}`}>{student.fullName || 'No Name'}</h3>
+                            <p className="text-sm text-muted-foreground truncate">{student.email}</p>
+                            <p className="text-sm text-muted-foreground truncate">{student.universityName || 'N/A'} - {student.academicProgram || 'N/A'}</p>
+                            <p className="text-xs text-muted-foreground">{student.yearOfStudy || 'N/A'}</p>
                           </div>
                         </div>
                       </div>
@@ -737,9 +738,9 @@ export default function AdminDashboard() {
                             <Users className="w-5 h-5 text-pink-600" />
                           </div>
                           <div className="min-w-0">
-                            <h3 className="font-semibold text-foreground truncate" data-testid={`text-mentor-name-${mentor.id}`}>{mentor.fullName}</h3>
-                            <p className="text-sm text-muted-foreground truncate">{mentor.currentJobTitle} at {mentor.company}</p>
-                            <p className="text-sm text-muted-foreground truncate">{mentor.location}</p>
+                            <h3 className="font-semibold text-foreground truncate" data-testid={`text-mentor-name-${mentor.id}`}>{mentor.fullName || 'No Name'}</h3>
+                            <p className="text-sm text-muted-foreground truncate">{mentor.currentJobTitle || 'N/A'} at {mentor.company || 'N/A'}</p>
+                            <p className="text-sm text-muted-foreground truncate">{mentor.location || 'N/A'}</p>
                             {mentor.linkedinUrl && (
                               <a href={mentor.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
                                 LinkedIn Profile

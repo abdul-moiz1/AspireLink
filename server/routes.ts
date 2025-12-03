@@ -2,46 +2,11 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, isMentor, isStudent } from "./firebaseAuth";
-import { insertContactSchema, insertMentorRegistrationSchema, insertStudentRegistrationSchema } from "@shared/schema";
+import { insertContactSchema, insertMentorSchema, insertStudentSchema, insertCohortSchema, insertAssignmentSchema, insertMentoringSessionSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Firebase Auth
   await setupAuth(app);
-
-  // Seed admin endpoint - creates admin user if not exists
-  app.post('/api/seed-admin', async (req, res) => {
-    try {
-      const { email, secretKey } = req.body;
-      
-      // Simple security check - in production, use environment variable
-      if (secretKey !== 'aspirelink-admin-seed-2025') {
-        return res.status(403).json({ error: 'Invalid secret key' });
-      }
-      
-      if (!email) {
-        return res.status(400).json({ error: 'Email is required' });
-      }
-      
-      // Check if admin already exists
-      const existingAdmin = await storage.getAdminByEmail(email);
-      if (existingAdmin) {
-        return res.json({ message: 'Admin already exists', admin: existingAdmin });
-      }
-      
-      // Create the admin (password is a placeholder - actual auth uses Firebase)
-      const newAdmin = await storage.createAdmin({ 
-        email, 
-        password: 'firebase-auth-managed' 
-      });
-      console.log(`Created admin user: ${email}`);
-      
-      res.json({ message: 'Admin created successfully', admin: newAdmin });
-    } catch (error) {
-      console.error('Error creating admin:', error);
-      res.status(500).json({ error: 'Failed to create admin' });
-    }
-  });
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -51,84 +16,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let user = await storage.getUser(userId);
       
       if (!user) {
-        // Create new user
         user = await storage.upsertUser({
           id: userId,
           email: userEmail,
-          firstName: req.user.displayName?.split(' ')[0] || null,
-          lastName: req.user.displayName?.split(' ').slice(1).join(' ') || null,
-          profileImageUrl: null,
+          fullName: req.user.displayName || null,
         });
-      }
-      
-      // Ensure registration is linked to Firebase userId for existing users with roles
-      if (user.role === 'mentor' && user.mentorRegistrationId && userEmail) {
-        const mentorReg = await storage.getMentorRegistration(user.mentorRegistrationId);
-        if (mentorReg && !mentorReg.userId) {
-          await storage.updateMentorRegistration(mentorReg.id, { userId });
-          console.log(`Linked existing mentor registration ${mentorReg.id} to Firebase user ${userId}`);
-        }
-      } else if (user.role === 'student' && user.studentRegistrationId && userEmail) {
-        const studentReg = await storage.getStudentRegistration(user.studentRegistrationId);
-        if (studentReg && !studentReg.userId) {
-          await storage.updateStudentRegistration(studentReg.id, { userId });
-          console.log(`Linked existing student registration ${studentReg.id} to Firebase user ${userId}`);
-        }
-      }
-      
-      // Check if user has a role assigned - if not, check for existing registrations
-      if (!user.role && userEmail) {
-        // Priority 1: Check for admin first (highest priority)
-        const adminRecord = await storage.getAdminByEmail(userEmail);
-        if (adminRecord) {
-          user = await storage.updateUserRole(userId, 'admin');
-          console.log(`Assigned admin role to user ${userEmail}`);
-        } else {
-          // Priority 2: Check for student and mentor registrations
-          const studentRegistration = await storage.getStudentByEmail(userEmail);
-          const mentorRegistration = await storage.getMentorByEmail(userEmail);
-          
-          // Handle dual registration case - warn and prefer the most recent
-          if (studentRegistration && mentorRegistration) {
-            console.warn(`User ${userEmail} has both student and mentor registrations. Using the most recent one.`);
-            const studentDate = studentRegistration.createdAt ? new Date(studentRegistration.createdAt) : new Date(0);
-            const mentorDate = mentorRegistration.createdAt ? new Date(mentorRegistration.createdAt) : new Date(0);
-            
-            if (mentorDate > studentDate) {
-              user = await storage.updateUserRole(userId, 'mentor', mentorRegistration.id);
-              // Link the Firebase userId to the mentor registration for assignment lookups
-              if (!mentorRegistration.userId) {
-                await storage.updateMentorRegistration(mentorRegistration.id, { userId });
-                console.log(`Linked mentor registration ${mentorRegistration.id} to Firebase user ${userId}`);
-              }
-              console.log(`Assigned mentor role to user ${userEmail} based on more recent registration ${mentorRegistration.id}`);
-            } else {
-              user = await storage.updateUserRole(userId, 'student', studentRegistration.id);
-              // Link the Firebase userId to the student registration for assignment lookups
-              if (!studentRegistration.userId) {
-                await storage.updateStudentRegistration(studentRegistration.id, { userId });
-                console.log(`Linked student registration ${studentRegistration.id} to Firebase user ${userId}`);
-              }
-              console.log(`Assigned student role to user ${userEmail} based on more recent registration ${studentRegistration.id}`);
-            }
-          } else if (studentRegistration) {
-            user = await storage.updateUserRole(userId, 'student', studentRegistration.id);
-            // Link the Firebase userId to the student registration for assignment lookups
-            if (!studentRegistration.userId) {
-              await storage.updateStudentRegistration(studentRegistration.id, { userId });
-              console.log(`Linked student registration ${studentRegistration.id} to Firebase user ${userId}`);
-            }
-            console.log(`Assigned student role to user ${userEmail} based on registration ${studentRegistration.id}`);
-          } else if (mentorRegistration) {
-            user = await storage.updateUserRole(userId, 'mentor', mentorRegistration.id);
-            // Link the Firebase userId to the mentor registration for assignment lookups
-            if (!mentorRegistration.userId) {
-              await storage.updateMentorRegistration(mentorRegistration.id, { userId });
-              console.log(`Linked mentor registration ${mentorRegistration.id} to Firebase user ${userId}`);
-            }
-            console.log(`Assigned mentor role to user ${userEmail} based on registration ${mentorRegistration.id}`);
-          }
-        }
       }
       
       res.json(user);
@@ -138,7 +30,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Auth registration endpoint
   app.post('/api/auth/register', isAuthenticated, async (req: any, res) => {
     try {
       const { email, displayName } = req.body;
@@ -147,9 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.upsertUser({
         id: userId,
         email: email,
-        firstName: displayName?.split(' ')[0] || null,
-        lastName: displayName?.split(' ').slice(1).join(' ') || null,
-        profileImageUrl: null,
+        fullName: displayName || null,
       });
       
       res.json(user);
@@ -159,7 +48,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Check if email is already registered as student, mentor, or admin
+  // Check if email is already registered
   app.post("/api/check-email-registration", async (req, res) => {
     try {
       const { email } = req.body;
@@ -167,31 +56,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Email is required" });
       }
 
-      const studentRegistration = await storage.getStudentByEmail(email);
-      const mentorRegistration = await storage.getMentorByEmail(email);
-      const adminUser = await storage.getAdminByEmail(email);
-
-      if (adminUser) {
+      const user = await storage.getUserByEmail(email);
+      
+      if (user && user.role) {
         return res.json({ 
           exists: true, 
-          type: 'admin',
-          message: "Welcome back, Admin! Sign in to access your admin dashboard."
-        });
-      }
-
-      if (studentRegistration) {
-        return res.json({ 
-          exists: true, 
-          type: 'student',
-          message: "This email is already registered as a student. Please sign in to access your student dashboard."
-        });
-      }
-
-      if (mentorRegistration) {
-        return res.json({ 
-          exists: true, 
-          type: 'mentor',
-          message: "This email is already registered as a mentor. Please sign in to access your mentor dashboard."
+          type: user.role,
+          message: `This email is already registered as a ${user.role}. Please sign in to access your dashboard.`
         });
       }
 
@@ -202,7 +73,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Contact form submission endpoint
+  // Contact form submission
   app.post("/api/contact", async (req, res) => {
     try {
       const contactData = insertContactSchema.parse(req.body);
@@ -218,7 +89,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all contacts (for admin purposes)
   app.get("/api/contacts", async (req, res) => {
     try {
       const contacts = await storage.getAllContacts();
@@ -229,16 +99,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Mentor registration submission endpoint (public - no auth required)
+  // ============ USER REGISTRATION ROUTES ============
+  
+  // Mentor registration (creates or updates user with mentor role)
   app.post("/api/mentor-registration", async (req: any, res) => {
     try {
-      const registrationData = insertMentorRegistrationSchema.parse({
-        ...req.body,
-        userId: null
+      // Map frontend field names to schema field names
+      const { emailAddress, ...rest } = req.body;
+      const registrationData = insertMentorSchema.parse({
+        ...rest,
+        email: emailAddress || rest.email,
+        role: 'mentor'
       });
-      const registration = await storage.createMentorRegistration(registrationData);
       
-      res.json({ success: true, id: registration.id });
+      // Check if user already exists
+      let user = await storage.getUserByEmail(registrationData.email);
+      
+      if (user) {
+        if (user.role) {
+          return res.status(400).json({ 
+            error: `Email already registered as ${user.role}` 
+          });
+        }
+        // Update existing user with mentor data
+        user = await storage.updateUser(user.id, {
+          ...registrationData,
+          role: 'mentor'
+        });
+      } else {
+        // Create new user with mentor data
+        user = await storage.upsertUser({
+          ...registrationData,
+          role: 'mentor'
+        });
+      }
+      
+      res.json({ success: true, id: user.id });
     } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ error: "Invalid registration data", details: error.errors });
@@ -249,27 +145,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all mentor registrations
-  app.get("/api/mentor-registrations", async (req, res) => {
-    try {
-      const registrations = await storage.getAllMentorRegistrations();
-      res.json(registrations);
-    } catch (error) {
-      console.error("Error fetching mentor registrations:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
-  // Student registration submission endpoint (public - no auth required)
+  // Student registration (creates or updates user with student role)
   app.post("/api/student-registration", async (req: any, res) => {
     try {
-      const registrationData = insertStudentRegistrationSchema.parse({
-        ...req.body,
-        userId: null
+      // Map frontend field names to schema field names
+      const { emailAddress, ...rest } = req.body;
+      const registrationData = insertStudentSchema.parse({
+        ...rest,
+        email: emailAddress || rest.email,
+        role: 'student'
       });
-      const registration = await storage.createStudentRegistration(registrationData);
       
-      res.json({ success: true, id: registration.id });
+      // Check if user already exists
+      let user = await storage.getUserByEmail(registrationData.email);
+      
+      if (user) {
+        if (user.role) {
+          return res.status(400).json({ 
+            error: `Email already registered as ${user.role}` 
+          });
+        }
+        // Update existing user with student data
+        user = await storage.updateUser(user.id, {
+          ...registrationData,
+          role: 'student'
+        });
+      } else {
+        // Create new user with student data
+        user = await storage.upsertUser({
+          ...registrationData,
+          role: 'student'
+        });
+      }
+      
+      res.json({ success: true, id: user.id });
     } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ error: "Invalid registration data", details: error.errors });
@@ -280,31 +189,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all student registrations
-  app.get("/api/student-registrations", async (req, res) => {
+  // Get all mentors
+  app.get("/api/mentors", async (req, res) => {
     try {
-      const registrations = await storage.getAllStudentRegistrations();
-      res.json(registrations);
+      const mentors = await storage.getUsersByRole('mentor');
+      res.json(mentors);
     } catch (error) {
-      console.error("Error fetching student registrations:", error);
+      console.error("Error fetching mentors:", error);
       res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Get all students
+  app.get("/api/students", async (req, res) => {
+    try {
+      const students = await storage.getUsersByRole('student');
+      res.json(students);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Get single user
+  app.get("/api/users/:id", async (req, res) => {
+    try {
+      const user = await storage.getUser(req.params.id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Update user
+  app.put("/api/users/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = await storage.updateUser(req.params.id, req.body);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+
+  // Delete user
+  app.delete("/api/users/:id", async (req, res) => {
+    try {
+      await storage.deleteUser(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ error: "Failed to delete user" });
     }
   });
 
   // ============ COHORT ROUTES ============
   
-  // Create cohort (admin only)
   app.post("/api/cohorts", async (req, res) => {
     try {
-      const cohort = await storage.createCohort(req.body);
+      const cohortData = insertCohortSchema.parse(req.body);
+      const cohort = await storage.createCohort(cohortData);
       res.json(cohort);
     } catch (error) {
-      console.error("Error creating cohort:", error);
-      res.status(500).json({ error: "Failed to create cohort" });
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid cohort data", details: error.errors });
+      } else {
+        console.error("Error creating cohort:", error);
+        res.status(500).json({ error: "Failed to create cohort" });
+      }
     }
   });
 
-  // Get all cohorts (admin only)
   app.get("/api/cohorts", async (req, res) => {
     try {
       const cohortList = await storage.getAllCohorts();
@@ -315,7 +274,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get single cohort (admin only)
   app.get("/api/cohorts/:id", async (req, res) => {
     try {
       const cohort = await storage.getCohort(parseInt(req.params.id));
@@ -329,7 +287,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update cohort (admin only)
   app.put("/api/cohorts/:id", async (req, res) => {
     try {
       const cohort = await storage.updateCohort(parseInt(req.params.id), req.body);
@@ -340,7 +297,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete cohort (admin only)
   app.delete("/api/cohorts/:id", async (req, res) => {
     try {
       await storage.deleteCohort(parseInt(req.params.id));
@@ -351,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get cohort members (admin only)
+  // Cohort members
   app.get("/api/cohorts/:id/members", async (req, res) => {
     try {
       const members = await storage.getCohortMembers(parseInt(req.params.id));
@@ -359,16 +315,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Enrich with user details
       const enrichedMembers = await Promise.all(members.map(async (member) => {
         const user = await storage.getUser(member.userId);
-        let registration = null;
-        if (member.role === 'mentor') {
-          registration = await storage.getMentorByUserId(member.userId);
-        } else if (member.role === 'student') {
-          registration = await storage.getStudentByUserId(member.userId);
-        }
         return {
           ...member,
-          user,
-          registration
+          user
         };
       }));
       
@@ -379,7 +328,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add member to cohort (admin only)
   app.post("/api/cohorts/:id/members", async (req, res) => {
     try {
       const { userId, role } = req.body;
@@ -396,7 +344,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Remove member from cohort (admin only)
   app.delete("/api/cohorts/:id/members/:userId", async (req, res) => {
     try {
       await storage.removeCohortMember(parseInt(req.params.id), req.params.userId);
@@ -407,19 +354,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get cohort assignments (admin only)
+  // ============ ASSIGNMENT ROUTES ============
+  
+  app.get("/api/assignments", async (req, res) => {
+    try {
+      const assignments = await storage.getAllAssignments();
+      
+      // Enrich with mentor and student details
+      const enrichedAssignments = await Promise.all(assignments.map(async (assignment) => {
+        const mentor = await storage.getUser(assignment.mentorUserId);
+        const student = await storage.getUser(assignment.studentUserId);
+        const cohort = await storage.getCohort(assignment.cohortId);
+        return {
+          ...assignment,
+          mentor,
+          student,
+          cohort
+        };
+      }));
+      
+      res.json(enrichedAssignments);
+    } catch (error) {
+      console.error("Error fetching assignments:", error);
+      res.status(500).json({ error: "Failed to fetch assignments" });
+    }
+  });
+
   app.get("/api/cohorts/:id/assignments", async (req, res) => {
     try {
       const assignments = await storage.getAssignmentsByCohort(parseInt(req.params.id));
       
       // Enrich with mentor and student details
       const enrichedAssignments = await Promise.all(assignments.map(async (assignment) => {
-        const mentor = await storage.getMentorRegistration(assignment.mentorId);
-        const student = await storage.getStudentRegistration(assignment.studentId);
+        const mentor = await storage.getUser(assignment.mentorUserId);
+        const student = await storage.getUser(assignment.studentUserId);
         return {
           ...assignment,
           mentorName: mentor?.fullName || 'Unknown Mentor',
-          studentName: student?.fullName || 'Unknown Student'
+          studentName: student?.fullName || 'Unknown Student',
+          mentor,
+          student
         };
       }));
       
@@ -430,14 +404,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create assignment in cohort (admin only)
   app.post("/api/cohorts/:id/assignments", async (req, res) => {
     try {
-      const { mentorId, studentId } = req.body;
+      const { mentorUserId, studentUserId } = req.body;
       const cohortId = parseInt(req.params.id);
       
-      const mentor = await storage.getMentorRegistration(mentorId);
-      const student = await storage.getStudentRegistration(studentId);
+      const mentor = await storage.getUser(mentorUserId);
+      const student = await storage.getUser(studentUserId);
       
       if (!mentor || !student) {
         return res.status(404).json({ error: "Mentor or student not found" });
@@ -445,10 +418,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const assignment = await storage.createAssignment({
         cohortId,
-        mentorId,
-        studentId,
-        mentorUserId: mentor.userId || undefined,
-        studentUserId: student.userId || undefined,
+        mentorUserId,
+        studentUserId,
         isActive: true
       });
       
@@ -459,25 +430,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ============ SESSION ROUTES ============
-  
-  // Create session (mentor only)
-  app.post("/api/sessions", isAuthenticated, isMentor, async (req: any, res) => {
+  app.put("/api/assignments/:id", async (req, res) => {
     try {
-      const userId = req.user.uid;
-      const session = await storage.createSession({
-        ...req.body,
-        createdBy: userId
-      });
-      res.json(session);
+      const assignment = await storage.updateAssignment(parseInt(req.params.id), req.body);
+      res.json(assignment);
     } catch (error) {
-      console.error("Error creating session:", error);
-      res.status(500).json({ error: "Failed to create session" });
+      console.error("Error updating assignment:", error);
+      res.status(500).json({ error: "Failed to update assignment" });
     }
   });
 
-  // Get sessions by assignment
-  app.get("/api/assignments/:id/sessions", isAuthenticated, async (req, res) => {
+  app.delete("/api/assignments/:id", async (req, res) => {
+    try {
+      await storage.deleteAssignment(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting assignment:", error);
+      res.status(500).json({ error: "Failed to delete assignment" });
+    }
+  });
+
+  // ============ SESSION ROUTES ============
+  
+  app.post("/api/sessions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.uid;
+      const sessionData = insertMentoringSessionSchema.parse({
+        ...req.body,
+        createdBy: userId
+      });
+      const session = await storage.createSession(sessionData);
+      res.json(session);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid session data", details: error.errors });
+      } else {
+        console.error("Error creating session:", error);
+        res.status(500).json({ error: "Failed to create session" });
+      }
+    }
+  });
+
+  app.get("/api/assignments/:id/sessions", async (req, res) => {
     try {
       const sessions = await storage.getSessionsByAssignment(parseInt(req.params.id));
       res.json(sessions);
@@ -487,7 +481,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update session
   app.put("/api/sessions/:id", isAuthenticated, async (req, res) => {
     try {
       const session = await storage.updateSession(parseInt(req.params.id), req.body);
@@ -498,7 +491,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete session
   app.delete("/api/sessions/:id", isAuthenticated, async (req, res) => {
     try {
       await storage.deleteSession(parseInt(req.params.id));
@@ -511,39 +503,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============ MENTOR DASHBOARD ROUTES ============
   
-  // Get mentor's assignments
   app.get("/api/mentor/assignments", isAuthenticated, isMentor, async (req: any, res) => {
     try {
       const userId = req.user.uid;
-      
-      // First try to get assignments by Firebase userId
-      let assignments = await storage.getAssignmentsByMentorUserId(userId);
-      
-      // If no assignments found by userId, try by mentorId (registration ID)
-      if (assignments.length === 0) {
-        const user = await storage.getUser(userId);
-        if (user?.mentorRegistrationId) {
-          assignments = await storage.getAssignmentsByMentor(user.mentorRegistrationId);
-          
-          // Update these assignments to have the correct mentorUserId for future queries
-          // Use Promise.allSettled to continue even if some updates fail
-          await Promise.allSettled(assignments.map(async (assignment) => {
-            if (!assignment.mentorUserId) {
-              try {
-                await storage.updateAssignment(assignment.id, { mentorUserId: userId });
-              } catch (e) {
-                console.warn(`Failed to update assignment ${assignment.id} with mentorUserId:`, e);
-              }
-            }
-          }));
-        }
-      }
+      const assignments = await storage.getAssignmentsByMentor(userId);
       
       // Enrich with student details and cohort info
-      // Use Promise.allSettled to continue even if some enrichments fail
-      const enrichmentResults = await Promise.allSettled(assignments.map(async (assignment) => {
-        const student = await storage.getStudentRegistration(assignment.studentId);
-        const cohort = assignment.cohortId ? await storage.getCohort(assignment.cohortId) : null;
+      const enrichedAssignments = await Promise.all(assignments.map(async (assignment) => {
+        const student = await storage.getUser(assignment.studentUserId);
+        const cohort = await storage.getCohort(assignment.cohortId);
         const sessions = await storage.getSessionsByAssignment(assignment.id);
         return {
           ...assignment,
@@ -553,10 +521,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }));
       
-      const enrichedAssignments = enrichmentResults
-        .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled')
-        .map(result => result.value);
-      
       res.json(enrichedAssignments);
     } catch (error) {
       console.error("Error fetching mentor assignments:", error);
@@ -564,7 +528,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get mentor's cohorts
   app.get("/api/mentor/cohorts", isAuthenticated, isMentor, async (req: any, res) => {
     try {
       const userId = req.user.uid;
@@ -578,39 +541,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============ STUDENT DASHBOARD ROUTES ============
   
-  // Get student's assignments
   app.get("/api/student/assignments", isAuthenticated, isStudent, async (req: any, res) => {
     try {
       const userId = req.user.uid;
-      
-      // First try to get assignments by Firebase userId
-      let assignments = await storage.getAssignmentsByStudentUserId(userId);
-      
-      // If no assignments found by userId, try by studentId (registration ID)
-      if (assignments.length === 0) {
-        const user = await storage.getUser(userId);
-        if (user?.studentRegistrationId) {
-          assignments = await storage.getAssignmentsByStudent(user.studentRegistrationId);
-          
-          // Update these assignments to have the correct studentUserId for future queries
-          // Use Promise.allSettled to continue even if some updates fail
-          await Promise.allSettled(assignments.map(async (assignment) => {
-            if (!assignment.studentUserId) {
-              try {
-                await storage.updateAssignment(assignment.id, { studentUserId: userId });
-              } catch (e) {
-                console.warn(`Failed to update assignment ${assignment.id} with studentUserId:`, e);
-              }
-            }
-          }));
-        }
-      }
+      const assignments = await storage.getAssignmentsByStudent(userId);
       
       // Enrich with mentor details and cohort info
-      // Use Promise.allSettled to continue even if some enrichments fail
-      const enrichmentResults = await Promise.allSettled(assignments.map(async (assignment) => {
-        const mentor = await storage.getMentorRegistration(assignment.mentorId);
-        const cohort = assignment.cohortId ? await storage.getCohort(assignment.cohortId) : null;
+      const enrichedAssignments = await Promise.all(assignments.map(async (assignment) => {
+        const mentor = await storage.getUser(assignment.mentorUserId);
+        const cohort = await storage.getCohort(assignment.cohortId);
         const sessions = await storage.getSessionsByAssignment(assignment.id);
         return {
           ...assignment,
@@ -620,10 +559,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }));
       
-      const enrichedAssignments = enrichmentResults
-        .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled')
-        .map(result => result.value);
-      
       res.json(enrichedAssignments);
     } catch (error) {
       console.error("Error fetching student assignments:", error);
@@ -631,7 +566,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get student's cohorts
   app.get("/api/student/cohorts", isAuthenticated, isStudent, async (req: any, res) => {
     try {
       const userId = req.user.uid;
@@ -645,297 +579,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============ ADMIN ROUTES ============
   
-  // Set user role (admin only)
-  app.put("/api/admin/users/:id/role", isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const { role } = req.body;
-      const user = await storage.updateUserRole(req.params.id, role);
-      res.json(user);
-    } catch (error) {
-      console.error("Error updating user role:", error);
-      res.status(500).json({ error: "Failed to update user role" });
-    }
-  });
-
-  // Admin dashboard stats
+  // Admin stats
   app.get("/api/admin/stats", async (req, res) => {
     try {
-      const students = await storage.getAllStudentRegistrations();
-      const mentors = await storage.getAllMentorRegistrations();
+      const students = await storage.getUsersByRole('student');
+      const mentors = await storage.getUsersByRole('mentor');
       const assignments = await storage.getAllAssignments();
-      const cohortList = await storage.getAllCohorts();
       
-      const stats = {
+      res.json({
         totalStudents: students.length,
         totalMentors: mentors.length,
         activeStudents: students.filter(s => s.isActive).length,
         activeMentors: mentors.filter(m => m.isActive).length,
-        totalAssignments: assignments.length,
-        totalCohorts: cohortList.length,
-        activeCohorts: cohortList.filter(c => c.isActive).length
-      };
-      
-      res.json(stats);
+        totalAssignments: assignments.length
+      });
     } catch (error) {
-      console.error("Admin stats error:", error);
-      res.status(500).json({ success: false, error: "Failed to fetch stats" });
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ error: "Failed to fetch stats" });
     }
   });
 
-  // Admin create student endpoint
-  app.post("/api/admin/students", async (req, res) => {
-    try {
-      const studentData = req.body;
-      const newStudent = await storage.createStudentRegistration(studentData);
-      res.json(newStudent);
-    } catch (error) {
-      console.error("Error creating student:", error);
-      res.status(500).json({ error: "Failed to create student" });
-    }
-  });
-
-  // Admin create mentor endpoint
-  app.post("/api/admin/mentors", async (req, res) => {
-    try {
-      const mentorData = req.body;
-      const newMentor = await storage.createMentorRegistration(mentorData);
-      res.json(newMentor);
-    } catch (error) {
-      console.error("Error creating mentor:", error);
-      res.status(500).json({ error: "Failed to create mentor" });
-    }
-  });
-
-  // Admin get single student endpoint
-  app.get("/api/admin/students/:id", async (req, res) => {
-    try {
-      const studentId = parseInt(req.params.id);
-      const student = await storage.getStudentRegistration(studentId);
-      
-      if (!student) {
-        return res.status(404).json({ error: "Student not found" });
-      }
-      
-      res.json(student);
-    } catch (error) {
-      console.error("Error fetching student:", error);
-      res.status(500).json({ error: "Failed to fetch student" });
-    }
-  });
-
-  // Admin get single mentor endpoint
-  app.get("/api/admin/mentors/:id", async (req, res) => {
-    try {
-      const mentorId = parseInt(req.params.id);
-      const mentor = await storage.getMentorRegistration(mentorId);
-      
-      if (!mentor) {
-        return res.status(404).json({ error: "Mentor not found" });
-      }
-      
-      res.json(mentor);
-    } catch (error) {
-      console.error("Error fetching mentor:", error);
-      res.status(500).json({ error: "Failed to fetch mentor" });
-    }
-  });
-
-  // Admin update student endpoint
-  app.put("/api/admin/students/:id", async (req, res) => {
-    try {
-      const studentId = parseInt(req.params.id);
-      const updateData = req.body;
-      const updatedStudent = await storage.updateStudentRegistration(studentId, updateData);
-      res.json(updatedStudent);
-    } catch (error) {
-      console.error("Error updating student:", error);
-      res.status(500).json({ error: "Failed to update student" });
-    }
-  });
-
-  // Admin update mentor endpoint
-  app.put("/api/admin/mentors/:id", async (req, res) => {
-    try {
-      const mentorId = parseInt(req.params.id);
-      const updateData = req.body;
-      const updatedMentor = await storage.updateMentorRegistration(mentorId, updateData);
-      res.json(updatedMentor);
-    } catch (error) {
-      console.error("Error updating mentor:", error);
-      res.status(500).json({ error: "Failed to update mentor" });
-    }
-  });
-
-  // Get all students for admin
+  // Admin get all students
   app.get("/api/admin/students", async (req, res) => {
     try {
-      const students = await storage.getAllStudentRegistrations();
+      const students = await storage.getUsersByRole('student');
       res.json(students);
     } catch (error) {
-      console.error("Get students error:", error);
-      res.status(500).json({ success: false, error: "Failed to fetch students" });
+      console.error("Error fetching students:", error);
+      res.status(500).json({ error: "Failed to fetch students" });
     }
   });
 
-  // Get all mentors for admin
+  // Admin get all mentors
   app.get("/api/admin/mentors", async (req, res) => {
     try {
-      const mentors = await storage.getAllMentorRegistrations();
+      const mentors = await storage.getUsersByRole('mentor');
       res.json(mentors);
     } catch (error) {
-      console.error("Get mentors error:", error);
-      res.status(500).json({ success: false, error: "Failed to fetch mentors" });
+      console.error("Error fetching mentors:", error);
+      res.status(500).json({ error: "Failed to fetch mentors" });
     }
   });
 
-  // Toggle student status
-  app.put("/api/admin/students/:id/status", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { isActive } = req.body;
-      
-      await storage.updateStudentRegistration(parseInt(id), { isActive });
-      
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Update student status error:", error);
-      res.status(500).json({ success: false, error: "Failed to update student status" });
-    }
-  });
-
-  // Toggle mentor status
-  app.put("/api/admin/mentors/:id/status", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { isActive } = req.body;
-      
-      await storage.updateMentorRegistration(parseInt(id), { isActive });
-      
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Update mentor status error:", error);
-      res.status(500).json({ success: false, error: "Failed to update mentor status" });
-    }
-  });
-
-  // Delete student
-  app.delete("/api/admin/students/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      
-      await storage.deleteStudentRegistration(parseInt(id));
-      
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Delete student error:", error);
-      res.status(500).json({ success: false, error: "Failed to delete student" });
-    }
-  });
-
-  // Delete mentor
-  app.delete("/api/admin/mentors/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      
-      await storage.deleteMentorRegistration(parseInt(id));
-      
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Delete mentor error:", error);
-      res.status(500).json({ success: false, error: "Failed to delete mentor" });
-    }
-  });
-
-  // Get assignments with mentor and student names
+  // Admin get all assignments
   app.get("/api/admin/assignments", async (req, res) => {
     try {
       const assignments = await storage.getAllAssignments();
-      const mentors = await storage.getAllMentorRegistrations();
-      const students = await storage.getAllStudentRegistrations();
-      const cohortList = await storage.getAllCohorts();
       
-      // Enrich assignments with mentor, student and cohort names
-      const enrichedAssignments = assignments.map(assignment => {
-        const mentor = mentors.find(m => m.id === assignment.mentorId);
-        const student = students.find(s => s.id === assignment.studentId);
-        const cohort = cohortList.find(c => c.id === assignment.cohortId);
-        
+      const enrichedAssignments = await Promise.all(assignments.map(async (assignment) => {
+        const mentor = await storage.getUser(assignment.mentorUserId);
+        const student = await storage.getUser(assignment.studentUserId);
         return {
           ...assignment,
           mentorName: mentor?.fullName || 'Unknown Mentor',
-          studentName: student?.fullName || 'Unknown Student',
-          cohortName: cohort?.name || 'Unknown Cohort'
+          studentName: student?.fullName || 'Unknown Student'
         };
-      });
+      }));
       
       res.json(enrichedAssignments);
     } catch (error) {
-      console.error("Get assignments error:", error);
-      res.status(500).json({ success: false, error: "Failed to fetch assignments" });
+      console.error("Error fetching assignments:", error);
+      res.status(500).json({ error: "Failed to fetch assignments" });
     }
   });
 
-  // Create new assignment
-  app.post("/api/admin/assignments", async (req, res) => {
+  // Admin toggle user status (uses string IDs from Firestore)
+  app.put("/api/admin/students/:id/status", async (req, res) => {
     try {
-      const { mentorId, studentId, cohortId } = req.body;
-      
-      if (!mentorId || !studentId) {
-        return res.status(400).json({ error: "Mentor ID and Student ID are required" });
-      }
-
-      const assignment = await storage.createAssignment({
-        mentorId: parseInt(mentorId),
-        studentId: parseInt(studentId),
-        cohortId: cohortId ? parseInt(cohortId) : null,
-        isActive: true,
-      });
-      
-      res.json(assignment);
+      const { isActive } = req.body;
+      const userId = req.params.id; // Keep as string - Firestore uses string IDs
+      const user = await storage.updateUser(userId, { isActive });
+      res.json(user);
     } catch (error) {
-      console.error("Create assignment error:", error);
-      res.status(500).json({ success: false, error: "Failed to create assignment" });
+      console.error("Error updating student status:", error);
+      res.status(500).json({ error: "Failed to update status" });
     }
   });
 
-  // Delete assignment endpoint
-  app.delete("/api/admin/assignments/:id", async (req, res) => {
+  app.put("/api/admin/mentors/:id/status", async (req, res) => {
     try {
-      const assignmentId = parseInt(req.params.id);
-      await storage.deleteAssignment(assignmentId);
+      const { isActive } = req.body;
+      const userId = req.params.id; // Keep as string - Firestore uses string IDs
+      const user = await storage.updateUser(userId, { isActive });
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating mentor status:", error);
+      res.status(500).json({ error: "Failed to update status" });
+    }
+  });
+
+  // Admin delete user (uses string IDs from Firestore)
+  app.delete("/api/admin/students/:id", async (req, res) => {
+    try {
+      const userId = req.params.id; // Keep as string - Firestore uses string IDs
+      await storage.deleteUser(userId);
       res.json({ success: true });
     } catch (error) {
-      console.error("Delete assignment error:", error);
-      res.status(500).json({ success: false, error: "Failed to delete assignment" });
+      console.error("Error deleting student:", error);
+      res.status(500).json({ error: "Failed to delete student" });
     }
   });
 
-  // Bulk delete assignments endpoint
-  app.post("/api/admin/assignments/bulk-delete", async (req, res) => {
+  app.delete("/api/admin/mentors/:id", async (req, res) => {
     try {
-      const { assignmentIds } = req.body;
-      
-      if (!Array.isArray(assignmentIds) || assignmentIds.length === 0) {
-        return res.status(400).json({ error: "Invalid assignment IDs" });
-      }
-
-      // Delete all assignments
-      for (const id of assignmentIds) {
-        await storage.deleteAssignment(parseInt(id));
-      }
-
-      res.json({ 
-        success: true, 
-        deletedCount: assignmentIds.length,
-        message: `Successfully deleted ${assignmentIds.length} assignment(s)` 
-      });
+      const userId = req.params.id; // Keep as string - Firestore uses string IDs
+      await storage.deleteUser(userId);
+      res.json({ success: true });
     } catch (error) {
-      console.error("Bulk delete assignments error:", error);
-      res.status(500).json({ success: false, error: "Failed to delete assignments" });
+      console.error("Error deleting mentor:", error);
+      res.status(500).json({ error: "Failed to delete mentor" });
+    }
+  });
+
+  // Make user admin
+  app.post("/api/admin/make-admin", async (req, res) => {
+    try {
+      const { email, secretKey } = req.body;
+      
+      if (secretKey !== 'aspirelink-admin-seed-2025') {
+        return res.status(403).json({ error: 'Invalid secret key' });
+      }
+      
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+      
+      let user = await storage.getUserByEmail(email);
+      
+      if (user) {
+        user = await storage.updateUser(user.id, { role: 'admin' });
+      } else {
+        user = await storage.upsertUser({
+          email,
+          role: 'admin'
+        });
+      }
+      
+      console.log(`Made ${email} an admin`);
+      res.json({ message: 'Admin created/updated successfully', user });
+    } catch (error) {
+      console.error('Error creating admin:', error);
+      res.status(500).json({ error: 'Failed to create admin' });
     }
   });
 
   const httpServer = createServer(app);
-
   return httpServer;
 }
