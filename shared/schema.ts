@@ -217,7 +217,7 @@ export const insertCohortMemberSchema = z.object({
 });
 
 export const insertMentorStudentAssignmentSchema = z.object({
-  cohortId: z.number(),
+  cohortId: z.number().nullable().optional(),
   mentorId: z.number(),
   studentId: z.number(),
   mentorUserId: z.string().nullable().optional(),
