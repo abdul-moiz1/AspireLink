@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation, Link } from "wouter";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Users, 
   GraduationCap, 
@@ -72,14 +73,14 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const { user, isLoading } = useAuth();
 
-  // Check admin authentication
+  // Check admin authentication - redirect to sign in if not authenticated or not admin
   useEffect(() => {
-    const token = localStorage.getItem("adminToken");
-    if (!token) {
-      setLocation("/admin/login");
+    if (!isLoading && (!user || user.role !== 'admin')) {
+      setLocation("/signin");
     }
-  }, [setLocation]);
+  }, [user, isLoading, setLocation]);
 
   // Fetch dashboard stats
   const { data: stats } = useQuery({
@@ -171,9 +172,11 @@ export default function AdminDashboard() {
     }
   });
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    setLocation("/admin/login");
+  const { logout } = useAuth();
+  
+  const handleLogout = async () => {
+    await logout();
+    setLocation("/");
   };
 
   const handleToggleStatus = (type: "student" | "mentor", id: number, currentStatus: boolean) => {
