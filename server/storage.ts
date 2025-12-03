@@ -371,4 +371,10 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+import { isFirebaseEnabled } from './firebase';
+import { FirestoreStorage } from './firestoreStorage';
+
+// Use Firestore if Firebase is enabled, otherwise use PostgreSQL
+export const storage: IStorage = isFirebaseEnabled() 
+  ? new FirestoreStorage() 
+  : new DatabaseStorage();
