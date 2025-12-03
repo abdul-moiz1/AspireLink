@@ -134,6 +134,18 @@ export class FirestoreStorage implements IStorage {
     return registrationData as StudentRegistration;
   }
 
+  async getStudentRegistration(id: string): Promise<StudentRegistration | undefined> {
+    const doc = await this.getDb().collection('studentRegistration').doc(id).get();
+    if (!doc.exists) return undefined;
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
+      updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
+    } as StudentRegistration;
+  }
+
   async getStudentRegistrationByEmail(email: string): Promise<StudentRegistration | undefined> {
     const snapshot = await this.getDb().collection('studentRegistration').where('email', '==', email).limit(1).get();
     if (snapshot.empty) return undefined;
@@ -189,6 +201,18 @@ export class FirestoreStorage implements IStorage {
     };
     await this.getDb().collection('mentorRegistration').doc(id).set(registrationData);
     return registrationData as MentorRegistration;
+  }
+
+  async getMentorRegistration(id: string): Promise<MentorRegistration | undefined> {
+    const doc = await this.getDb().collection('mentorRegistration').doc(id).get();
+    if (!doc.exists) return undefined;
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
+      updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
+    } as MentorRegistration;
   }
 
   async getMentorRegistrationByEmail(email: string): Promise<MentorRegistration | undefined> {

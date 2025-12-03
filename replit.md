@@ -36,12 +36,74 @@ Preferred communication style: Simple, everyday language.
     - If a matching registration is found, it's automatically linked to the new account and the user is assigned the appropriate role.
     - Users who sign up without a prior registration are redirected to `/complete-profile` to choose their role and fill out the appropriate form.
     - A global RoleGuard ensures users without roles cannot access protected areas of the app.
+
+## App Flow Summary
+
+### User Journeys
+
+**Student Journey:**
+1. Visit `/students` page to learn about the program
+2. Click "Apply as Student" to go to `/register-student`
+3. Fill out the 3-step registration form (Personal Info, Academic Details, Preferences)
+4. After submission, prompted to create account at `/signup`
+5. After signup, automatically assigned "student" role and redirected to `/dashboard/student`
+
+**Mentor Journey:**
+1. Visit `/mentors` page to learn about becoming a mentor
+2. Click "Become a Mentor" to go to `/register-mentor`
+3. Fill out the 2-step registration form (Professional Info, Mentorship Preferences)
+4. After submission, prompted to create account at `/signup`
+5. After signup, automatically assigned "mentor" role and redirected to `/dashboard/mentor`
+
+**Admin Journey:**
+1. Sign in at `/signin` with admin credentials
+2. Access `/admin/dashboard` to manage the platform
+3. Can create cohorts, assign mentors to students, view all registrations
+
+### Pages Overview
+
+**Public Pages (no login required):**
+- `/` - Home page with program overview
+- `/about` - About AspireLink
+- `/students` - Information for prospective students
+- `/mentors` - Information for prospective mentors
+- `/faq` - Frequently asked questions
+- `/contact` - Contact information
+
+**Registration Pages (no login required):**
+- `/register-student` - Student application form
+- `/register-mentor` - Mentor application form
+
+**Auth Pages:**
+- `/signin` - Login for existing users
+- `/signup` - Create new account
+- `/complete-profile` - For users who signed up without registering first
+
+**Dashboard Pages (login required):**
+- `/dashboard/student` - Student dashboard
+- `/dashboard/mentor` - Mentor dashboard
+- `/admin/dashboard` - Admin dashboard
+- `/admin/cohorts` - Cohort management
+- `/admin/create-student` - Create student manually
+- `/admin/create-mentor` - Create mentor manually
+- `/admin/create-assignment` - Assign mentor to student
+
+**Policy Pages:**
+- `/privacy` - Privacy policy
+- `/terms` - Terms of service
+- `/conduct` - Code of conduct
+- `/accessibility` - Accessibility statement
     
 ### Firestore Collections
 - **users**: Stores user accounts with linked profile data and roles (student/mentor/admin).
 - **studentRegistration**: Pending student applications with status tracking (pending/linked).
 - **mentorRegistration**: Pending mentor applications with status tracking (pending/linked).
-- **cohort**: Mentorship cohort data and assignments.
+- **cohorts**: Mentorship cohort data.
+- **cohortMembers**: Links users to cohorts.
+- **assignments**: Mentor-student pairings within cohorts.
+- **mentoringSessions**: Scheduled sessions between mentors and students.
+- **contacts**: Contact form submissions.
+- **counters**: Auto-increment ID counters for numeric IDs.
 
 ### Feature Specifications
 - **Mentorship Program**: Structured 4-month program, 100% free, 1:1 matching, 24/7 support.

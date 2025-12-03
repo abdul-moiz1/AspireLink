@@ -29,12 +29,14 @@ export interface IStorage {
   
   // Student Registration operations (no auth required)
   createStudentRegistration(data: InsertStudentRegistration): Promise<StudentRegistration>;
+  getStudentRegistration(id: string): Promise<StudentRegistration | undefined>;
   getStudentRegistrationByEmail(email: string): Promise<StudentRegistration | undefined>;
   updateStudentRegistration(id: string, updates: Partial<StudentRegistration>): Promise<StudentRegistration>;
   getAllStudentRegistrations(): Promise<StudentRegistration[]>;
   
   // Mentor Registration operations (no auth required)
   createMentorRegistration(data: InsertMentorRegistration): Promise<MentorRegistration>;
+  getMentorRegistration(id: string): Promise<MentorRegistration | undefined>;
   getMentorRegistrationByEmail(email: string): Promise<MentorRegistration | undefined>;
   updateMentorRegistration(id: string, updates: Partial<MentorRegistration>): Promise<MentorRegistration>;
   getAllMentorRegistrations(): Promise<MentorRegistration[]>;
