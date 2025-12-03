@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -601,73 +602,49 @@ export default function AdminDashboard() {
           <RecentActivityFeed students={students || []} mentors={mentors || []} />
         </div>
 
-        <Card className="mb-6 card-hover">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    placeholder="Search by name, email, university, or company..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                    data-testid="input-search"
-                  />
-                </div>
+        <Tabs defaultValue="students" className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+            <TabsList className="grid grid-cols-2 w-auto">
+              <TabsTrigger value="students" data-testid="tab-students">Students ({filterUsers(students || []).length})</TabsTrigger>
+              <TabsTrigger value="mentors" data-testid="tab-mentors">Mentors ({filterUsers(mentors || []).length})</TabsTrigger>
+            </TabsList>
+            <div className="flex gap-2 items-center flex-wrap w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-initial sm:w-64">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-search"
+                />
               </div>
-              <div className="flex gap-2 flex-wrap">
-                <Button
-                  variant={filterStatus === "all" ? "default" : "outline"}
-                  onClick={() => setFilterStatus("all")}
-                  className="hover-lift"
-                  data-testid="button-filter-all"
-                >
-                  All
-                </Button>
-                <Button
-                  variant={filterStatus === "active" ? "default" : "outline"}
-                  onClick={() => setFilterStatus("active")}
-                  className="hover-lift"
-                  data-testid="button-filter-active"
-                >
-                  Active
-                </Button>
-                <Button
-                  variant={filterStatus === "inactive" ? "default" : "outline"}
-                  onClick={() => setFilterStatus("inactive")}
-                  className="hover-lift"
-                  data-testid="button-filter-inactive"
-                >
-                  Inactive
-                </Button>
-              </div>
+              <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as "all" | "active" | "inactive")}>
+                <SelectTrigger className="w-28" data-testid="select-filter-status">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Tabs defaultValue="students" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="students" data-testid="tab-students">Students ({filterUsers(students || []).length})</TabsTrigger>
-            <TabsTrigger value="mentors" data-testid="tab-mentors">Mentors ({filterUsers(mentors || []).length})</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="students">
-            <Card className="card-hover">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between gap-4 flex-wrap">
-                  <span>Student Management</span>
-                  <Button 
-                    className="bg-primary hover:bg-primary/90 hover-lift"
-                    onClick={() => setLocation("/admin/create-student")}
-                    data-testid="button-add-student"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Student
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+          <TabsContent value="students" className="mt-4">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Student Management</h3>
+              <Button 
+                className="bg-primary hover:bg-primary/90"
+                onClick={() => setLocation("/admin/create-student")}
+                data-testid="button-add-student"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Student
+              </Button>
+            </div>
+            <div className="border rounded-lg">
                 <div className="space-y-3">
                   {filterUsers(students || []).map((student: Student, index: number) => (
                     <div 
@@ -730,27 +707,23 @@ export default function AdminDashboard() {
                     </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+            </div>
           </TabsContent>
 
-          <TabsContent value="mentors">
-            <Card className="card-hover">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between gap-4 flex-wrap">
-                  <span>Mentor Management</span>
-                  <Button 
-                    className="bg-secondary hover:bg-secondary/90 hover-lift"
-                    onClick={() => setLocation("/admin/create-mentor")}
-                    data-testid="button-add-mentor"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Mentor
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+          <TabsContent value="mentors" className="mt-4">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Mentor Management</h3>
+              <Button 
+                className="bg-primary hover:bg-primary/90"
+                onClick={() => setLocation("/admin/create-mentor")}
+                data-testid="button-add-mentor"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Mentor
+              </Button>
+            </div>
+            <div className="border rounded-lg">
+              <div className="space-y-3">
                   {filterUsers(mentors || []).map((mentor: Mentor, index: number) => (
                     <div 
                       key={mentor.id} 
@@ -815,9 +788,8 @@ export default function AdminDashboard() {
                       <p>No mentors found matching your criteria.</p>
                     </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
