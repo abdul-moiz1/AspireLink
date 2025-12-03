@@ -124,7 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Check if email is already registered as student or mentor
+  // Check if email is already registered as student, mentor, or admin
   app.post("/api/check-email-registration", async (req, res) => {
     try {
       const { email } = req.body;
@@ -134,6 +134,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const studentRegistration = await storage.getStudentByEmail(email);
       const mentorRegistration = await storage.getMentorByEmail(email);
+      const adminUser = await storage.getAdminByEmail(email);
+
+      if (adminUser) {
+        return res.json({ 
+          exists: true, 
+          type: 'admin',
+          message: "Welcome back, Admin! Sign in to access your admin dashboard."
+        });
+      }
 
       if (studentRegistration) {
         return res.json({ 

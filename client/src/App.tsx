@@ -18,7 +18,6 @@ import RegisterMentor from "@/pages/RegisterMentor";
 import RegisterStudent from "@/pages/RegisterStudent";
 import SignIn from "@/pages/SignIn";
 import SignUp from "@/pages/SignUp";
-import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
 import CreateStudent from "@/pages/CreateStudent";
 import CreateMentor from "@/pages/CreateMentor";
@@ -44,8 +43,7 @@ const ALLOWED_PATHS_WITHOUT_ROLE = [
   '/privacy',
   '/terms',
   '/conduct',
-  '/accessibility',
-  '/admin/login'
+  '/accessibility'
 ];
 
 function RoleGuard({ children }: { children: React.ReactNode }) {
@@ -91,7 +89,6 @@ function Router() {
             <Route path="/complete-profile" component={CompleteProfile} />
             <Route path="/dashboard/student" component={StudentDashboard} />
             <Route path="/dashboard/mentor" component={MentorDashboard} />
-            <Route path="/admin/login" component={AdminLogin} />
             <Route path="/admin/dashboard" component={AdminDashboard} />
             <Route path="/admin/cohorts" component={CohortManagement} />
             <Route path="/admin/create-student" component={CreateStudent} />
