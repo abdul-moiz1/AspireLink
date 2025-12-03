@@ -61,6 +61,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Ensure registration is linked to Firebase userId for existing users with roles
+      if (user.role === 'mentor' && user.mentorRegistrationId && userEmail) {
+        const mentorReg = await storage.getMentorRegistration(user.mentorRegistrationId);
+        if (mentorReg && !mentorReg.userId) {
+          await storage.updateMentorRegistration(mentorReg.id, { userId });
+          console.log(`Linked existing mentor registration ${mentorReg.id} to Firebase user ${userId}`);
+        }
+      } else if (user.role === 'student' && user.studentRegistrationId && userEmail) {
+        const studentReg = await storage.getStudentRegistration(user.studentRegistrationId);
+        if (studentReg && !studentReg.userId) {
+          await storage.updateStudentRegistration(studentReg.id, { userId });
+          console.log(`Linked existing student registration ${studentReg.id} to Firebase user ${userId}`);
+        }
+      }
+      
       // Check if user has a role assigned - if not, check for existing registrations
       if (!user.role && userEmail) {
         // Priority 1: Check for admin first (highest priority)
@@ -81,16 +96,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             if (mentorDate > studentDate) {
               user = await storage.updateUserRole(userId, 'mentor', mentorRegistration.id);
+              // Link the Firebase userId to the mentor registration for assignment lookups
+              if (!mentorRegistration.userId) {
+                await storage.updateMentorRegistration(mentorRegistration.id, { userId });
+                console.log(`Linked mentor registration ${mentorRegistration.id} to Firebase user ${userId}`);
+              }
               console.log(`Assigned mentor role to user ${userEmail} based on more recent registration ${mentorRegistration.id}`);
             } else {
               user = await storage.updateUserRole(userId, 'student', studentRegistration.id);
+              // Link the Firebase userId to the student registration for assignment lookups
+              if (!studentRegistration.userId) {
+                await storage.updateStudentRegistration(studentRegistration.id, { userId });
+                console.log(`Linked student registration ${studentRegistration.id} to Firebase user ${userId}`);
+              }
               console.log(`Assigned student role to user ${userEmail} based on more recent registration ${studentRegistration.id}`);
             }
           } else if (studentRegistration) {
             user = await storage.updateUserRole(userId, 'student', studentRegistration.id);
+            // Link the Firebase userId to the student registration for assignment lookups
+            if (!studentRegistration.userId) {
+              await storage.updateStudentRegistration(studentRegistration.id, { userId });
+              console.log(`Linked student registration ${studentRegistration.id} to Firebase user ${userId}`);
+            }
             console.log(`Assigned student role to user ${userEmail} based on registration ${studentRegistration.id}`);
           } else if (mentorRegistration) {
             user = await storage.updateUserRole(userId, 'mentor', mentorRegistration.id);
+            // Link the Firebase userId to the mentor registration for assignment lookups
+            if (!mentorRegistration.userId) {
+              await storage.updateMentorRegistration(mentorRegistration.id, { userId });
+              console.log(`Linked mentor registration ${mentorRegistration.id} to Firebase user ${userId}`);
+            }
             console.log(`Assigned mentor role to user ${userEmail} based on registration ${mentorRegistration.id}`);
           }
         }
