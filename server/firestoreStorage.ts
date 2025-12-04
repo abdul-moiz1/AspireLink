@@ -25,6 +25,16 @@ function isNotFoundError(error: any): boolean {
          (error?.message && error.message.includes('NOT_FOUND'));
 }
 
+function removeUndefinedValues<T extends object>(obj: T): Partial<T> {
+  const result: Partial<T> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      result[key as keyof T] = value;
+    }
+  }
+  return result;
+}
+
 export class FirestoreStorage implements IStorage {
   private getDb() {
     if (!db) throw new Error('Firestore not initialized');
@@ -96,17 +106,23 @@ export class FirestoreStorage implements IStorage {
         if (!isNotFoundError(error)) throw error;
       }
       
+      // Remove undefined values to avoid Firestore errors
+      const cleanedUserData = removeUndefinedValues(userData);
+      
       const data = {
         ...existingData,
-        ...userData,
+        ...cleanedUserData,
         id,
         isActive: userData.isActive ?? (existingData as any)?.isActive ?? true,
         updatedAt: now,
         createdAt: (existingData as any)?.createdAt || now,
       };
       
-      await this.getDb().collection('users').doc(id).set(data, { merge: true });
-      return { ...data, id } as User;
+      // Clean the final data object as well
+      const cleanedData = removeUndefinedValues(data);
+      
+      await this.getDb().collection('users').doc(id).set(cleanedData, { merge: true });
+      return { ...cleanedData, id } as User;
     } catch (error) {
       if (isNotFoundError(error)) {
         this.handleFirestoreError(error, 'upsertUser');
@@ -116,8 +132,9 @@ export class FirestoreStorage implements IStorage {
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User> {
+    const cleanedUpdates = removeUndefinedValues(updates);
     await this.getDb().collection('users').doc(id).update({
-      ...updates,
+      ...cleanedUpdates,
       updatedAt: new Date()
     });
     const user = await this.getUser(id);
