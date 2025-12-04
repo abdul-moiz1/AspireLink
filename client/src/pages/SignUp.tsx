@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, Eye, EyeOff, UserCheck, GraduationCap, Users } from "lucide-react";
+import { SiGoogle } from "react-icons/si";
 import logoPath from "@assets/AspireLink-Favicon_1751236188567.png";
 
 const signUpSchema = z.object({
@@ -36,9 +38,10 @@ interface RegistrationCheck {
 
 export default function SignUp() {
   const [, setLocation] = useLocation();
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registrationInfo, setRegistrationInfo] = useState<RegistrationCheck | null>(null);
@@ -47,16 +50,24 @@ export default function SignUp() {
   const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const preRegisteredRole = urlParams?.get('role') as 'student' | 'mentor' | null;
   const isPreRegistered = urlParams?.get('registered') === 'true';
+  const preFilledEmail = urlParams?.get('email') || '';
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
       displayName: "",
-      email: "",
+      email: preFilledEmail,
       password: "",
       confirmPassword: "",
     },
   });
+  
+  // Pre-fill email when URL param changes
+  useEffect(() => {
+    if (preFilledEmail && !form.getValues('email')) {
+      form.setValue('email', preFilledEmail);
+    }
+  }, [preFilledEmail, form]);
 
   const checkEmailRegistration = async (email: string) => {
     try {
@@ -160,6 +171,29 @@ export default function SignUp() {
       console.error('Signup error:', error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    setIsGoogleSubmitting(true);
+    try {
+      const { user: googleUser, isNew } = await loginWithGoogle();
+      
+      // AuthContext.loginWithGoogle now handles registration linking
+      // Check if the user got a role assigned
+      if (googleUser.role) {
+        const dashboard = googleUser.role === 'student' ? '/dashboard/student' : 
+                         googleUser.role === 'mentor' ? '/dashboard/mentor' : 
+                         googleUser.role === 'admin' ? '/admin/dashboard' : '/complete-profile';
+        setLocation(dashboard);
+      } else {
+        // No role - redirect to complete profile
+        setLocation("/complete-profile?new=true");
+      }
+    } catch (error) {
+      console.error('Google signup error:', error);
+    } finally {
+      setIsGoogleSubmitting(false);
     }
   };
 
@@ -308,7 +342,7 @@ export default function SignUp() {
               <Button
                 type="submit"
                 className="w-full bg-primary-custom hover:bg-primary-dark"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isGoogleSubmitting}
                 data-testid="button-sign-up"
               >
                 {isSubmitting ? (
@@ -322,6 +356,34 @@ export default function SignUp() {
               </Button>
             </form>
           </Form>
+          
+          <div className="relative my-4">
+            <Separator />
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-sm text-muted-foreground">
+              or
+            </span>
+          </div>
+          
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogleSignUp}
+            disabled={isSubmitting || isGoogleSubmitting}
+            data-testid="button-google-signup"
+          >
+            {isGoogleSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing up with Google...
+              </>
+            ) : (
+              <>
+                <SiGoogle className="mr-2 h-4 w-4" />
+                Sign up with Google
+              </>
+            )}
+          </Button>
         </CardContent>
         <CardFooter className="flex flex-col gap-4 text-center">
           <p className="text-sm text-gray-600">

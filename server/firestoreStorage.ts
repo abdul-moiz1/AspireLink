@@ -19,10 +19,24 @@ import type {
 } from '@shared/schema';
 import type { IStorage } from './storage';
 
+function isNotFoundError(error: any): boolean {
+  return error?.code === 5 || 
+         error?.code === 'NOT_FOUND' || 
+         (error?.message && error.message.includes('NOT_FOUND'));
+}
+
 export class FirestoreStorage implements IStorage {
   private getDb() {
     if (!db) throw new Error('Firestore not initialized');
     return db;
+  }
+  
+  private handleFirestoreError(error: any, operation: string): never {
+    if (isNotFoundError(error)) {
+      console.error(`Firestore ${operation}: Resource not found - Database may not be initialized`);
+      throw new Error(`Database not initialized. Please create the Firestore database in Firebase Console.`);
+    }
+    throw error;
   }
 
   private async getNextId(counterName: string): Promise<number> {
@@ -35,48 +49,70 @@ export class FirestoreStorage implements IStorage {
 
   // User operations
   async getUser(id: string): Promise<User | undefined> {
-    const doc = await this.getDb().collection('users').doc(id).get();
-    if (!doc.exists) return undefined;
-    const data = doc.data();
-    return { 
-      id: doc.id, 
-      ...data,
-      createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
-      updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
-    } as User;
+    try {
+      const doc = await this.getDb().collection('users').doc(id).get();
+      if (!doc.exists) return undefined;
+      const data = doc.data();
+      return { 
+        id: doc.id, 
+        ...data,
+        createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
+        updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
+      } as User;
+    } catch (error) {
+      if (isNotFoundError(error)) return undefined;
+      throw error;
+    }
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const snapshot = await this.getDb().collection('users').where('email', '==', email).limit(1).get();
-    if (snapshot.empty) return undefined;
-    const doc = snapshot.docs[0];
-    const data = doc.data();
-    return { 
-      id: doc.id, 
-      ...data,
-      createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
-      updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
-    } as User;
+    try {
+      const snapshot = await this.getDb().collection('users').where('email', '==', email).limit(1).get();
+      if (snapshot.empty) return undefined;
+      const doc = snapshot.docs[0];
+      const data = doc.data();
+      return { 
+        id: doc.id, 
+        ...data,
+        createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
+        updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
+      } as User;
+    } catch (error) {
+      if (isNotFoundError(error)) return undefined;
+      throw error;
+    }
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const id = userData.id || this.getDb().collection('users').doc().id;
-    const now = new Date();
-    
-    const existingDoc = await this.getDb().collection('users').doc(id).get();
-    const existingData = existingDoc.exists ? existingDoc.data() : {};
-    
-    const data = {
-      ...existingData,
-      ...userData,
-      id,
-      isActive: userData.isActive ?? existingData?.isActive ?? true,
-      updatedAt: now,
-      createdAt: existingData?.createdAt || now,
-    };
-    
-    await this.getDb().collection('users').doc(id).set(data, { merge: true });
-    return { ...data, id } as User;
+    try {
+      const id = userData.id || this.getDb().collection('users').doc().id;
+      const now = new Date();
+      
+      let existingData = {};
+      try {
+        const existingDoc = await this.getDb().collection('users').doc(id).get();
+        existingData = existingDoc.exists ? existingDoc.data() || {} : {};
+      } catch (error) {
+        if (!isNotFoundError(error)) throw error;
+      }
+      
+      const data = {
+        ...existingData,
+        ...userData,
+        id,
+        isActive: userData.isActive ?? (existingData as any)?.isActive ?? true,
+        updatedAt: now,
+        createdAt: (existingData as any)?.createdAt || now,
+      };
+      
+      await this.getDb().collection('users').doc(id).set(data, { merge: true });
+      return { ...data, id } as User;
+    } catch (error) {
+      if (isNotFoundError(error)) {
+        this.handleFirestoreError(error, 'upsertUser');
+      }
+      throw error;
+    }
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User> {
@@ -120,43 +156,60 @@ export class FirestoreStorage implements IStorage {
 
   // Student Registration operations
   async createStudentRegistration(data: InsertStudentRegistration): Promise<StudentRegistration> {
-    const id = this.getDb().collection('studentRegistration').doc().id;
-    const now = new Date();
-    const registrationData = {
-      ...data,
-      id,
-      status: 'pending' as const,
-      linkedUserId: null,
-      createdAt: now,
-      updatedAt: now,
-    };
-    await this.getDb().collection('studentRegistration').doc(id).set(registrationData);
-    return registrationData as StudentRegistration;
+    try {
+      const id = this.getDb().collection('studentRegistration').doc().id;
+      const now = new Date();
+      const registrationData = {
+        ...data,
+        id,
+        status: 'pending' as const,
+        linkedUserId: null,
+        createdAt: now,
+        updatedAt: now,
+      };
+      await this.getDb().collection('studentRegistration').doc(id).set(registrationData);
+      return registrationData as StudentRegistration;
+    } catch (error) {
+      if (isNotFoundError(error)) {
+        this.handleFirestoreError(error, 'createStudentRegistration');
+      }
+      throw error;
+    }
   }
 
   async getStudentRegistration(id: string): Promise<StudentRegistration | undefined> {
-    const doc = await this.getDb().collection('studentRegistration').doc(id).get();
-    if (!doc.exists) return undefined;
-    const data = doc.data();
-    return {
-      id: doc.id,
-      ...data,
-      createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
-      updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
-    } as StudentRegistration;
+    try {
+      const doc = await this.getDb().collection('studentRegistration').doc(id).get();
+      if (!doc.exists) return undefined;
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
+        updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
+      } as StudentRegistration;
+    } catch (error) {
+      if (isNotFoundError(error)) return undefined;
+      throw error;
+    }
   }
 
   async getStudentRegistrationByEmail(email: string): Promise<StudentRegistration | undefined> {
-    const snapshot = await this.getDb().collection('studentRegistration').where('email', '==', email).limit(1).get();
-    if (snapshot.empty) return undefined;
-    const doc = snapshot.docs[0];
-    const data = doc.data();
-    return {
-      id: doc.id,
-      ...data,
-      createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
-      updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
-    } as StudentRegistration;
+    try {
+      const snapshot = await this.getDb().collection('studentRegistration').where('email', '==', email).limit(1).get();
+      if (snapshot.empty) return undefined;
+      const doc = snapshot.docs[0];
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
+        updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
+      } as StudentRegistration;
+    } catch (error) {
+      if (isNotFoundError(error)) return undefined;
+      throw error;
+    }
   }
 
   async updateStudentRegistration(id: string, updates: Partial<StudentRegistration>): Promise<StudentRegistration> {
@@ -189,43 +242,60 @@ export class FirestoreStorage implements IStorage {
 
   // Mentor Registration operations
   async createMentorRegistration(data: InsertMentorRegistration): Promise<MentorRegistration> {
-    const id = this.getDb().collection('mentorRegistration').doc().id;
-    const now = new Date();
-    const registrationData = {
-      ...data,
-      id,
-      status: 'pending' as const,
-      linkedUserId: null,
-      createdAt: now,
-      updatedAt: now,
-    };
-    await this.getDb().collection('mentorRegistration').doc(id).set(registrationData);
-    return registrationData as MentorRegistration;
+    try {
+      const id = this.getDb().collection('mentorRegistration').doc().id;
+      const now = new Date();
+      const registrationData = {
+        ...data,
+        id,
+        status: 'pending' as const,
+        linkedUserId: null,
+        createdAt: now,
+        updatedAt: now,
+      };
+      await this.getDb().collection('mentorRegistration').doc(id).set(registrationData);
+      return registrationData as MentorRegistration;
+    } catch (error) {
+      if (isNotFoundError(error)) {
+        this.handleFirestoreError(error, 'createMentorRegistration');
+      }
+      throw error;
+    }
   }
 
   async getMentorRegistration(id: string): Promise<MentorRegistration | undefined> {
-    const doc = await this.getDb().collection('mentorRegistration').doc(id).get();
-    if (!doc.exists) return undefined;
-    const data = doc.data();
-    return {
-      id: doc.id,
-      ...data,
-      createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
-      updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
-    } as MentorRegistration;
+    try {
+      const doc = await this.getDb().collection('mentorRegistration').doc(id).get();
+      if (!doc.exists) return undefined;
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
+        updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
+      } as MentorRegistration;
+    } catch (error) {
+      if (isNotFoundError(error)) return undefined;
+      throw error;
+    }
   }
 
   async getMentorRegistrationByEmail(email: string): Promise<MentorRegistration | undefined> {
-    const snapshot = await this.getDb().collection('mentorRegistration').where('email', '==', email).limit(1).get();
-    if (snapshot.empty) return undefined;
-    const doc = snapshot.docs[0];
-    const data = doc.data();
-    return {
-      id: doc.id,
-      ...data,
-      createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
-      updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
-    } as MentorRegistration;
+    try {
+      const snapshot = await this.getDb().collection('mentorRegistration').where('email', '==', email).limit(1).get();
+      if (snapshot.empty) return undefined;
+      const doc = snapshot.docs[0];
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
+        updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
+      } as MentorRegistration;
+    } catch (error) {
+      if (isNotFoundError(error)) return undefined;
+      throw error;
+    }
   }
 
   async updateMentorRegistration(id: string, updates: Partial<MentorRegistration>): Promise<MentorRegistration> {

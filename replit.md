@@ -31,11 +31,13 @@ Preferred communication style: Simple, everyday language.
 - **Registration-First Flow**: 
     - Users fill out student or mentor registration forms WITHOUT needing to create an account first.
     - Registration data is stored in separate Firestore collections: `studentRegistration` and `mentorRegistration`.
-    - After form submission, users are prompted to create an account to access their dashboard.
-    - On signup, the system checks for existing registrations matching the user's email.
+    - After form submission, success page shows "Sign Up Now" and "Login" buttons (NOT "Go to Dashboard").
+    - On signup/signin, the system checks for existing registrations matching the user's email.
     - If a matching registration is found, it's automatically linked to the new account and the user is assigned the appropriate role.
     - Users who sign up without a prior registration are redirected to `/complete-profile` to choose their role and fill out the appropriate form.
     - A global RoleGuard ensures users without roles cannot access protected areas of the app.
+    - **Google Sign-In**: Both SignUp and SignIn pages support Google authentication with the same auto-linking logic.
+    - **Email Pre-fill**: Registration success pages pass the email to signup page for convenience.
 
 ## App Flow Summary
 

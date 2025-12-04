@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, Eye, EyeOff, CheckCircle, GraduationCap, Users } from "lucide-react";
+import { SiGoogle } from "react-icons/si";
 import logoPath from "@assets/AspireLink-Favicon_1751236188567.png";
 
 const signInSchema = z.object({
@@ -21,8 +23,9 @@ type SignInFormValues = z.infer<typeof signInSchema>;
 
 export default function SignIn() {
   const [, setLocation] = useLocation();
-  const { login, refreshUser, user, isLoading } = useAuth();
+  const { login, loginWithGoogle, refreshUser, user, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [pendingRedirect, setPendingRedirect] = useState<string | null>(null);
   
@@ -54,7 +57,6 @@ export default function SignIn() {
       
       // Wait a bit for auth state to settle, then refresh user data
       await new Promise(resolve => setTimeout(resolve, 500));
-      await refreshUser();
       
       // Check if user has a registration by querying the API
       const checkResponse = await fetch('/api/check-email-registration', {
@@ -63,6 +65,55 @@ export default function SignIn() {
         body: JSON.stringify({ email: data.email }),
       });
       const checkData = await checkResponse.json();
+      
+      if (checkData.exists && !checkData.hasAccount) {
+        // User has a registration but account not linked yet - try to link
+        try {
+          const { getIdToken } = await import('@/lib/firebase');
+          let token = null;
+          let retries = 3;
+          
+          while (!token && retries > 0) {
+            token = await getIdToken();
+            if (!token) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+              retries--;
+            }
+          }
+          
+          if (token) {
+            const linkResponse = await fetch('/api/auth/link-registration', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                email: data.email,
+                registrationId: checkData.registrationId || null,
+                registrationType: checkData.type || null
+              })
+            });
+            
+            const linkResult = await linkResponse.json();
+            
+            if (linkResult.success && linkResult.role) {
+              // Successfully linked - refresh user and redirect to role-specific dashboard
+              await refreshUser();
+              const dashboard = linkResult.role === 'student' ? '/dashboard/student' : 
+                               linkResult.role === 'mentor' ? '/dashboard/mentor' : 
+                               linkResult.role === 'admin' ? '/admin/dashboard' : '/';
+              setPendingRedirect(dashboard);
+              return;
+            }
+          }
+        } catch (linkError) {
+          console.error('Error linking registration:', linkError);
+        }
+      }
+      
+      // Refresh user data to get latest role
+      await refreshUser();
       
       if (checkData.exists) {
         // User has a registration - redirect to their specific dashboard
@@ -81,8 +132,32 @@ export default function SignIn() {
         setPendingRedirect("/complete-profile");
       }
     } catch (error) {
+      console.error('Sign in error:', error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleSubmitting(true);
+    try {
+      const { user: googleUser, isNew } = await loginWithGoogle();
+      
+      // AuthContext.loginWithGoogle now handles registration linking
+      // Check if the user got a role assigned
+      if (googleUser.role) {
+        const dashboard = googleUser.role === 'student' ? '/dashboard/student' : 
+                         googleUser.role === 'mentor' ? '/dashboard/mentor' : 
+                         googleUser.role === 'admin' ? '/admin/dashboard' : '/complete-profile';
+        setPendingRedirect(dashboard);
+      } else {
+        // No role - redirect to complete profile
+        setPendingRedirect("/complete-profile");
+      }
+    } catch (error) {
+      console.error('Google sign in error:', error);
+    } finally {
+      setIsGoogleSubmitting(false);
     }
   };
 
@@ -171,7 +246,7 @@ export default function SignIn() {
               <Button
                 type="submit"
                 className="w-full bg-primary-custom hover:bg-primary-dark"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isGoogleSubmitting}
                 data-testid="button-sign-in"
               >
                 {isSubmitting ? (
@@ -185,6 +260,34 @@ export default function SignIn() {
               </Button>
             </form>
           </Form>
+          
+          <div className="relative my-4">
+            <Separator />
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-sm text-muted-foreground">
+              or
+            </span>
+          </div>
+          
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogleSignIn}
+            disabled={isSubmitting || isGoogleSubmitting}
+            data-testid="button-google-signin"
+          >
+            {isGoogleSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing in with Google...
+              </>
+            ) : (
+              <>
+                <SiGoogle className="mr-2 h-4 w-4" />
+                Sign in with Google
+              </>
+            )}
+          </Button>
         </CardContent>
         <CardFooter className="flex flex-col gap-4 text-center">
           <p className="text-sm text-gray-600">

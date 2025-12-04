@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { auth, signIn, signUp, signOut, getIdToken, subscribeToAuthChanges, type User } from "@/lib/firebase";
+import { auth, signIn, signUp, signOut, signInWithGoogle, getIdToken, subscribeToAuthChanges, type User } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 interface AuthUser {
@@ -18,6 +18,7 @@ interface AuthContextType {
   needsProfileCompletion: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
+  loginWithGoogle: () => Promise<{ user: AuthUser; isNew: boolean }>;
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
   refreshUser: () => Promise<void>;
@@ -144,6 +145,107 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loginWithGoogle = async (): Promise<{ user: AuthUser; isNew: boolean }> => {
+    try {
+      const firebaseUser = await signInWithGoogle();
+      const token = await firebaseUser.getIdToken();
+      
+      // Try to get user from backend to check if they already exist
+      const response = await fetch("/api/auth/user", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      let isNew = false;
+      let backendUserData = null;
+      
+      if (!response.ok) {
+        // User doesn't exist in backend, register them
+        isNew = true;
+        await fetch("/api/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+          }),
+        });
+        
+        // Check for existing registration and try to link
+        if (firebaseUser.email) {
+          try {
+            const checkResponse = await fetch('/api/check-email-registration', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: firebaseUser.email }),
+            });
+            const checkData = await checkResponse.json();
+            
+            if (checkData.exists && !checkData.hasAccount) {
+              // Try to link registration
+              const linkResponse = await fetch('/api/auth/link-registration', {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                  email: firebaseUser.email,
+                  registrationId: checkData.registrationId || null,
+                  registrationType: checkData.type || null
+                })
+              });
+              
+              const linkResult = await linkResponse.json();
+              if (linkResult.success) {
+                backendUserData = { role: linkResult.role };
+              }
+            }
+          } catch (linkError) {
+            console.error('Error linking registration during Google sign-in:', linkError);
+          }
+        }
+      } else {
+        backendUserData = await response.json();
+      }
+      
+      const authUser: AuthUser = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName,
+        photoURL: firebaseUser.photoURL,
+        role: backendUserData?.role,
+        registrationId: backendUserData?.registrationId,
+      };
+      
+      setUser(authUser);
+      
+      toast({
+        title: isNew ? "Account created!" : "Welcome back!",
+        description: isNew ? "Welcome to AspireLink." : "You have successfully signed in with Google.",
+      });
+      
+      return { user: authUser, isNew };
+    } catch (error: any) {
+      let message = "Failed to sign in with Google.";
+      if (error.code === "auth/popup-closed-by-user") {
+        message = "Sign in was cancelled.";
+      } else if (error.code === "auth/popup-blocked") {
+        message = "Pop-up was blocked. Please allow pop-ups for this site.";
+      }
+      toast({
+        title: "Google Sign In Failed",
+        description: message,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
       await signOut();
@@ -204,6 +306,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         needsProfileCompletion,
         login,
         register,
+        loginWithGoogle,
         logout,
         getToken,
         refreshUser,

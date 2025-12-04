@@ -3,6 +3,8 @@ import {
   getAuth, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   updateProfile,
@@ -61,6 +63,15 @@ export async function signUp(email: string, password: string, displayName: strin
   }
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   await updateProfile(userCredential.user, { displayName });
+  return userCredential.user;
+}
+
+export async function signInWithGoogle() {
+  if (!auth) {
+    throw new Error('Firebase authentication is not configured. Please contact support.');
+  }
+  const provider = new GoogleAuthProvider();
+  const userCredential = await signInWithPopup(auth, provider);
   return userCredential.user;
 }
 

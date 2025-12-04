@@ -193,51 +193,39 @@ export default function RegisterStudent() {
                 Thank you for applying to AspireLink's mentorship program. We've received your application 
                 and will review it carefully.
               </p>
-              {!user && (
-                <div className="bg-green-50 border border-green-200 p-6 rounded-lg mb-8">
-                  <h3 className="font-semibold text-green-800 mb-2">Create Your Account</h3>
-                  <p className="text-green-700">
-                    To access your student dashboard and track your mentorship progress, please create an account. 
-                    We'll automatically link your application to your new account.
-                  </p>
-                </div>
-              )}
-              {user && (
-                <div className="bg-blue-50 p-6 rounded-lg mb-8">
-                  <h3 className="font-semibold text-charcoal-custom mb-2">What happens next?</h3>
-                  <ul className="text-left text-gray-600 space-y-2">
-                    <li>• Application review by our team</li>
-                    <li>• Professor verification (if nominated)</li>
-                    <li>• Student matching with suitable mentors</li>
-                    <li>• Program onboarding and kickoff</li>
-                  </ul>
-                </div>
-              )}
+              <div className="bg-blue-50 p-6 rounded-lg mb-8">
+                <h3 className="font-semibold text-charcoal-custom mb-2">What happens next?</h3>
+                <ul className="text-left text-gray-600 space-y-2">
+                  <li>• Application review by our team</li>
+                  <li>• Professor verification (if nominated)</li>
+                  <li>• Student matching with suitable mentors</li>
+                  <li>• Program onboarding and kickoff</li>
+                </ul>
+              </div>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                {user ? (
-                  <>
-                    <Button 
-                      onClick={() => setLocationPath('/dashboard/student')}
-                      className="bg-primary-custom hover:bg-primary-dark text-white"
-                    >
-                      Go to Dashboard
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => setLocationPath('/faq')}
-                      className="border-gray-300"
-                    >
-                      View FAQ
-                    </Button>
-                  </>
-                ) : (
-                  <Button 
-                    onClick={() => setLocationPath('/signup?role=student&registered=true')}
-                    className="bg-primary-custom hover:bg-primary-dark text-white"
-                  >
-                    Create Account Now
-                  </Button>
-                )}
+                <Button 
+                  onClick={() => setLocationPath('/signup?role=student&registered=true&email=' + encodeURIComponent(studentData.emailAddress || ''))}
+                  className="bg-primary-custom hover:bg-primary-dark text-white"
+                  data-testid="button-signup-student"
+                >
+                  Sign Up Now
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setLocationPath('/signin')}
+                  className="border-gray-300"
+                  data-testid="button-login-student"
+                >
+                  Already have an account? Log In
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setLocationPath('/faq')}
+                  className="border-gray-300"
+                  data-testid="button-faq"
+                >
+                  View FAQ
+                </Button>
               </div>
             </CardContent>
           </Card>
