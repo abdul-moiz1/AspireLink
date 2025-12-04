@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, User, Clock, Video, Mail, Building, MapPin, Target, Award, BookOpen, TrendingUp, Star, CheckCircle2 } from "lucide-react";
+import { Calendar, User, Clock, Video, Mail, Building, MapPin, Target, BookOpen, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -218,58 +218,7 @@ function EngagementTrendChart() {
   );
 }
 
-function MilestoneTracker({ assignments }: { assignments: any[] }) {
-  const completedSessions = assignments.reduce((acc, a) => acc + (a.sessions?.filter((s: any) => s.status === 'completed').length || 0), 0);
-  
-  const milestones = [
-    { id: 1, title: 'First Meeting', description: 'Complete your first mentoring session', completed: completedSessions >= 1 },
-    { id: 2, title: 'Building Rapport', description: 'Complete 3 sessions with your mentor', completed: completedSessions >= 3 },
-    { id: 3, title: 'Halfway There', description: 'Complete 6 sessions', completed: completedSessions >= 6 },
-    { id: 4, title: 'Program Champion', description: 'Complete all 12 sessions', completed: completedSessions >= 12 },
-  ];
 
-  const completedMilestones = milestones.filter(m => m.completed).length;
-
-  return (
-    <Card className="card-hover">
-      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-        <div>
-          <CardTitle className="text-lg font-semibold">Milestones</CardTitle>
-          <CardDescription>{completedMilestones} of {milestones.length} achieved</CardDescription>
-        </div>
-        <Award className="w-5 h-5 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {milestones.map((milestone, index) => (
-            <div 
-              key={milestone.id} 
-              className={`p-3 rounded-lg flex items-center gap-3 ${milestone.completed ? 'bg-green-50' : 'bg-muted/50'} hover-lift`}
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <div className={`p-2 rounded-full ${milestone.completed ? 'bg-green-100' : 'bg-muted'}`}>
-                {milestone.completed ? (
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
-                ) : (
-                  <Star className="w-4 h-4 text-muted-foreground" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className={`font-medium text-sm ${milestone.completed ? 'text-green-800' : 'text-foreground'}`}>
-                  {milestone.title}
-                </h4>
-                <p className="text-xs text-muted-foreground truncate">{milestone.description}</p>
-              </div>
-              {milestone.completed && (
-                <Badge className="bg-green-100 text-green-800 text-xs">Completed</Badge>
-              )}
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function LearningTopicsCard({ assignments }: { assignments: any[] }) {
   const topics = assignments.flatMap(a => a.mentor?.mentoringTopics || []).slice(0, 6);
@@ -495,7 +444,6 @@ export default function StudentDashboard() {
             </Card>
           </div>
           <div className="space-y-6">
-            <MilestoneTracker assignments={assignmentList} />
             <LearningTopicsCard assignments={assignmentList} />
           </div>
         </div>
