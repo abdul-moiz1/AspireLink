@@ -1,13 +1,19 @@
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, User, Clock, Video, Mail, Building, MapPin, Target, BookOpen, TrendingUp } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Calendar, User, Clock, Video, Mail, Building, MapPin, Target, BookOpen, TrendingUp, Edit, Loader2, GraduationCap, Phone, Linkedin } from "lucide-react";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import {
   AreaChart,
   Area,
@@ -255,9 +261,27 @@ function LearningTopicsCard({ assignments }: { assignments: any[] }) {
   );
 }
 
+const yearOfStudyOptions = [
+  "1st year undergraduate", "2nd year undergraduate", "3rd year undergraduate", 
+  "4th year undergraduate", "5th year undergraduate", "1st year master's", 
+  "2nd year master's", "1st year PhD", "2nd year PhD", "3rd+ year PhD"
+];
+
 export default function StudentDashboard() {
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { user, isLoading: authLoading, isAuthenticated, refreshUser } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    fullName: '',
+    phoneNumber: '',
+    linkedinUrl: '',
+    universityName: '',
+    academicProgram: '',
+    yearOfStudy: '',
+    careerInterests: '',
+    mentorshipGoals: '',
+  });
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -280,6 +304,56 @@ export default function StudentDashboard() {
       }, 500);
     }
   }, [authLoading, isAuthenticated, user, toast]);
+
+  useEffect(() => {
+    if (user && isEditDialogOpen) {
+      const userData = user as any;
+      setEditForm({
+        fullName: userData.fullName || '',
+        phoneNumber: userData.phoneNumber || '',
+        linkedinUrl: userData.linkedinUrl || '',
+        universityName: userData.universityName || '',
+        academicProgram: userData.academicProgram || '',
+        yearOfStudy: userData.yearOfStudy || '',
+        careerInterests: userData.careerInterests || '',
+        mentorshipGoals: userData.mentorshipGoals || '',
+      });
+    }
+  }, [user, isEditDialogOpen]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: typeof editForm) => {
+      return apiRequest(`/api/users/${(user as any)?.id}`, "PUT", data);
+    },
+    onSuccess: async () => {
+      toast({
+        title: "Profile Updated",
+        description: "Your application information has been updated successfully.",
+      });
+      setIsEditDialogOpen(false);
+      await refreshUser();
+      queryClient.invalidateQueries({ queryKey: ["/api/student/assignments"] });
+    },
+    onError: () => {
+      toast({
+        title: "Update Failed",
+        description: "There was an error updating your profile. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleSaveProfile = () => {
+    if (!editForm.fullName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your full name.",
+        variant: "destructive",
+      });
+      return;
+    }
+    updateProfileMutation.mutate(editForm);
+  };
 
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({
     queryKey: ["/api/student/assignments"],
@@ -312,14 +386,164 @@ export default function StudentDashboard() {
     <div className="min-h-screen bg-muted/30 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8 animate-fadeInUp">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <User className="w-6 h-6 text-primary" />
+          <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <User className="w-6 h-6 text-primary" />
+              </div>
+              <h1 className="text-3xl font-bold text-foreground">Student Dashboard</h1>
             </div>
-            <h1 className="text-3xl font-bold text-foreground">Student Dashboard</h1>
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" data-testid="button-edit-application">
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Application
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <GraduationCap className="w-5 h-5 text-primary" />
+                    Edit Your Application
+                  </DialogTitle>
+                  <DialogDescription>
+                    Update your profile information below. Your changes will be saved immediately.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName">Full Name *</Label>
+                      <Input
+                        id="fullName"
+                        value={editForm.fullName}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, fullName: e.target.value }))}
+                        placeholder="Your full name"
+                        data-testid="input-edit-fullname"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phoneNumber">Phone Number</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="phoneNumber"
+                          value={editForm.phoneNumber}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                          placeholder="(555) 123-4567"
+                          className="pl-10"
+                          data-testid="input-edit-phone"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="linkedinUrl">LinkedIn Profile URL</Label>
+                    <div className="relative">
+                      <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="linkedinUrl"
+                        value={editForm.linkedinUrl}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, linkedinUrl: e.target.value }))}
+                        placeholder="https://linkedin.com/in/yourprofile"
+                        className="pl-10"
+                        data-testid="input-edit-linkedin"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="universityName">University Name</Label>
+                      <div className="relative">
+                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="universityName"
+                          value={editForm.universityName}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, universityName: e.target.value }))}
+                          placeholder="Your university"
+                          className="pl-10"
+                          data-testid="input-edit-university"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="academicProgram">Academic Program</Label>
+                      <Input
+                        id="academicProgram"
+                        value={editForm.academicProgram}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, academicProgram: e.target.value }))}
+                        placeholder="Computer Science, Business, etc."
+                        data-testid="input-edit-program"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="yearOfStudy">Year of Study</Label>
+                    <Select 
+                      value={editForm.yearOfStudy} 
+                      onValueChange={(value) => setEditForm(prev => ({ ...prev, yearOfStudy: value }))}
+                    >
+                      <SelectTrigger data-testid="select-edit-year">
+                        <SelectValue placeholder="Select your year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {yearOfStudyOptions.map((year) => (
+                          <SelectItem key={year} value={year}>{year}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="careerInterests">Career Interests</Label>
+                    <Textarea
+                      id="careerInterests"
+                      value={editForm.careerInterests}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, careerInterests: e.target.value }))}
+                      placeholder="Describe your career interests..."
+                      rows={3}
+                      data-testid="input-edit-career"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mentorshipGoals">Mentorship Goals</Label>
+                    <Textarea
+                      id="mentorshipGoals"
+                      value={editForm.mentorshipGoals}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, mentorshipGoals: e.target.value }))}
+                      placeholder="What do you hope to gain from this mentorship?"
+                      rows={3}
+                      data-testid="input-edit-goals"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsEditDialogOpen(false)}
+                    data-testid="button-cancel-edit"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleSaveProfile}
+                    disabled={updateProfileMutation.isPending}
+                    data-testid="button-save-edit"
+                  >
+                    {updateProfileMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Changes'
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
           <p className="text-muted-foreground ml-11">
-            Welcome back, {(user as any)?.firstName || 'Student'}! View your mentor and upcoming sessions.
+            Welcome back, {(user as any)?.fullName || 'Student'}! View your mentor and upcoming sessions.
           </p>
         </div>
 

@@ -150,16 +150,32 @@ export default function SignUp() {
           }
         } catch (linkError) {
           console.error('Error linking registration:', linkError);
-          // Show user feedback about the failure
+          // Registration exists but linking failed - redirect to signin so they can log in and complete linking
           toast({
             title: "Account Created",
-            description: "We found your application but couldn't link it automatically. Please complete your profile setup.",
+            description: "Your account is ready! Please sign in to access your dashboard.",
             variant: "default",
           });
+          setTimeout(() => {
+            setLocation("/signin?message=account_created");
+          }, 500);
+          return;
         }
       }
       
-      // No existing registration found or linking failed - redirect to complete profile
+      // Check if registration exists - if so, redirect to signin
+      if (registrationCheck?.exists && !registrationCheck.hasAccount) {
+        toast({
+          title: "Account Created Successfully",
+          description: "Please sign in to access your dashboard.",
+        });
+        setTimeout(() => {
+          setLocation("/signin?message=account_created");
+        }, 500);
+        return;
+      }
+      
+      // No existing registration found - redirect to complete profile for role selection
       toast({
         title: "Account Created Successfully",
         description: "Complete your profile to get started.",

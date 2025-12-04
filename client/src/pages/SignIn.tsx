@@ -33,6 +33,9 @@ export default function SignIn() {
   const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const isWelcome = urlParams?.get('welcome') === 'true';
   const welcomeRole = urlParams?.get('role') as 'student' | 'mentor' | null;
+  const messageParam = urlParams?.get('message');
+  const isAccountCreated = messageParam === 'account_created';
+  const isAccountExists = messageParam === 'account_exists';
 
   // Handle redirect after user state is fully updated
   useEffect(() => {
@@ -172,7 +175,7 @@ export default function SignIn() {
           <CardDescription>Sign in to your AspireLink account</CardDescription>
         </CardHeader>
         <CardContent>
-          {isWelcome && (
+          {(isWelcome || isAccountCreated) && (
             <Alert className="mb-4 border-green-200 bg-green-50">
               <CheckCircle className="h-4 w-4 text-green-600" />
               <AlertTitle className="text-green-800">
@@ -184,8 +187,19 @@ export default function SignIn() {
                 ) : welcomeRole === 'mentor' ? (
                   <>Your mentor account is ready! Sign in with your credentials to access your dashboard.</>
                 ) : (
-                  <>Your account is ready! Sign in with your credentials to get started.</>
+                  <>Your account is ready! Sign in with your credentials to access your dashboard.</>
                 )}
+              </AlertDescription>
+            </Alert>
+          )}
+          {isAccountExists && (
+            <Alert className="mb-4 border-blue-200 bg-blue-50">
+              <CheckCircle className="h-4 w-4 text-blue-600" />
+              <AlertTitle className="text-blue-800">
+                Account Already Exists
+              </AlertTitle>
+              <AlertDescription className="text-blue-700">
+                An account with this email already exists. Please sign in to access your dashboard.
               </AlertDescription>
             </Alert>
           )}

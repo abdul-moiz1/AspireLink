@@ -9,6 +9,32 @@ interface AuthUser {
   photoURL: string | null;
   role?: string;
   registrationId?: number;
+  id?: string;
+  fullName?: string;
+  phoneNumber?: string;
+  linkedinUrl?: string;
+  profileImageUrl?: string;
+  currentJobTitle?: string;
+  company?: string;
+  yearsExperience?: number;
+  education?: string;
+  skills?: string[];
+  location?: string;
+  timeZone?: string;
+  profileSummary?: string;
+  availability?: string[];
+  motivation?: string;
+  universityName?: string;
+  academicProgram?: string;
+  yearOfStudy?: string;
+  nominatedBy?: string;
+  professorEmail?: string;
+  careerInterests?: string;
+  mentorshipGoals?: string;
+  preferredDisciplines?: string[];
+  mentoringTopics?: string[];
+  agreedToCommitment?: boolean;
+  consentToContact?: boolean;
 }
 
 interface AuthContextType {
@@ -49,8 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               email: firebaseUser.email,
               displayName: firebaseUser.displayName,
               photoURL: firebaseUser.photoURL,
-              role: userData.role,
-              registrationId: userData.registrationId,
+              ...userData,
             });
           } else {
             setUser({
@@ -285,8 +310,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: currentUser.email,
             displayName: currentUser.displayName,
             photoURL: currentUser.photoURL,
-            role: userData.role,
-            registrationId: userData.registrationId,
+            ...userData,
           });
         }
       } catch (error) {

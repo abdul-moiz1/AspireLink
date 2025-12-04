@@ -5,8 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Calendar, User, Clock, Video, Users, Plus, GraduationCap, Building, RefreshCw } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Calendar, User, Clock, Video, Users, Plus, GraduationCap, Building, RefreshCw, Edit, Loader2, Phone, Linkedin, MapPin, Briefcase } from "lucide-react";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -22,11 +23,12 @@ import {
 } from "recharts";
 
 export default function MentorDashboard() {
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { user, isLoading: authLoading, isAuthenticated, refreshUser } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [sessionForm, setSessionForm] = useState({
@@ -35,6 +37,18 @@ export default function MentorDashboard() {
     durationMinutes: 30,
     meetingLink: '',
     notes: ''
+  });
+  const [editForm, setEditForm] = useState({
+    fullName: '',
+    phoneNumber: '',
+    linkedinUrl: '',
+    currentJobTitle: '',
+    company: '',
+    yearsExperience: '',
+    education: '',
+    location: '',
+    profileSummary: '',
+    motivation: '',
   });
 
   useEffect(() => {
@@ -58,6 +72,62 @@ export default function MentorDashboard() {
       }, 500);
     }
   }, [authLoading, isAuthenticated, user, toast]);
+
+  useEffect(() => {
+    if (user && isEditDialogOpen) {
+      const userData = user as any;
+      setEditForm({
+        fullName: userData.fullName || '',
+        phoneNumber: userData.phoneNumber || '',
+        linkedinUrl: userData.linkedinUrl || '',
+        currentJobTitle: userData.currentJobTitle || '',
+        company: userData.company || '',
+        yearsExperience: userData.yearsExperience?.toString() || '',
+        education: userData.education || '',
+        location: userData.location || '',
+        profileSummary: userData.profileSummary || '',
+        motivation: userData.motivation || '',
+      });
+    }
+  }, [user, isEditDialogOpen]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: typeof editForm) => {
+      const updateData = {
+        ...data,
+        yearsExperience: data.yearsExperience ? parseInt(data.yearsExperience) : null
+      };
+      return apiRequest(`/api/users/${(user as any)?.id}`, "PUT", updateData);
+    },
+    onSuccess: async () => {
+      toast({
+        title: "Profile Updated",
+        description: "Your application information has been updated successfully.",
+      });
+      setIsEditDialogOpen(false);
+      await refreshUser();
+      queryClient.invalidateQueries({ queryKey: ["/api/mentor/assignments"] });
+    },
+    onError: () => {
+      toast({
+        title: "Update Failed",
+        description: "There was an error updating your profile. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleSaveProfile = () => {
+    if (!editForm.fullName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your full name.",
+        variant: "destructive",
+      });
+      return;
+    }
+    updateProfileMutation.mutate(editForm);
+  };
 
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({
     queryKey: ["/api/mentor/assignments"],
@@ -197,14 +267,189 @@ export default function MentorDashboard() {
     <div className="min-h-screen bg-muted/30 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Users className="w-6 h-6 text-primary" />
+          <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Users className="w-6 h-6 text-primary" />
+              </div>
+              <h1 className="text-3xl font-bold text-foreground">Mentor Dashboard</h1>
             </div>
-            <h1 className="text-3xl font-bold text-foreground">Mentor Dashboard</h1>
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" data-testid="button-edit-application">
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Application
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Briefcase className="w-5 h-5 text-primary" />
+                    Edit Your Application
+                  </DialogTitle>
+                  <DialogDescription>
+                    Update your profile information below. Your changes will be saved immediately.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName">Full Name *</Label>
+                      <Input
+                        id="fullName"
+                        value={editForm.fullName}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, fullName: e.target.value }))}
+                        placeholder="Your full name"
+                        data-testid="input-edit-fullname"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phoneNumber">Phone Number</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="phoneNumber"
+                          value={editForm.phoneNumber}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                          placeholder="(555) 123-4567"
+                          className="pl-10"
+                          data-testid="input-edit-phone"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="linkedinUrl">LinkedIn Profile URL</Label>
+                    <div className="relative">
+                      <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="linkedinUrl"
+                        value={editForm.linkedinUrl}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, linkedinUrl: e.target.value }))}
+                        placeholder="https://linkedin.com/in/yourprofile"
+                        className="pl-10"
+                        data-testid="input-edit-linkedin"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="currentJobTitle">Current Job Title</Label>
+                      <div className="relative">
+                        <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="currentJobTitle"
+                          value={editForm.currentJobTitle}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, currentJobTitle: e.target.value }))}
+                          placeholder="Senior Software Engineer"
+                          className="pl-10"
+                          data-testid="input-edit-jobtitle"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="company">Company</Label>
+                      <div className="relative">
+                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="company"
+                          value={editForm.company}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, company: e.target.value }))}
+                          placeholder="Your company"
+                          className="pl-10"
+                          data-testid="input-edit-company"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="yearsExperience">Years of Experience</Label>
+                      <Input
+                        id="yearsExperience"
+                        type="number"
+                        value={editForm.yearsExperience}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, yearsExperience: e.target.value }))}
+                        placeholder="10"
+                        data-testid="input-edit-experience"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="location">Location</Label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="location"
+                          value={editForm.location}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
+                          placeholder="San Francisco, CA"
+                          className="pl-10"
+                          data-testid="input-edit-location"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="education">Education</Label>
+                    <Input
+                      id="education"
+                      value={editForm.education}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, education: e.target.value }))}
+                      placeholder="MBA, Computer Science Degree, etc."
+                      data-testid="input-edit-education"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="profileSummary">Profile Summary</Label>
+                    <Textarea
+                      id="profileSummary"
+                      value={editForm.profileSummary}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, profileSummary: e.target.value }))}
+                      placeholder="Brief description of your professional background..."
+                      rows={3}
+                      data-testid="input-edit-summary"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="motivation">Motivation to Mentor</Label>
+                    <Textarea
+                      id="motivation"
+                      value={editForm.motivation}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, motivation: e.target.value }))}
+                      placeholder="Why do you want to be a mentor?"
+                      rows={3}
+                      data-testid="input-edit-motivation"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsEditDialogOpen(false)}
+                    data-testid="button-cancel-edit"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleSaveProfile}
+                    disabled={updateProfileMutation.isPending}
+                    data-testid="button-save-edit"
+                  >
+                    {updateProfileMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Changes'
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
           <p className="text-muted-foreground ml-11">
-            Welcome back, {(user as any)?.firstName || 'Mentor'}! Manage your students and sessions.
+            Welcome back, {(user as any)?.fullName || 'Mentor'}! Manage your students and sessions.
           </p>
         </div>
 
