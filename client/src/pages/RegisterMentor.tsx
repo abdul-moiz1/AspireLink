@@ -137,18 +137,11 @@ export default function RegisterMentor() {
         description: "Thank you for registering as a mentor! We'll be in touch soon.",
       });
       
-      // If user is completing their profile, refresh user data and redirect to dashboard
+      // If user is completing their profile, refresh user data (no auto-redirect)
       if (isCompletingProfile && user) {
         await refreshUser();
-        setTimeout(() => {
-          setLocationPath("/dashboard/mentor");
-        }, 2000);
-      } else if (!user) {
-        // User is not logged in - redirect to signup with personalized message
-        setTimeout(() => {
-          setLocationPath("/signup?role=mentor&registered=true");
-        }, 2000);
       }
+      // No auto-redirect - users will see the success page with navigation buttons
     },
     onError: () => {
       toast({
@@ -320,11 +313,10 @@ export default function RegisterMentor() {
               {!user && (
                 <div className="bg-green-50 border border-green-200 p-6 rounded-lg mb-8">
                   <h3 className="font-semibold text-green-800 mb-2">Create Your Account</h3>
-                  <p className="text-green-700 mb-4">
+                  <p className="text-green-700">
                     To access your mentor dashboard and manage your mentees, please create an account. 
                     We'll automatically link your application to your new account.
                   </p>
-                  <p className="text-sm text-green-600">Redirecting you to sign up...</p>
                 </div>
               )}
               {user && (

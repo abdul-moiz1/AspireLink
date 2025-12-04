@@ -95,18 +95,11 @@ export default function RegisterStudent() {
         description: "Thank you for applying to AspireLink's mentorship program!",
       });
       
-      // If user is completing their profile, refresh user data and redirect to dashboard
+      // If user is completing their profile, refresh user data (no auto-redirect)
       if (isCompletingProfile && user) {
         await refreshUser();
-        setTimeout(() => {
-          setLocationPath("/dashboard/student");
-        }, 2000);
-      } else if (!user) {
-        // User is not logged in - redirect to signup with personalized message
-        setTimeout(() => {
-          setLocationPath("/signup?role=student&registered=true");
-        }, 2000);
       }
+      // No auto-redirect - users will see the success page with navigation buttons
     },
     onError: () => {
       toast({
@@ -203,11 +196,10 @@ export default function RegisterStudent() {
               {!user && (
                 <div className="bg-green-50 border border-green-200 p-6 rounded-lg mb-8">
                   <h3 className="font-semibold text-green-800 mb-2">Create Your Account</h3>
-                  <p className="text-green-700 mb-4">
+                  <p className="text-green-700">
                     To access your student dashboard and track your mentorship progress, please create an account. 
                     We'll automatically link your application to your new account.
                   </p>
-                  <p className="text-sm text-green-600">Redirecting you to sign up...</p>
                 </div>
               )}
               {user && (
