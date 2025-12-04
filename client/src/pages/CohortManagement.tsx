@@ -131,8 +131,8 @@ export default function CohortManagement() {
   });
 
   const createAssignmentMutation = useMutation({
-    mutationFn: async ({ cohortId, mentorId, studentId }: { cohortId: number; mentorId: number; studentId: number }) => {
-      return await apiRequest(`/api/cohorts/${cohortId}/assignments`, 'POST', { mentorId, studentId });
+    mutationFn: async ({ cohortId, mentorUserId, studentUserId }: { cohortId: number; mentorUserId: string; studentUserId: string }) => {
+      return await apiRequest(`/api/cohorts/${cohortId}/assignments`, 'POST', { mentorUserId, studentUserId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/cohorts/${selectedCohort?.id}/assignments`] });
@@ -173,8 +173,8 @@ export default function CohortManagement() {
     
     createAssignmentMutation.mutate({
       cohortId: selectedCohort.id,
-      mentorId: parseInt(assignForm.mentorId),
-      studentId: parseInt(assignForm.studentId)
+      mentorUserId: assignForm.mentorId,
+      studentUserId: assignForm.studentId
     });
   };
 
