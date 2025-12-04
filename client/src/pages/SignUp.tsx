@@ -11,6 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { signOut } from "@/lib/firebase";
 import { Loader2, Eye, EyeOff, UserCheck, GraduationCap, Users } from "lucide-react";
 import { SiGoogle } from "react-icons/si";
 import logoPath from "@assets/AspireLink-Favicon_1751236188567.png";
@@ -142,15 +143,22 @@ export default function SignUp() {
             const linkResult = await linkResponse.json();
             
             if (linkResult.success && linkResult.role) {
-              // Successfully linked - redirect to role-specific dashboard
-              const dashboard = linkResult.role === 'student' ? '/dashboard/student' : '/dashboard/mentor';
-              setLocation(dashboard);
+              // Successfully linked - sign out and redirect to signin page
+              await signOut();
+              toast({
+                title: "Account Created Successfully",
+                description: "Please sign in with your new credentials to access your dashboard.",
+              });
+              setTimeout(() => {
+                setLocation("/signin?message=account_created");
+              }, 500);
               return;
             }
           }
         } catch (linkError) {
           console.error('Error linking registration:', linkError);
-          // Registration exists but linking failed - redirect to signin so they can log in and complete linking
+          // Registration exists but linking failed - sign out and redirect to signin
+          await signOut();
           toast({
             title: "Account Created",
             description: "Your account is ready! Please sign in to access your dashboard.",
@@ -163,8 +171,9 @@ export default function SignUp() {
         }
       }
       
-      // Check if registration exists - if so, redirect to signin
+      // Check if registration exists - if so, sign out and redirect to signin
       if (registrationCheck?.exists && !registrationCheck.hasAccount) {
+        await signOut();
         toast({
           title: "Account Created Successfully",
           description: "Please sign in to access your dashboard.",
@@ -175,13 +184,14 @@ export default function SignUp() {
         return;
       }
       
-      // No existing registration found - redirect to complete profile for role selection
+      // No existing registration found - sign out and redirect to complete profile for role selection
+      await signOut();
       toast({
         title: "Account Created Successfully",
-        description: "Complete your profile to get started.",
+        description: "Please sign in to complete your profile and get started.",
       });
       setTimeout(() => {
-        setLocation("/complete-profile?new=true");
+        setLocation("/signin?message=account_created");
       }, 500);
     } catch (error) {
       console.error('Signup error:', error);
@@ -195,17 +205,17 @@ export default function SignUp() {
     try {
       const { user: googleUser, isNew } = await loginWithGoogle();
       
-      // AuthContext.loginWithGoogle now handles registration linking
-      // Check if the user got a role assigned
-      if (googleUser.role) {
-        const dashboard = googleUser.role === 'student' ? '/dashboard/student' : 
-                         googleUser.role === 'mentor' ? '/dashboard/mentor' : 
-                         googleUser.role === 'admin' ? '/admin/dashboard' : '/complete-profile';
-        setLocation(dashboard);
-      } else {
-        // No role - redirect to complete profile
-        setLocation("/complete-profile?new=true");
-      }
+      // Sign out the user after successful Google signup
+      await signOut();
+      
+      // Show success message and redirect to signin
+      toast({
+        title: "Account Created Successfully",
+        description: "Please sign in with Google to access your dashboard.",
+      });
+      setTimeout(() => {
+        setLocation("/signin?message=account_created");
+      }, 500);
     } catch (error) {
       console.error('Google signup error:', error);
     } finally {
