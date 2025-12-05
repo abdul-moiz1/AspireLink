@@ -3,253 +3,25 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Calendar, User, Clock, Video, Mail, Building, MapPin, Target, BookOpen, Edit, Loader2, GraduationCap, Phone, Linkedin } from "lucide-react";
+import { Calendar, User, Clock, Video, Building, MapPin, Edit, Loader2, GraduationCap, Phone, Linkedin, ChevronRight, Users, Briefcase } from "lucide-react";
 import { format } from "date-fns";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
-  ResponsiveContainer,
-  RadialBarChart,
-  RadialBar
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer
 } from "recharts";
-
-function AnimatedStatCard({ 
-  title, 
-  value, 
-  icon: Icon, 
-  color, 
-  subtitle,
-  delay = 0 
-}: { 
-  title: string; 
-  value: number; 
-  icon: any; 
-  color: string; 
-  subtitle?: string;
-  delay?: number;
-}) {
-  const [displayValue, setDisplayValue] = useState(0);
-
-  useEffect(() => {
-    const duration = 1000;
-    const steps = 30;
-    const stepValue = value / steps;
-    let current = 0;
-    let intervalId: ReturnType<typeof setInterval> | null = null;
-    
-    const timer = setTimeout(() => {
-      intervalId = setInterval(() => {
-        current += stepValue;
-        if (current >= value) {
-          setDisplayValue(value);
-          if (intervalId) clearInterval(intervalId);
-        } else {
-          setDisplayValue(Math.floor(current));
-        }
-      }, duration / steps);
-    }, delay);
-    
-    return () => {
-      clearTimeout(timer);
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [value, delay]);
-
-  return (
-    <Card className="card-hover hover-lift overflow-hidden">
-      <CardContent className="p-6 relative">
-        <div className={`absolute top-0 right-0 w-20 h-20 -mr-6 -mt-6 rounded-full opacity-10`} style={{ backgroundColor: color }} />
-        <div className="flex items-center gap-4">
-          <div className={`p-3 rounded-xl`} style={{ backgroundColor: `${color}20` }}>
-            <Icon className="w-6 h-6" style={{ color }} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-3xl font-bold text-foreground">{displayValue}</p>
-            {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function LearningProgressChart({ assignments }: { assignments: any[] }) {
-  const totalExpectedSessions = assignments.length * 4;
-  const completedSessions = assignments.reduce((acc, a) => acc + (a.sessions?.filter((s: any) => s.status === 'completed').length || 0), 0);
-  const scheduledSessions = assignments.reduce((acc, a) => acc + (a.sessions?.filter((s: any) => s.status === 'scheduled').length || 0), 0);
-  
-  const progressPercentage = totalExpectedSessions > 0 
-    ? Math.round((completedSessions / totalExpectedSessions) * 100) 
-    : 0;
-
-  const data = [
-    { name: 'Completed', value: completedSessions, color: '#4ECDC4' },
-    { name: 'Scheduled', value: scheduledSessions, color: '#2E86AB' },
-    { name: 'Remaining', value: Math.max(0, totalExpectedSessions - completedSessions - scheduledSessions), color: '#e0e0e0' },
-  ].filter(item => item.value > 0);
-
-  const radialData = [
-    {
-      name: 'Progress',
-      value: progressPercentage,
-      fill: '#4ECDC4',
-    },
-  ];
-
-  return (
-    <Card className="card-hover">
-      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-        <div>
-          <CardTitle className="text-lg font-semibold">Learning Progress</CardTitle>
-          <CardDescription>Your mentorship journey</CardDescription>
-        </div>
-        <Target className="w-5 h-5 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-6">
-          <div className="w-32 h-32 relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadialBarChart 
-                cx="50%" 
-                cy="50%" 
-                innerRadius="60%" 
-                outerRadius="100%" 
-                barSize={10} 
-                data={radialData}
-                startAngle={90}
-                endAngle={-270}
-              >
-                <RadialBar
-                  background
-                  dataKey="value"
-                  cornerRadius={10}
-                />
-              </RadialBarChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-2xl font-bold text-foreground">{progressPercentage}%</span>
-            </div>
-          </div>
-          <div className="flex-1 space-y-3">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-muted-foreground">Sessions Completed</span>
-                <span className="font-semibold">{completedSessions} / {totalExpectedSessions}</span>
-              </div>
-              <Progress value={progressPercentage} className="h-2" />
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {data.map((item, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span className="text-xs text-muted-foreground">{item.name}: {item.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function LearningProgressWithFocusAreas({ assignments }: { assignments: any[] }) {
-  const totalExpectedSessions = assignments.length * 4;
-  const completedSessions = assignments.reduce((acc, a) => acc + (a.sessions?.filter((s: any) => s.status === 'completed').length || 0), 0);
-  const scheduledSessions = assignments.reduce((acc, a) => acc + (a.sessions?.filter((s: any) => s.status === 'scheduled').length || 0), 0);
-  
-  const progressPercentage = totalExpectedSessions > 0 
-    ? Math.round((completedSessions / totalExpectedSessions) * 100) 
-    : 0;
-
-  const topics = assignments.flatMap(a => a.mentor?.mentoringTopics || []);
-  const uniqueTopics = Array.from(new Set(topics));
-  
-  const focusAreaColors = [
-    { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-700' },
-    { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-700' },
-    { bg: 'bg-teal-100 dark:bg-teal-900/30', text: 'text-teal-700 dark:text-teal-300', border: 'border-teal-200 dark:border-teal-700' },
-    { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-700' },
-    { bg: 'bg-rose-100 dark:bg-rose-900/30', text: 'text-rose-700 dark:text-rose-300', border: 'border-rose-200 dark:border-rose-700' },
-    { bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-700 dark:text-indigo-300', border: 'border-indigo-200 dark:border-indigo-700' },
-  ];
-
-  return (
-    <Card className="card-hover h-full">
-      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-        <div>
-          <CardTitle className="text-lg font-semibold">Learning Progress</CardTitle>
-          <CardDescription>Your mentorship journey and focus areas</CardDescription>
-        </div>
-        <Target className="w-5 h-5 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Overall Progress</span>
-              <span className="font-semibold text-foreground">{progressPercentage}%</span>
-            </div>
-            <Progress value={progressPercentage} className="h-3" />
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-2 rounded-lg bg-green-50 dark:bg-green-900/20">
-                <p className="text-lg font-bold text-green-600 dark:text-green-400">{completedSessions}</p>
-                <p className="text-xs text-muted-foreground">Completed</p>
-              </div>
-              <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{scheduledSessions}</p>
-                <p className="text-xs text-muted-foreground">Scheduled</p>
-              </div>
-              <div className="p-2 rounded-lg bg-gray-50 dark:bg-gray-900/20">
-                <p className="text-lg font-bold text-gray-600 dark:text-gray-400">{Math.max(0, totalExpectedSessions - completedSessions - scheduledSessions)}</p>
-                <p className="text-xs text-muted-foreground">Remaining</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-4 border-t">
-            <div className="flex items-center gap-2 mb-3">
-              <BookOpen className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">Focus Areas</span>
-            </div>
-            {uniqueTopics.length === 0 ? (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">Focus areas will appear once you're matched with a mentor.</p>
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {uniqueTopics.map((topic, index) => {
-                  const colorSet = focusAreaColors[index % focusAreaColors.length];
-                  return (
-                    <Badge 
-                      key={index} 
-                      className={`${colorSet.bg} ${colorSet.text} ${colorSet.border} border`}
-                      data-testid={`badge-focus-area-${index}`}
-                    >
-                      {topic}
-                    </Badge>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-
-
 
 const yearOfStudyOptions = [
   "1st year undergraduate", "2nd year undergraduate", "3rd year undergraduate", 
@@ -263,6 +35,7 @@ export default function StudentDashboard() {
   const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedMentorForPreview, setSelectedMentorForPreview] = useState<any>(null);
   const [editForm, setEditForm] = useState({
     fullName: '',
     phoneNumber: '',
@@ -357,11 +130,13 @@ export default function StudentDashboard() {
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({
     queryKey: ["/api/student/assignments"],
     enabled: isAuthenticated,
+    refetchInterval: 30000,
   });
 
   const { data: cohorts, isLoading: cohortsLoading } = useQuery({
     queryKey: ["/api/student/cohorts"],
     enabled: isAuthenticated,
+    refetchInterval: 30000,
   });
 
   if (authLoading || !isAuthenticated) {
@@ -378,20 +153,81 @@ export default function StudentDashboard() {
   const assignmentList = assignments as any[] || [];
   const cohortList = cohorts as any[] || [];
 
-  const upcomingSessions = assignmentList.reduce((acc, a) => acc + (a.sessions?.filter((s: any) => s.status === 'scheduled').length || 0), 0);
+  const deduplicatedMentors = useMemo(() => {
+    const mentorMap = new Map<string, {
+      mentor: any;
+      cohorts: { id: number; name: string; startDate?: string; endDate?: string; isActive: boolean; sessionCount: number }[];
+      totalSessions: number;
+      assignments: any[];
+    }>();
+    
+    assignmentList.forEach((assignment) => {
+      const mentorId = assignment.mentor?.id || assignment.mentorUserId;
+      if (!mentorId) return;
+      
+      if (!mentorMap.has(mentorId)) {
+        mentorMap.set(mentorId, {
+          mentor: assignment.mentor,
+          cohorts: [],
+          totalSessions: 0,
+          assignments: []
+        });
+      }
+      
+      const entry = mentorMap.get(mentorId)!;
+      entry.assignments.push(assignment);
+      entry.totalSessions += assignment.sessions?.length || 0;
+      
+      if (assignment.cohort) {
+        const existingCohort = entry.cohorts.find(c => c.id === assignment.cohort.id);
+        if (!existingCohort) {
+          entry.cohorts.push({
+            id: assignment.cohort.id,
+            name: assignment.cohort.name,
+            startDate: assignment.cohort.startDate,
+            endDate: assignment.cohort.endDate,
+            isActive: assignment.cohort.isActive ?? true,
+            sessionCount: assignment.sessions?.length || 0
+          });
+        } else {
+          existingCohort.sessionCount += assignment.sessions?.length || 0;
+        }
+      }
+    });
+    
+    return Array.from(mentorMap.values());
+  }, [assignmentList]);
+
+  const totalSessions = assignmentList.reduce((acc, a) => acc + (a.sessions?.length || 0), 0);
+  const scheduledSessions = assignmentList.reduce((acc, a) => acc + (a.sessions?.filter((s: any) => s.status === 'scheduled').length || 0), 0);
   const completedSessions = assignmentList.reduce((acc, a) => acc + (a.sessions?.filter((s: any) => s.status === 'completed').length || 0), 0);
+
+  const sessionData = [
+    { name: 'Scheduled', value: scheduledSessions },
+    { name: 'Completed', value: completedSessions },
+    { name: 'Total', value: totalSessions },
+  ];
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 animate-fadeInUp">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
           <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg">
-                <User className="w-6 h-6 text-primary" />
+                <GraduationCap className="w-6 h-6 text-primary" />
               </div>
               <h1 className="text-3xl font-bold text-foreground">Student Dashboard</h1>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditDialogOpen(true)}
+              data-testid="button-edit-profile"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Application
+            </Button>
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
@@ -536,362 +372,336 @@ export default function StudentDashboard() {
             </Dialog>
           </div>
           <p className="text-muted-foreground ml-11">
-            Welcome back, {(user as any)?.fullName || 'Student'}! View your mentor and upcoming sessions.
+            Welcome back, {(user as any)?.fullName || 'Student'}! Manage your mentors and sessions.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          <AnimatedStatCard
-            title="Assigned Mentor"
-            value={assignmentList.length}
-            icon={User}
-            color="#2E86AB"
-            subtitle="Your mentor"
-            delay={0}
-          />
-          <AnimatedStatCard
-            title="Active Cohorts"
-            value={cohortList.length}
-            icon={Calendar}
-            color="#4ECDC4"
-            subtitle="Current programs"
-            delay={100}
-          />
-          <AnimatedStatCard
-            title="Upcoming Sessions"
-            value={upcomingSessions}
-            icon={Video}
-            color="#A23B72"
-            subtitle="Scheduled meetings"
-            delay={200}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <LearningProgressChart assignments={assignmentList} />
-          <LearningProgressWithFocusAreas assignments={assignmentList} />
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 mb-8">
-          <Card className="card-hover">
-            <CardHeader className="flex flex-row items-center justify-between gap-2">
-              <div>
-                <CardTitle className="text-lg font-semibold">My Mentor</CardTitle>
-                <CardDescription>Your assigned mentor for guidance</CardDescription>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <User className="w-5 h-5 text-blue-600" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Mentors</p>
+                  <p className="text-2xl font-bold">{deduplicatedMentors.length}</p>
+                </div>
               </div>
-              <User className="w-5 h-5 text-muted-foreground" />
-            </CardHeader>
-              <CardContent>
-                {assignmentsLoading ? (
-                  <div className="flex justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  </div>
-                ) : assignmentList.length === 0 ? (
-                  <div className="text-center py-8">
-                    <User className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                    <h3 className="text-lg font-semibold text-foreground mb-2">No Mentor Assigned Yet</h3>
-                    <p className="text-muted-foreground">You will be matched with a mentor once you are added to a cohort.</p>
-                  </div>
-                ) : (
-                  <div className="grid md:grid-cols-1 gap-4">
-                    {assignmentList.map((assignment: any, index: number) => (
-                      <Card 
-                        key={assignment.id} 
-                        className="overflow-hidden hover-lift border-0 shadow-sm"
-                        style={{ animationDelay: `${index * 100}ms` }}
-                        data-testid={`card-mentor-${assignment.id}`}
-                      >
-                        <div className="h-2 bg-gradient-to-r from-blue-500 to-indigo-500" />
-                        <CardContent className="p-6">
-                          <div className="flex items-start gap-4">
-                            <div className="p-3 bg-blue-100 rounded-full">
-                              <User className="h-8 w-8 text-blue-600" />
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-start justify-between mb-3">
-                                <div>
-                                  <h3 className="text-xl font-semibold text-foreground">{assignment.mentor?.fullName || 'Your Mentor'}</h3>
-                                  <p className="text-muted-foreground">{assignment.mentor?.currentJobTitle || 'Professional Mentor'}</p>
-                                </div>
-                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                  Active
-                                </Badge>
-                              </div>
-                              
-                              <div className="grid md:grid-cols-2 gap-3 mb-4">
-                                {assignment.mentor?.company && (
-                                  <div className="flex items-center text-muted-foreground">
-                                    <Building className="h-4 w-4 mr-2" />
-                                    <span>{assignment.mentor.company}</span>
-                                  </div>
-                                )}
-                                {assignment.mentor?.location && (
-                                  <div className="flex items-center text-muted-foreground">
-                                    <MapPin className="h-4 w-4 mr-2" />
-                                    <span>{assignment.mentor.location}</span>
-                                  </div>
-                                )}
-                                {assignment.cohort && (
-                                  <div className="flex items-center text-muted-foreground">
-                                    <Calendar className="h-4 w-4 mr-2" />
-                                    <span>Cohort: {assignment.cohort.name}</span>
-                                  </div>
-                                )}
-                              </div>
-
-                              {assignment.mentor?.mentoringTopics && assignment.mentor.mentoringTopics.length > 0 && (
-                                <div>
-                                  <p className="text-sm font-medium text-foreground mb-2">Mentoring Topics:</p>
-                                  <div className="flex flex-wrap gap-2">
-                                    {assignment.mentor.mentoringTopics.map((topic: string, idx: number) => (
-                                      <Badge key={idx} variant="secondary">{topic}</Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Calendar className="w-5 h-5 text-teal-600" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Cohorts</p>
+                  <p className="text-2xl font-bold">{cohortList.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Video className="w-5 h-5 text-purple-600" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Scheduled</p>
+                  <p className="text-2xl font-bold">{scheduledSessions}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Clock className="w-5 h-5 text-green-600" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Completed</p>
+                  <p className="text-2xl font-bold">{completedSessions}</p>
+                </div>
+              </div>
+            </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <Card className="card-hover">
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Sessions Overview</CardTitle>
+            <CardDescription>Your mentoring activity summary</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-32">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={sessionData} layout="horizontal" barCategoryGap="20%">
+                  <XAxis dataKey="name" stroke="#888" fontSize={11} axisLine={false} tickLine={false} />
+                  <YAxis hide />
+                  <Tooltip 
+                    contentStyle={{ 
+                      background: 'hsl(var(--background))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px',
+                      fontSize: '12px'
+                    }}
+                  />
+                  <Bar dataKey="value" fill="#4ECDC4" radius={[4, 4, 4, 4]} name="Sessions" maxBarSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid lg:grid-cols-2 gap-6 mb-6">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-2">
               <div>
-                <CardTitle className="text-lg font-semibold">Upcoming Sessions</CardTitle>
-                <CardDescription>Your scheduled mentoring sessions</CardDescription>
+                <CardTitle className="text-lg">My Mentors</CardTitle>
+                <CardDescription>Mentors assigned to you ({deduplicatedMentors.length} unique)</CardDescription>
+              </div>
+              <User className="w-5 h-5 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {assignmentsLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : deduplicatedMentors.length === 0 ? (
+                <div className="text-center py-8">
+                  <User className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-50" />
+                  <p className="text-muted-foreground">No mentors assigned yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {deduplicatedMentors.map((entry: any) => (
+                    <div 
+                      key={entry.mentor?.id || 'unknown'} 
+                      className="p-3 rounded-lg bg-muted/50"
+                      data-testid={`card-mentor-${entry.mentor?.id}`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <button 
+                          className="flex items-center gap-2 text-left hover-elevate active-elevate-2 rounded-md px-1 -mx-1"
+                          onClick={() => setSelectedMentorForPreview(entry)}
+                          data-testid={`button-view-mentor-cohorts-${entry.mentor?.id}`}
+                        >
+                          <Briefcase className="h-4 w-4 text-blue-600" />
+                          <span className="font-medium">{entry.mentor?.fullName || 'Mentor'}</span>
+                          {entry.cohorts.length > 1 && (
+                            <Badge variant="secondary" className="text-xs">
+                              {entry.cohorts.length} cohorts
+                            </Badge>
+                          )}
+                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                        </button>
+                        <Badge variant="outline" className="text-xs">
+                          {entry.totalSessions} sessions
+                        </Badge>
+                      </div>
+                      {entry.mentor?.currentJobTitle && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1 mb-1">
+                          <Briefcase className="h-3 w-3" />
+                          {entry.mentor.currentJobTitle}
+                          {entry.mentor?.company && ` at ${entry.mentor.company}`}
+                        </p>
+                      )}
+                      {entry.mentor?.location && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {entry.mentor.location}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-2">
+              <div>
+                <CardTitle className="text-lg">Upcoming Sessions</CardTitle>
+                <CardDescription>Your scheduled meetings</CardDescription>
               </div>
               <Video className="w-5 h-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               {assignmentList.length === 0 ? (
                 <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No Sessions Scheduled</h3>
-                  <p className="text-muted-foreground">Your mentor will schedule sessions once you're matched.</p>
+                  <Calendar className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-50" />
+                  <p className="text-muted-foreground">No sessions scheduled</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {assignmentList.flatMap((assignment: any) => 
                     (assignment.sessions || [])
                       .filter((s: any) => s.status === 'scheduled')
-                      .map((session: any, idx: number) => (
-                        <div key={session.id} className="p-4 rounded-lg bg-muted/50 hover-lift" style={{ animationDelay: `${idx * 100}ms` }}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-green-100 rounded-full">
-                                <Video className="h-5 w-5 text-green-600" />
-                              </div>
-                              <div>
-                                <h3 className="font-semibold text-foreground">
-                                  Session with {assignment.mentor?.fullName}
-                                </h3>
-                                <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1 flex-wrap">
-                                  <span className="flex items-center">
-                                    <Calendar className="h-3 w-3 mr-1" />
-                                    {session.scheduledDate ? format(new Date(session.scheduledDate), 'MMM d, yyyy') : 'TBD'}
-                                  </span>
-                                  <span className="flex items-center">
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    {session.scheduledTime || 'TBD'}
-                                  </span>
-                                  <span className="flex items-center">
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    {session.durationMinutes || 30} mins
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      .map((session: any) => (
+                        <div key={session.id} className="p-3 rounded-lg bg-muted/50">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium text-sm">
+                              {assignment.mentor?.fullName}
+                            </span>
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
                               Scheduled
                             </Badge>
                           </div>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2 flex-wrap">
+                            <span className="flex items-center">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              {session.scheduledDate ? format(new Date(session.scheduledDate), 'MMM d, yyyy') : 'TBD'}
+                            </span>
+                            <span className="flex items-center">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {session.scheduledTime || 'TBD'}
+                            </span>
+                          </div>
                           {session.meetingLink && (
-                            <div className="mt-3">
-                              <Button asChild size="sm" className="hover-lift">
-                                <a href={session.meetingLink} target="_blank" rel="noopener noreferrer">
-                                  <Video className="h-4 w-4 mr-2" />
-                                  Join Meeting
-                                </a>
-                              </Button>
-                            </div>
+                            <Button asChild size="sm" className="w-full">
+                              <a href={session.meetingLink} target="_blank" rel="noopener noreferrer">
+                                <Video className="h-3 w-3 mr-1" />
+                                Join Meeting
+                              </a>
+                            </Button>
                           )}
                         </div>
                       ))
                   )}
                   {assignmentList.every((a: any) => !a.sessions || a.sessions.filter((s: any) => s.status === 'scheduled').length === 0) && (
                     <div className="text-center py-8">
-                      <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                      <h3 className="text-lg font-semibold text-foreground mb-2">No Upcoming Sessions</h3>
-                      <p className="text-muted-foreground">Your mentor will schedule sessions soon.</p>
+                      <Calendar className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-50" />
+                      <p className="text-muted-foreground">No upcoming sessions</p>
                     </div>
                   )}
                 </div>
               )}
             </CardContent>
           </Card>
+        </div>
 
-          <Card className="card-hover">
-            <CardHeader className="flex flex-row items-center justify-between gap-2">
-              <div>
-                <CardTitle className="text-lg font-semibold">My Cohorts</CardTitle>
-                <CardDescription>Programs you're participating in</CardDescription>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-2">
+            <div>
+              <CardTitle className="text-lg">My Cohorts</CardTitle>
+              <CardDescription>Programs you're participating in</CardDescription>
+            </div>
+            <Calendar className="w-5 h-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {cohortsLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
-              <Calendar className="w-5 h-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {cohortsLoading ? (
-                <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                </div>
-              ) : cohortList.length === 0 ? (
-                <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">Not Part of Any Cohort Yet</h3>
-                  <p className="text-muted-foreground">You will be added to a cohort by the program admin.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {cohortList.map((cohort: any, index: number) => {
-                    const cohortSessions = assignmentList
-                      .filter((a: any) => a.cohortId === cohort.id)
-                      .flatMap((a: any) => (a.sessions || []).map((s: any) => ({ 
-                        ...s, 
-                        mentorName: a.mentor?.fullName || a.mentorName || 'Your Mentor' 
-                      })))
-                      .filter((s: any) => s.status === 'scheduled');
-                    
-                    return (
-                      <div 
-                        key={cohort.id} 
-                        className="p-4 rounded-lg bg-muted/50 hover-lift"
-                        style={{ animationDelay: `${index * 100}ms` }}
-                        data-testid={`card-cohort-${cohort.id}`}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-semibold text-foreground">{cohort.name}</h3>
-                          <Badge className={cohort.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                            {cohort.isActive ? 'Active' : 'Inactive'}
-                          </Badge>
+            ) : cohortList.length === 0 ? (
+              <div className="text-center py-8">
+                <Calendar className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-50" />
+                <p className="text-muted-foreground">Not part of any cohort yet</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {cohortList.map((cohort: any) => {
+                  const cohortSessions = assignmentList
+                    .filter((a: any) => a.cohortId === cohort.id)
+                    .flatMap((a: any) => (a.sessions || []).map((s: any) => ({
+                      ...s,
+                      mentorName: a.mentor?.fullName || 'Mentor'
+                    })))
+                    .filter((s: any) => s.status === 'scheduled');
+                  
+                  return (
+                    <div 
+                      key={cohort.id} 
+                      className="p-4 rounded-lg border bg-background"
+                      data-testid={`card-cohort-${cohort.id}`}
+                    >
+                      <div className="flex items-center justify-between mb-2 gap-2">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-primary" />
+                          <span className="font-semibold">{cohort.name}</span>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-2">{cohort.description}</p>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-                          <span className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {cohort.startDate ? format(new Date(cohort.startDate), 'MMM d, yyyy') : 'TBD'} - 
-                            {cohort.endDate ? format(new Date(cohort.endDate), 'MMM d, yyyy') : 'TBD'}
-                          </span>
+                        <Badge className={cohort.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                          {cohort.isActive ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3 flex-wrap">
+                        <span className="flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {cohort.startDate ? format(new Date(cohort.startDate), 'MMM d, yyyy') : 'TBD'} -{' '}
+                          {cohort.endDate ? format(new Date(cohort.endDate), 'MMM d, yyyy') : 'TBD'}
+                        </span>
+                        {cohort.sessionsPerMonth && (
                           <span className="flex items-center">
                             <Clock className="h-3 w-3 mr-1" />
-                            {cohort.sessionsPerMonth || 2} sessions/month
+                            {cohort.sessionsPerMonth} sessions/month
                           </span>
-                        </div>
-                        
-                        {cohortSessions.length > 0 && (
-                          <div className="mt-3 pt-3 border-t">
-                            <p className="text-xs font-medium text-foreground mb-2 flex items-center gap-1">
-                              <Video className="h-3 w-3" />
-                              Upcoming Sessions ({cohortSessions.length})
-                            </p>
-                            <div className="space-y-2">
-                              {cohortSessions.slice(0, 2).map((session: any) => (
-                                <Dialog key={session.id}>
-                                  <DialogTrigger asChild>
-                                    <div 
-                                      className="p-2 rounded bg-background/50 cursor-pointer hover:bg-background/80 transition-colors"
-                                      data-testid={`session-preview-${session.id}`}
-                                    >
-                                      <div className="flex items-center justify-between text-xs">
-                                        <span className="font-medium">{session.mentorName || 'Mentor'}</span>
-                                        <span className="text-muted-foreground">
-                                          {session.scheduledDate ? format(new Date(session.scheduledDate), 'MMM d') : 'TBD'} at {session.scheduledTime || 'TBD'}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </DialogTrigger>
-                                  <DialogContent>
-                                    <DialogHeader>
-                                      <DialogTitle className="flex items-center gap-2">
-                                        <Video className="h-5 w-5 text-primary" />
-                                        Session Details
-                                      </DialogTitle>
-                                      <DialogDescription>
-                                        Your scheduled mentoring session
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="space-y-4 pt-4">
-                                      <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-blue-100 rounded-full">
-                                          <User className="h-4 w-4 text-blue-600" />
-                                        </div>
-                                        <div>
-                                          <p className="text-sm text-muted-foreground">Mentor</p>
-                                          <p className="font-medium">{session.mentorName || 'Your Mentor'}</p>
-                                        </div>
-                                      </div>
-                                      <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                          <p className="text-sm text-muted-foreground">Date</p>
-                                          <p className="font-medium flex items-center gap-1">
-                                            <Calendar className="h-4 w-4" />
-                                            {session.scheduledDate ? format(new Date(session.scheduledDate), 'MMMM d, yyyy') : 'TBD'}
-                                          </p>
-                                        </div>
-                                        <div>
-                                          <p className="text-sm text-muted-foreground">Time</p>
-                                          <p className="font-medium flex items-center gap-1">
-                                            <Clock className="h-4 w-4" />
-                                            {session.scheduledTime || 'TBD'}
-                                          </p>
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <p className="text-sm text-muted-foreground">Duration</p>
-                                        <p className="font-medium">{session.durationMinutes || 30} minutes</p>
-                                      </div>
-                                      {session.meetingLink && (
-                                        <div>
-                                          <p className="text-sm text-muted-foreground mb-2">Meeting Link</p>
-                                          <Button asChild size="sm" className="w-full">
-                                            <a href={session.meetingLink} target="_blank" rel="noopener noreferrer">
-                                              <Video className="h-4 w-4 mr-2" />
-                                              Join Meeting
-                                            </a>
-                                          </Button>
-                                        </div>
-                                      )}
-                                      {session.notes && (
-                                        <div>
-                                          <p className="text-sm text-muted-foreground">Notes</p>
-                                          <p className="text-sm">{session.notes}</p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </DialogContent>
-                                </Dialog>
-                              ))}
-                              {cohortSessions.length > 2 && (
-                                <p className="text-xs text-muted-foreground text-center">
-                                  +{cohortSessions.length - 2} more sessions
-                                </p>
-                              )}
-                            </div>
-                          </div>
                         )}
                       </div>
-                    );
-                  })}
+                      
+                      {cohortSessions.length > 0 && (
+                        <div className="mt-3 pt-3 border-t">
+                          <span className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
+                            <Video className="h-3 w-3" />
+                            Upcoming Sessions ({cohortSessions.length})
+                          </span>
+                          <div className="space-y-1">
+                            {cohortSessions.slice(0, 2).map((session: any) => (
+                              <div key={session.id} className="text-xs flex justify-between items-center py-1">
+                                <span className="text-muted-foreground">{session.mentorName}</span>
+                                <span className="text-foreground">
+                                  {session.scheduledDate ? format(new Date(session.scheduledDate), 'MMM d') : ''} at {session.scheduledTime || 'TBD'}
+                                </span>
+                              </div>
+                            ))}
+                            {cohortSessions.length > 2 && (
+                              <span className="text-xs text-muted-foreground">
+                                +{cohortSessions.length - 2} more sessions
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Dialog open={!!selectedMentorForPreview} onOpenChange={() => setSelectedMentorForPreview(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-primary" />
+                {selectedMentorForPreview?.mentor?.fullName || 'Mentor'} - Cohorts
+              </DialogTitle>
+              <DialogDescription>
+                Your mentor across different cohorts
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 pt-2">
+              {selectedMentorForPreview?.cohorts?.map((cohort: any) => (
+                <div key={cohort.id} className="p-3 rounded-lg border bg-muted/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium">{cohort.name}</span>
+                    <Badge className={cohort.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                      {cohort.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                    <span className="flex items-center">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      {cohort.startDate ? format(new Date(cohort.startDate), 'MMM d, yyyy') : 'TBD'} -{' '}
+                      {cohort.endDate ? format(new Date(cohort.endDate), 'MMM d, yyyy') : 'TBD'}
+                    </span>
+                    <span className="flex items-center">
+                      <Video className="h-3 w-3 mr-1" />
+                      {cohort.sessionCount} sessions
+                    </span>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

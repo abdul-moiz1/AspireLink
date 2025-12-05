@@ -146,11 +146,13 @@ export default function MentorDashboard() {
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({
     queryKey: ["/api/mentor/assignments"],
     enabled: isAuthenticated,
+    refetchInterval: 30000,
   });
 
   const { data: cohorts, isLoading: cohortsLoading } = useQuery({
     queryKey: ["/api/mentor/cohorts"],
     enabled: isAuthenticated,
+    refetchInterval: 30000,
   });
 
   const createSessionMutation = useMutation({
@@ -333,6 +335,15 @@ export default function MentorDashboard() {
               </div>
               <h1 className="text-3xl font-bold text-foreground">Mentor Dashboard</h1>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditDialogOpen(true)}
+              data-testid="button-edit-profile"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Application
+            </Button>
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
