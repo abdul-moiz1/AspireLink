@@ -57,6 +57,14 @@ export default function Navigation() {
     setLocation("/");
   };
 
+  const handleEditApplication = () => {
+    const editLink = getEditApplicationLink();
+    if (editLink) {
+      // Use window.location to ensure the page reloads with the query param
+      window.location.href = editLink;
+    }
+  };
+
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -124,14 +132,10 @@ export default function Navigation() {
                     </Link>
                   </DropdownMenuItem>
                   {getEditApplicationLink() && (
-                    <>
-                      <DropdownMenuItem asChild>
-                        <Link href={getEditApplicationLink()!} className="flex items-center cursor-pointer">
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit Application
-                        </Link>
-                      </DropdownMenuItem>
-                    </>
+                    <DropdownMenuItem onClick={handleEditApplication} className="flex items-center cursor-pointer">
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Application
+                    </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="flex items-center cursor-pointer text-red-600">
@@ -192,14 +196,13 @@ export default function Navigation() {
                           Dashboard
                         </Link>
                         {getEditApplicationLink() && (
-                          <Link
-                            href={getEditApplicationLink()!}
-                            onClick={() => setIsOpen(false)}
-                            className="block px-3 py-2 text-base font-medium text-charcoal-custom hover:text-primary-custom"
+                          <button
+                            onClick={() => { handleEditApplication(); setIsOpen(false); }}
+                            className="block w-full text-left px-3 py-2 text-base font-medium text-charcoal-custom hover:text-primary-custom"
                           >
                             <Edit className="w-4 h-4 inline mr-2" />
                             Edit Application
-                          </Link>
+                          </button>
                         )}
                         <button
                           onClick={() => { handleLogout(); setIsOpen(false); }}

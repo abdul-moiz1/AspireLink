@@ -15,8 +15,8 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
-  BarChart,
-  Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
@@ -425,13 +425,19 @@ export default function StudentDashboard() {
 
         <Card className="mb-6">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Sessions Overview</CardTitle>
-            <CardDescription>Your mentoring activity summary</CardDescription>
+            <CardTitle className="text-lg">Learning Progress</CardTitle>
+            <CardDescription>Your mentoring journey overview</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-32">
+            <div className="h-40">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={sessionData} layout="horizontal" barCategoryGap="20%">
+                <AreaChart data={sessionData}>
+                  <defs>
+                    <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4ECDC4" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#4ECDC4" stopOpacity={0.05}/>
+                    </linearGradient>
+                  </defs>
                   <XAxis dataKey="name" stroke="#888" fontSize={11} axisLine={false} tickLine={false} />
                   <YAxis hide />
                   <Tooltip 
@@ -442,8 +448,15 @@ export default function StudentDashboard() {
                       fontSize: '12px'
                     }}
                   />
-                  <Bar dataKey="value" fill="#4ECDC4" radius={[4, 4, 4, 4]} name="Sessions" maxBarSize={40} />
-                </BarChart>
+                  <Area 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="#4ECDC4" 
+                    strokeWidth={2}
+                    fill="url(#colorGradient)" 
+                    name="Sessions"
+                  />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </CardContent>

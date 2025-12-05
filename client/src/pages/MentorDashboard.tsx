@@ -15,13 +15,12 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { CohortPreviewDialog } from "@/components/CohortPreviewDialog";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Legend
 } from "recharts";
 
 export default function MentorDashboard() {
@@ -318,11 +317,12 @@ export default function MentorDashboard() {
   const scheduledSessions = assignmentList.reduce((acc, a) => acc + (a.sessions?.filter((s: any) => s.status === 'scheduled').length || 0), 0);
   const completedSessions = assignmentList.reduce((acc, a) => acc + (a.sessions?.filter((s: any) => s.status === 'completed').length || 0), 0);
 
-  const sessionData = [
-    { name: 'Scheduled', value: scheduledSessions },
-    { name: 'Completed', value: completedSessions },
-    { name: 'Total', value: totalSessions },
-  ];
+  const COLORS = ['#8B5CF6', '#10B981', '#F59E0B'];
+  const pieData = [
+    { name: 'Scheduled', value: scheduledSessions, color: '#8B5CF6' },
+    { name: 'Completed', value: completedSessions, color: '#10B981' },
+    { name: 'Pending', value: Math.max(0, totalSessions - scheduledSessions - completedSessions), color: '#F59E0B' },
+  ].filter(item => item.value > 0);
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">
@@ -566,26 +566,52 @@ export default function MentorDashboard() {
 
         <Card className="mb-6">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Sessions Overview</CardTitle>
-            <CardDescription>Your mentoring activity summary</CardDescription>
+            <CardTitle className="text-lg">Session Distribution</CardTitle>
+            <CardDescription>Your mentoring activity breakdown</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-32">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={sessionData} layout="horizontal" barCategoryGap="20%">
-                  <XAxis dataKey="name" stroke="#888" fontSize={11} axisLine={false} tickLine={false} />
-                  <YAxis hide />
-                  <Tooltip 
-                    contentStyle={{ 
-                      background: 'hsl(var(--background))', 
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '6px',
-                      fontSize: '12px'
-                    }}
-                  />
-                  <Bar dataKey="value" fill="#2E86AB" radius={[4, 4, 4, 4]} name="Sessions" maxBarSize={40} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="h-48 flex items-center justify-center">
+              {pieData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={40}
+                      outerRadius={70}
+                      paddingAngle={3}
+                      dataKey="value"
+                      label={({ name, value }) => `${name}: ${value}`}
+                      labelLine={false}
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ 
+                        background: 'hsl(var(--background))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px',
+                        fontSize: '12px'
+                      }}
+                    />
+                    <Legend 
+                      verticalAlign="bottom"
+                      height={36}
+                      formatter={(value, entry: any) => (
+                        <span style={{ color: entry.color, fontSize: '12px' }}>{value}</span>
+                      )}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center text-muted-foreground">
+                  <Video className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No sessions yet</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
