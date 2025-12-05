@@ -254,19 +254,8 @@ export default function MentorDashboard() {
     setIsRescheduleDialogOpen(true);
   };
 
-  if (authLoading || !isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const assignmentList = assignments as any[] || [];
-  const cohortList = cohorts as any[] || [];
+  const assignmentList = (assignments as any[]) || [];
+  const cohortList = (cohorts as any[]) || [];
 
   const deduplicatedStudents = useMemo(() => {
     const studentMap = new Map<string, {
@@ -316,6 +305,17 @@ export default function MentorDashboard() {
   const totalSessions = assignmentList.reduce((acc, a) => acc + (a.sessions?.length || 0), 0);
   const scheduledSessions = assignmentList.reduce((acc, a) => acc + (a.sessions?.filter((s: any) => s.status === 'scheduled').length || 0), 0);
   const completedSessions = assignmentList.reduce((acc, a) => acc + (a.sessions?.filter((s: any) => s.status === 'completed').length || 0), 0);
+
+  if (authLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const COLORS = ['#8B5CF6', '#10B981', '#F59E0B'];
   const pieData = [

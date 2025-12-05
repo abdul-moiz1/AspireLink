@@ -139,19 +139,8 @@ export default function StudentDashboard() {
     refetchInterval: 30000,
   });
 
-  if (authLoading || !isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const assignmentList = assignments as any[] || [];
-  const cohortList = cohorts as any[] || [];
+  const assignmentList = (assignments as any[]) || [];
+  const cohortList = (cohorts as any[]) || [];
 
   const deduplicatedMentors = useMemo(() => {
     const mentorMap = new Map<string, {
@@ -207,6 +196,17 @@ export default function StudentDashboard() {
     { name: 'Completed', value: completedSessions },
     { name: 'Total', value: totalSessions },
   ];
+
+  if (authLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">
