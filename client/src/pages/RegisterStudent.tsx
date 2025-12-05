@@ -123,7 +123,6 @@ export default function RegisterStudent() {
     const requiredStep1Fields = [
       { field: studentData.fullName, name: "Full Name" },
       { field: studentData.emailAddress, name: "Email Address" },
-      { field: studentData.linkedinUrl, name: "LinkedIn URL" },
       { field: studentData.phoneNumber, name: "Phone Number" },
       { field: studentData.universityName, name: "University Name" },
       { field: studentData.academicProgram, name: "Academic Program" },
@@ -314,7 +313,7 @@ export default function RegisterStudent() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="linkedinUrl">LinkedIn Profile URL *</Label>
+                  <Label htmlFor="linkedinUrl">LinkedIn Profile URL</Label>
                   <Input
                     id="linkedinUrl"
                     type="url"
@@ -323,7 +322,7 @@ export default function RegisterStudent() {
                     placeholder="https://linkedin.com/in/yourprofile"
                     className="mt-2"
                   />
-                  <p className="text-sm text-gray-500 mt-1">Required for professional verification</p>
+                  <p className="text-sm text-gray-500 mt-1">Optional - helps with professional verification</p>
                 </div>
               </div>
 
@@ -380,14 +379,6 @@ export default function RegisterStudent() {
                       toast({
                         title: "Required Field Missing",
                         description: "Please enter your email address to continue.",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-                    if (!studentData.linkedinUrl.trim()) {
-                      toast({
-                        title: "Required Field Missing",
-                        description: "Please enter your LinkedIn profile URL to continue.",
                         variant: "destructive",
                       });
                       return;

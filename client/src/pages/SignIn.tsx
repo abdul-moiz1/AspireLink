@@ -146,15 +146,79 @@ export default function SignIn() {
     try {
       const { user: googleUser, isNew } = await loginWithGoogle();
       
-      // AuthContext.loginWithGoogle now handles registration linking
-      // Check if the user got a role assigned
+      // Wait for auth state to settle
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Refresh user data to get the latest role information from backend
+      await refreshUser();
+      
+      // Check registration status and determine proper redirect
+      if (googleUser.email) {
+        try {
+          const checkResponse = await fetch('/api/check-email-registration', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: googleUser.email }),
+          });
+          const checkData = await checkResponse.json();
+          
+          if (checkData.exists && checkData.hasAccount) {
+            // User has registration and account - redirect to their dashboard
+            const role = checkData.type;
+            if (role === 'student') {
+              setPendingRedirect("/dashboard/student");
+            } else if (role === 'mentor') {
+              setPendingRedirect("/dashboard/mentor");
+            } else if (role === 'admin') {
+              setPendingRedirect("/admin/dashboard");
+            } else {
+              setPendingRedirect("/complete-profile");
+            }
+            return;
+          } else if (checkData.exists && !checkData.hasAccount) {
+            // User has registration but no account linked yet - try to link
+            const { getIdToken } = await import('@/lib/firebase');
+            const token = await getIdToken();
+            
+            if (token) {
+              const linkResponse = await fetch('/api/auth/link-registration', {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                  email: googleUser.email,
+                  registrationId: checkData.registrationId || null,
+                  registrationType: checkData.type || null
+                })
+              });
+              
+              const linkResult = await linkResponse.json();
+              
+              if (linkResult.success && linkResult.role) {
+                await refreshUser();
+                const dashboard = linkResult.role === 'student' ? '/dashboard/student' : 
+                                 linkResult.role === 'mentor' ? '/dashboard/mentor' : 
+                                 linkResult.role === 'admin' ? '/admin/dashboard' : '/complete-profile';
+                setPendingRedirect(dashboard);
+                return;
+              }
+            }
+          }
+        } catch (checkError) {
+          console.error('Error checking registration:', checkError);
+        }
+      }
+      
+      // Fallback: Check if user already has a role from initial sign-in
       if (googleUser.role) {
         const dashboard = googleUser.role === 'student' ? '/dashboard/student' : 
                          googleUser.role === 'mentor' ? '/dashboard/mentor' : 
                          googleUser.role === 'admin' ? '/admin/dashboard' : '/complete-profile';
         setPendingRedirect(dashboard);
       } else {
-        // No role - redirect to complete profile
+        // No role found - redirect to complete profile
         setPendingRedirect("/complete-profile");
       }
     } catch (error) {
