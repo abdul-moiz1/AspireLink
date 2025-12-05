@@ -20,6 +20,7 @@ Preferred communication style: Simple, everyday language.
 - **Data Visualization**: Professional charts using recharts library (AreaChart, PieChart, BarChart, RadialBarChart) with simple stat cards for dashboard experiences.
 - **Color Theme**: Blue-based accent color scheme (hsl 202) for better contrast and theme consistency across light/dark modes.
 - **Dashboard Design**: Consistent minimal layouts for both student and mentor dashboards with simple stat cards, sessions overview bar chart, two-column grids, and "Edit Application" buttons for profile updates.
+- **Session Management**: Mentors can schedule, reschedule, and mark sessions as completed. When scheduling sessions with students in multiple cohorts, mentors can select which cohort to assign the session to. Completed sessions are tracked across admin and student dashboards.
 
 ### Technical Implementations
 - **Frontend**: Vite for fast development and optimized builds, Wouter for client-side routing, TanStack React Query for server state management.

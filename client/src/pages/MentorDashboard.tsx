@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, User, Clock, Video, Users, Plus, GraduationCap, Building, RefreshCw, Edit, Loader2, Phone, Linkedin, MapPin, Briefcase, ChevronRight } from "lucide-react";
+import { Calendar, User, Clock, Video, Users, Plus, GraduationCap, Building, RefreshCw, Edit, Loader2, Phone, Linkedin, MapPin, Briefcase, ChevronRight, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useEffect, useState, useMemo } from "react";
 import { useLocation } from "wouter";
@@ -187,7 +187,7 @@ export default function MentorDashboard() {
 
   const rescheduleSessionMutation = useMutation({
     mutationFn: async ({ sessionId, data }: { sessionId: number; data: any }) => {
-      return await apiRequest(`/api/sessions/${sessionId}`, 'PATCH', data);
+      return await apiRequest(`/api/sessions/${sessionId}`, 'PUT', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mentor/assignments"] });
@@ -210,6 +210,26 @@ export default function MentorDashboard() {
       toast({
         title: "Error",
         description: "Failed to reschedule session. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const completeSessionMutation = useMutation({
+    mutationFn: async (sessionId: number) => {
+      return await apiRequest(`/api/sessions/${sessionId}`, 'PUT', { status: 'completed' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mentor/assignments"] });
+      toast({
+        title: "Session Completed",
+        description: "The session has been marked as completed.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to mark session as completed. Please try again.",
         variant: "destructive",
       });
     }
@@ -866,8 +886,19 @@ export default function MentorDashboard() {
                               <RefreshCw className="h-3 w-3 mr-1" />
                               Reschedule
                             </Button>
+                            <Button 
+                              size="sm" 
+                              variant="default"
+                              className="flex-1"
+                              onClick={() => completeSessionMutation.mutate(session.id)}
+                              disabled={completeSessionMutation.isPending}
+                              data-testid={`button-complete-${session.id}`}
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              {completeSessionMutation.isPending ? 'Saving...' : 'Completed'}
+                            </Button>
                             {session.meetingLink && (
-                              <Button asChild size="sm" className="flex-1">
+                              <Button asChild size="sm" variant="outline">
                                 <a href={session.meetingLink} target="_blank" rel="noopener noreferrer">
                                   <Video className="h-3 w-3 mr-1" />
                                   Join
