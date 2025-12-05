@@ -17,8 +17,9 @@ Preferred communication style: Simple, everyday language.
 - **Branding**: Custom AspireLink logo and favicon, consistent professional imagery, and accurate program messaging across the site.
 - **Accessibility**: Focus on high-contrast text (charcoal color for all text), WCAG 2.1 Level AA compliance, semantic HTML, and keyboard navigation support.
 - **Animations**: Global hover animations (hover-lift, hover-scale, hover-glow, card-hover) and keyframe animations (fadeInUp, fadeIn, slideInLeft, pulse-soft) for smooth, polished interactions throughout the app.
-- **Data Visualization**: Professional charts using recharts library (AreaChart, PieChart, BarChart, RadialBarChart) with animated stat cards for engaging dashboard experiences.
+- **Data Visualization**: Professional charts using recharts library (AreaChart, PieChart, BarChart, RadialBarChart) with simple stat cards for dashboard experiences.
 - **Color Theme**: Blue-based accent color scheme (hsl 202) for better contrast and theme consistency across light/dark modes.
+- **Dashboard Design**: Consistent minimal layouts for both student and mentor dashboards with simple stat cards, sessions overview bar chart, two-column grids, and "Edit Application" buttons for profile updates.
 
 ### Technical Implementations
 - **Frontend**: Vite for fast development and optimized builds, Wouter for client-side routing, TanStack React Query for server state management.
