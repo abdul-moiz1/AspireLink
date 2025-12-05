@@ -331,13 +331,6 @@ export default function AdminDashboard() {
           <TabsContent value="students" className="mt-4">
             <div className="flex items-center justify-between gap-4 mb-4">
               <h3 className="text-lg font-semibold text-foreground">Students</h3>
-              <Button 
-                onClick={() => setLocation("/admin/create-student")}
-                data-testid="button-add-student"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Student
-              </Button>
             </div>
             <div className="space-y-2">
               {filterUsers(students || []).map((student: Student) => (
@@ -404,13 +397,6 @@ export default function AdminDashboard() {
           <TabsContent value="mentors" className="mt-4">
             <div className="flex items-center justify-between gap-4 mb-4">
               <h3 className="text-lg font-semibold text-foreground">Mentors</h3>
-              <Button 
-                onClick={() => setLocation("/admin/create-mentor")}
-                data-testid="button-add-mentor"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Mentor
-              </Button>
             </div>
             <div className="space-y-2">
               {filterUsers(mentors || []).map((mentor: Mentor) => (
