@@ -60,8 +60,8 @@ export default function Navigation() {
   const handleEditApplication = () => {
     const editLink = getEditApplicationLink();
     if (editLink) {
-      // Use window.location to ensure the page reloads with the query param
-      window.location.href = editLink;
+      // Use setLocation for smooth client-side navigation without page reload
+      setLocation(editLink);
     }
   };
 
