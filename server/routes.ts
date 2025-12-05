@@ -895,6 +895,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin get single student by ID
+  app.get("/api/admin/students/:id", async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const student = await storage.getUser(userId);
+      if (!student || student.role !== 'student') {
+        return res.status(404).json({ error: "Student not found" });
+      }
+      res.json(student);
+    } catch (error) {
+      console.error("Error fetching student:", error);
+      res.status(500).json({ error: "Failed to fetch student" });
+    }
+  });
+
   // Admin get all mentors
   app.get("/api/admin/mentors", async (req, res) => {
     try {
@@ -903,6 +918,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching mentors:", error);
       res.status(500).json({ error: "Failed to fetch mentors" });
+    }
+  });
+
+  // Admin get single mentor by ID
+  app.get("/api/admin/mentors/:id", async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const mentor = await storage.getUser(userId);
+      if (!mentor || mentor.role !== 'mentor') {
+        return res.status(404).json({ error: "Mentor not found" });
+      }
+      res.json(mentor);
+    } catch (error) {
+      console.error("Error fetching mentor:", error);
+      res.status(500).json({ error: "Failed to fetch mentor" });
     }
   });
 
@@ -950,6 +980,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating mentor status:", error);
       res.status(500).json({ error: "Failed to update status" });
+    }
+  });
+
+  // Admin update student (full update)
+  app.put("/api/admin/students/:id", async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const updateData = req.body;
+      const user = await storage.updateUser(userId, updateData);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating student:", error);
+      res.status(500).json({ error: "Failed to update student" });
+    }
+  });
+
+  // Admin update mentor (full update)
+  app.put("/api/admin/mentors/:id", async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const updateData = req.body;
+      const user = await storage.updateUser(userId, updateData);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating mentor:", error);
+      res.status(500).json({ error: "Failed to update mentor" });
     }
   });
 
