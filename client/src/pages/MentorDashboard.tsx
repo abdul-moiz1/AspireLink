@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Calendar, User, Clock, Video, Users, Plus, GraduationCap, Building, RefreshCw, Edit, Loader2, Phone, Linkedin, MapPin, Briefcase } from "lucide-react";
+import { Calendar, User, Clock, Video, Users, Plus, GraduationCap, Building, RefreshCw, Edit, Loader2, Phone, Linkedin, MapPin, Briefcase, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { CohortPreviewDialog } from "@/components/CohortPreviewDialog";
 import {
   BarChart,
   Bar,
@@ -54,6 +55,7 @@ export default function MentorDashboard() {
     profileSummary: '',
     motivation: '',
   });
+  const [selectedStudentForPreview, setSelectedStudentForPreview] = useState<any>(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -264,6 +266,51 @@ export default function MentorDashboard() {
 
   const assignmentList = assignments as any[] || [];
   const cohortList = cohorts as any[] || [];
+
+  const deduplicatedStudents = useMemo(() => {
+    const studentMap = new Map<string, {
+      student: any;
+      cohorts: { id: number; name: string; startDate?: string; endDate?: string; isActive: boolean; sessionCount: number }[];
+      totalSessions: number;
+      assignments: any[];
+    }>();
+    
+    assignmentList.forEach((assignment) => {
+      const studentId = assignment.student?.id || assignment.studentUserId;
+      if (!studentId) return;
+      
+      if (!studentMap.has(studentId)) {
+        studentMap.set(studentId, {
+          student: assignment.student,
+          cohorts: [],
+          totalSessions: 0,
+          assignments: []
+        });
+      }
+      
+      const entry = studentMap.get(studentId)!;
+      entry.assignments.push(assignment);
+      entry.totalSessions += assignment.sessions?.length || 0;
+      
+      if (assignment.cohort) {
+        const existingCohort = entry.cohorts.find(c => c.id === assignment.cohort.id);
+        if (!existingCohort) {
+          entry.cohorts.push({
+            id: assignment.cohort.id,
+            name: assignment.cohort.name,
+            startDate: assignment.cohort.startDate,
+            endDate: assignment.cohort.endDate,
+            isActive: assignment.cohort.isActive ?? true,
+            sessionCount: assignment.sessions?.length || 0
+          });
+        } else {
+          existingCohort.sessionCount += assignment.sessions?.length || 0;
+        }
+      }
+    });
+    
+    return Array.from(studentMap.values());
+  }, [assignmentList]);
 
   const totalSessions = assignmentList.reduce((acc, a) => acc + (a.sessions?.length || 0), 0);
   const scheduledSessions = assignmentList.reduce((acc, a) => acc + (a.sessions?.filter((s: any) => s.status === 'scheduled').length || 0), 0);
@@ -537,7 +584,7 @@ export default function MentorDashboard() {
             <CardHeader className="flex flex-row items-center justify-between gap-2">
               <div>
                 <CardTitle className="text-lg">My Students</CardTitle>
-                <CardDescription>Students assigned to you</CardDescription>
+                <CardDescription>Students assigned to you ({deduplicatedStudents.length} unique)</CardDescription>
               </div>
               <GraduationCap className="w-5 h-5 text-muted-foreground" />
             </CardHeader>
@@ -546,38 +593,48 @@ export default function MentorDashboard() {
                 <div className="flex justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
-              ) : assignmentList.length === 0 ? (
+              ) : deduplicatedStudents.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-50" />
                   <p className="text-muted-foreground">No students assigned yet</p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {assignmentList.map((assignment: any) => (
+                  {deduplicatedStudents.map((entry: any) => (
                     <div 
-                      key={assignment.id} 
+                      key={entry.student?.id || 'unknown'} 
                       className="p-3 rounded-lg bg-muted/50"
-                      data-testid={`card-student-${assignment.id}`}
+                      data-testid={`card-student-${entry.student?.id}`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
+                        <button 
+                          className="flex items-center gap-2 text-left hover-elevate active-elevate-2 rounded-md px-1 -mx-1"
+                          onClick={() => setSelectedStudentForPreview(entry)}
+                          data-testid={`button-view-student-cohorts-${entry.student?.id}`}
+                        >
                           <GraduationCap className="h-4 w-4 text-green-600" />
-                          <span className="font-medium">{assignment.student?.fullName || 'Student'}</span>
-                        </div>
+                          <span className="font-medium">{entry.student?.fullName || 'Student'}</span>
+                          {entry.cohorts.length > 1 && (
+                            <Badge variant="secondary" className="text-xs">
+                              {entry.cohorts.length} cohorts
+                            </Badge>
+                          )}
+                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                        </button>
                         <Badge variant="outline" className="text-xs">
-                          {assignment.sessions?.length || 0} sessions
+                          {entry.totalSessions} sessions
                         </Badge>
                       </div>
-                      {assignment.student?.universityName && (
+                      {entry.student?.universityName && (
                         <p className="text-sm text-muted-foreground flex items-center gap-1 mb-2">
                           <Building className="h-3 w-3" />
-                          {assignment.student.universityName}
+                          {entry.student.universityName}
                         </p>
                       )}
-                      <Dialog open={isScheduleDialogOpen && selectedAssignment?.id === assignment.id} onOpenChange={(open) => {
+                      <Dialog open={isScheduleDialogOpen && selectedAssignment?.studentUserId === entry.student?.id} onOpenChange={(open) => {
                         setIsScheduleDialogOpen(open);
-                        if (open) {
-                          setSelectedAssignment(assignment);
+                        if (open && entry.assignments.length > 0) {
+                          setSelectedAssignment(entry.assignments[0]);
                           setSessionForm({
                             scheduledDate: '',
                             scheduledTime: '',
@@ -588,14 +645,14 @@ export default function MentorDashboard() {
                         }
                       }}>
                         <DialogTrigger asChild>
-                          <Button size="sm" className="w-full" data-testid={`button-schedule-${assignment.id}`}>
+                          <Button size="sm" className="w-full" data-testid={`button-schedule-${entry.student?.id}`}>
                             <Plus className="h-4 w-4 mr-2" />
                             Schedule Session
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Schedule Session with {assignment.student?.fullName}</DialogTitle>
+                            <DialogTitle>Schedule Session with {entry.student?.fullName}</DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4 pt-4">
                             <div className="grid grid-cols-2 gap-4">
@@ -941,6 +998,14 @@ export default function MentorDashboard() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <CohortPreviewDialog
+          open={!!selectedStudentForPreview}
+          onOpenChange={(open) => !open && setSelectedStudentForPreview(null)}
+          personName={selectedStudentForPreview?.student?.fullName || 'Student'}
+          personRole="student"
+          cohorts={selectedStudentForPreview?.cohorts || []}
+        />
       </div>
     </div>
   );

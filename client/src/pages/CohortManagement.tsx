@@ -22,8 +22,22 @@ import {
   Link as LinkIcon,
   Clock,
   GraduationCap,
-  Building
+  Building,
+  Video,
+  User,
+  AlertTriangle
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function CohortManagement() {
@@ -376,6 +390,18 @@ function CohortCard({ cohort, students, mentors, onDelete, onSelectForAssignment
   onDelete: () => void;
   onSelectForAssignment: () => void;
 }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [editingSession, setEditingSession] = useState<any>(null);
+  const [deletingSession, setDeletingSession] = useState<any>(null);
+  const [sessionForm, setSessionForm] = useState({
+    title: '',
+    scheduledDate: '',
+    scheduledTime: '',
+    notes: '',
+    status: 'scheduled'
+  });
+
   const { data: members } = useQuery({
     queryKey: [`/api/cohorts/${cohort.id}/members`],
   });
@@ -384,8 +410,81 @@ function CohortCard({ cohort, students, mentors, onDelete, onSelectForAssignment
     queryKey: [`/api/cohorts/${cohort.id}/assignments`],
   });
 
+  const { data: sessions } = useQuery({
+    queryKey: [`/api/cohorts/${cohort.id}/sessions`],
+  });
+
+  const updateSessionMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      return await apiRequest(`/api/sessions/${id}`, 'PATCH', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/cohorts/${cohort.id}/sessions`] });
+      setEditingSession(null);
+      toast({
+        title: "Session Updated",
+        description: "The session has been updated successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update session.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteSessionMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return await apiRequest(`/api/sessions/${id}`, 'DELETE');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/cohorts/${cohort.id}/sessions`] });
+      setDeletingSession(null);
+      toast({
+        title: "Session Deleted",
+        description: "The session has been deleted successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete session.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleEditSession = (session: any) => {
+    const dateTime = session.scheduledDate ? new Date(session.scheduledDate) : new Date();
+    setSessionForm({
+      title: session.title || '',
+      scheduledDate: dateTime.toISOString().split('T')[0],
+      scheduledTime: dateTime.toTimeString().slice(0, 5),
+      notes: session.notes || '',
+      status: session.status || 'scheduled'
+    });
+    setEditingSession(session);
+  };
+
+  const handleSaveSession = () => {
+    if (!editingSession) return;
+    const scheduledDate = new Date(`${sessionForm.scheduledDate}T${sessionForm.scheduledTime}`);
+    updateSessionMutation.mutate({
+      id: editingSession.id,
+      data: {
+        title: sessionForm.title,
+        scheduledDate: scheduledDate.toISOString(),
+        notes: sessionForm.notes,
+        status: sessionForm.status
+      }
+    });
+  };
+
   const memberList = members as any[] || [];
   const assignmentList = assignments as any[] || [];
+  const sessionList = sessions as any[] || [];
   const studentMembers = memberList.filter(m => m.role === 'student');
   const mentorMembers = memberList.filter(m => m.role === 'mentor');
 
@@ -436,6 +535,9 @@ function CohortCard({ cohort, students, mentors, onDelete, onSelectForAssignment
             </TabsTrigger>
             <TabsTrigger value="assignments">
               Assignments ({assignmentList.length})
+            </TabsTrigger>
+            <TabsTrigger value="sessions">
+              Sessions ({sessionList.length})
             </TabsTrigger>
           </TabsList>
 
@@ -527,7 +629,182 @@ function CohortCard({ cohort, students, mentors, onDelete, onSelectForAssignment
               )}
             </div>
           </TabsContent>
+
+          <TabsContent value="sessions">
+            <div className="space-y-4">
+              {sessionList.length === 0 ? (
+                <div className="text-center py-6 text-gray-500">
+                  <Video className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                  <p>No sessions scheduled in this cohort yet.</p>
+                  <p className="text-sm">Sessions are created by mentors from their dashboard.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {sessionList.map((session: any) => (
+                    <div key={session.id} className="p-4 border rounded-lg" data-testid={`session-${session.id}`}>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Video className="h-4 w-4 text-primary-custom" />
+                            <span className="font-medium">{session.title || 'Untitled Session'}</span>
+                            <Badge 
+                              variant={session.status === 'completed' ? 'default' : session.status === 'cancelled' ? 'destructive' : 'secondary'}
+                              className="text-xs"
+                            >
+                              {session.status}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {session.scheduledDate ? format(new Date(session.scheduledDate), 'MMM d, yyyy h:mm a') : 'TBD'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4 mt-2 text-sm">
+                            <span className="flex items-center gap-1">
+                              <Building className="h-3 w-3 text-blue-600" />
+                              {session.mentorName}
+                            </span>
+                            <span className="text-gray-400">→</span>
+                            <span className="flex items-center gap-1">
+                              <GraduationCap className="h-3 w-3 text-green-600" />
+                              {session.studentName}
+                            </span>
+                          </div>
+                          {session.notes && (
+                            <p className="text-sm text-gray-500 mt-2 line-clamp-2">{session.notes}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleEditSession(session)}
+                            data-testid={`button-edit-session-${session.id}`}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-red-600"
+                            onClick={() => setDeletingSession(session)}
+                            data-testid={`button-delete-session-${session.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
+
+        {/* Edit Session Dialog */}
+        <Dialog open={!!editingSession} onOpenChange={(open) => !open && setEditingSession(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Session</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div>
+                <Label>Title</Label>
+                <Input 
+                  value={sessionForm.title} 
+                  onChange={(e) => setSessionForm(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Session title"
+                  data-testid="input-session-title"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Date</Label>
+                  <Input 
+                    type="date" 
+                    value={sessionForm.scheduledDate}
+                    onChange={(e) => setSessionForm(prev => ({ ...prev, scheduledDate: e.target.value }))}
+                    data-testid="input-session-date"
+                  />
+                </div>
+                <div>
+                  <Label>Time</Label>
+                  <Input 
+                    type="time" 
+                    value={sessionForm.scheduledTime}
+                    onChange={(e) => setSessionForm(prev => ({ ...prev, scheduledTime: e.target.value }))}
+                    data-testid="input-session-time"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select 
+                  value={sessionForm.status} 
+                  onValueChange={(value) => setSessionForm(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger data-testid="select-session-status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="scheduled">Scheduled</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Notes</Label>
+                <Textarea 
+                  value={sessionForm.notes}
+                  onChange={(e) => setSessionForm(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Session notes..."
+                  className="min-h-[100px]"
+                  data-testid="input-session-notes"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setEditingSession(null)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSaveSession}
+                  disabled={updateSessionMutation.isPending}
+                  data-testid="button-save-session"
+                >
+                  {updateSessionMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Session Confirmation */}
+        <AlertDialog open={!!deletingSession} onOpenChange={(open) => !open && setDeletingSession(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+                Delete Session
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this session? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-red-600 hover:bg-red-700"
+                onClick={() => deletingSession && deleteSessionMutation.mutate(deletingSession.id)}
+                data-testid="button-confirm-delete-session"
+              >
+                {deleteSessionMutation.isPending ? 'Deleting...' : 'Delete'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );

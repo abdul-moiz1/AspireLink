@@ -9,23 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Calendar, User, Clock, Video, Mail, Building, MapPin, Target, BookOpen, TrendingUp, Edit, Loader2, GraduationCap, Phone, Linkedin } from "lucide-react";
+import { Calendar, User, Clock, Video, Mail, Building, MapPin, Target, BookOpen, Edit, Loader2, GraduationCap, Phone, Linkedin } from "lucide-react";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
   RadialBarChart,
   RadialBar
 } from "recharts";
@@ -171,54 +162,86 @@ function LearningProgressChart({ assignments }: { assignments: any[] }) {
   );
 }
 
-function EngagementTrendChart() {
-  const trendData = [
-    { month: 'Month 1', engagement: 60, sessions: 1 },
-    { month: 'Month 2', engagement: 75, sessions: 2 },
-    { month: 'Month 3', engagement: 85, sessions: 2 },
-    { month: 'Month 4', engagement: 90, sessions: 3 },
+function LearningProgressWithFocusAreas({ assignments }: { assignments: any[] }) {
+  const totalExpectedSessions = assignments.length * 4;
+  const completedSessions = assignments.reduce((acc, a) => acc + (a.sessions?.filter((s: any) => s.status === 'completed').length || 0), 0);
+  const scheduledSessions = assignments.reduce((acc, a) => acc + (a.sessions?.filter((s: any) => s.status === 'scheduled').length || 0), 0);
+  
+  const progressPercentage = totalExpectedSessions > 0 
+    ? Math.round((completedSessions / totalExpectedSessions) * 100) 
+    : 0;
+
+  const topics = assignments.flatMap(a => a.mentor?.mentoringTopics || []);
+  const uniqueTopics = Array.from(new Set(topics));
+  
+  const focusAreaColors = [
+    { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-700' },
+    { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-700' },
+    { bg: 'bg-teal-100 dark:bg-teal-900/30', text: 'text-teal-700 dark:text-teal-300', border: 'border-teal-200 dark:border-teal-700' },
+    { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-700' },
+    { bg: 'bg-rose-100 dark:bg-rose-900/30', text: 'text-rose-700 dark:text-rose-300', border: 'border-rose-200 dark:border-rose-700' },
+    { bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-700 dark:text-indigo-300', border: 'border-indigo-200 dark:border-indigo-700' },
   ];
 
   return (
-    <Card className="card-hover">
+    <Card className="card-hover h-full">
       <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
         <div>
-          <CardTitle className="text-lg font-semibold">Engagement Trend</CardTitle>
-          <CardDescription>Your progress over time</CardDescription>
+          <CardTitle className="text-lg font-semibold">Learning Progress</CardTitle>
+          <CardDescription>Your mentorship journey and focus areas</CardDescription>
         </div>
-        <TrendingUp className="w-5 h-5 text-muted-foreground" />
+        <Target className="w-5 h-5 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="h-48">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trendData}>
-              <defs>
-                <linearGradient id="engagementGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#4ECDC4" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#4ECDC4" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-              <XAxis dataKey="month" stroke="#888" fontSize={12} />
-              <YAxis stroke="#888" fontSize={12} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e0e0e0', 
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                }} 
-              />
-              <Area 
-                type="monotone" 
-                dataKey="engagement" 
-                stroke="#4ECDC4" 
-                strokeWidth={2}
-                fill="url(#engagementGradient)" 
-                name="Engagement Score"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Overall Progress</span>
+              <span className="font-semibold text-foreground">{progressPercentage}%</span>
+            </div>
+            <Progress value={progressPercentage} className="h-3" />
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="p-2 rounded-lg bg-green-50 dark:bg-green-900/20">
+                <p className="text-lg font-bold text-green-600 dark:text-green-400">{completedSessions}</p>
+                <p className="text-xs text-muted-foreground">Completed</p>
+              </div>
+              <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{scheduledSessions}</p>
+                <p className="text-xs text-muted-foreground">Scheduled</p>
+              </div>
+              <div className="p-2 rounded-lg bg-gray-50 dark:bg-gray-900/20">
+                <p className="text-lg font-bold text-gray-600 dark:text-gray-400">{Math.max(0, totalExpectedSessions - completedSessions - scheduledSessions)}</p>
+                <p className="text-xs text-muted-foreground">Remaining</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t">
+            <div className="flex items-center gap-2 mb-3">
+              <BookOpen className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Focus Areas</span>
+            </div>
+            {uniqueTopics.length === 0 ? (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">Focus areas will appear once you're matched with a mentor.</p>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {uniqueTopics.map((topic, index) => {
+                  const colorSet = focusAreaColors[index % focusAreaColors.length];
+                  return (
+                    <Badge 
+                      key={index} 
+                      className={`${colorSet.bg} ${colorSet.text} ${colorSet.border} border`}
+                      data-testid={`badge-focus-area-${index}`}
+                    >
+                      {topic}
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -227,43 +250,6 @@ function EngagementTrendChart() {
 
 
 
-function LearningTopicsCard({ assignments }: { assignments: any[] }) {
-  const topics = assignments.flatMap(a => a.mentor?.mentoringTopics || []).slice(0, 6);
-  const uniqueTopics = Array.from(new Set(topics));
-
-  return (
-    <Card className="card-hover h-full">
-      <CardHeader className="flex flex-row items-center justify-between gap-2">
-        <div>
-          <CardTitle className="text-lg font-semibold">Focus Areas</CardTitle>
-          <CardDescription>Topics covered in mentoring</CardDescription>
-        </div>
-        <BookOpen className="w-5 h-5 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        {uniqueTopics.length === 0 ? (
-          <div className="text-center py-8">
-            <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">No Topics Yet</h3>
-            <p className="text-sm text-muted-foreground">Topics will appear once you're matched with a mentor.</p>
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {uniqueTopics.map((topic, index) => (
-              <Badge 
-                key={index} 
-                className="bg-primary/10 text-primary border-primary/20 hover-lift"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                {topic}
-              </Badge>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
 
 const yearOfStudyOptions = [
   "1st year undergraduate", "2nd year undergraduate", "3rd year undergraduate", 
@@ -583,19 +569,18 @@ export default function StudentDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <LearningProgressChart assignments={assignmentList} />
-          <EngagementTrendChart />
+          <LearningProgressWithFocusAreas assignments={assignmentList} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
-            <Card className="card-hover">
-              <CardHeader className="flex flex-row items-center justify-between gap-2">
-                <div>
-                  <CardTitle className="text-lg font-semibold">My Mentor</CardTitle>
-                  <CardDescription>Your assigned mentor for guidance</CardDescription>
-                </div>
-                <User className="w-5 h-5 text-muted-foreground" />
-              </CardHeader>
+        <div className="grid grid-cols-1 gap-6 mb-8">
+          <Card className="card-hover">
+            <CardHeader className="flex flex-row items-center justify-between gap-2">
+              <div>
+                <CardTitle className="text-lg font-semibold">My Mentor</CardTitle>
+                <CardDescription>Your assigned mentor for guidance</CardDescription>
+              </div>
+              <User className="w-5 h-5 text-muted-foreground" />
+            </CardHeader>
               <CardContent>
                 {assignmentsLoading ? (
                   <div className="flex justify-center py-8">
@@ -672,11 +657,7 @@ export default function StudentDashboard() {
                   </div>
                 )}
               </CardContent>
-            </Card>
-          </div>
-          <div className="space-y-6">
-            <LearningTopicsCard assignments={assignmentList} />
-          </div>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">

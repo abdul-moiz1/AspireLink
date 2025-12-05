@@ -738,6 +738,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get sessions by cohort (for admin)
+  app.get("/api/cohorts/:id/sessions", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const cohortId = parseInt(req.params.id);
+      const sessions = await storage.getSessionsByCohort(cohortId);
+      
+      // Enrich sessions with mentor and student info
+      const enrichedSessions = await Promise.all(sessions.map(async (session) => {
+        const assignment = await storage.getAssignment(session.assignmentId);
+        if (!assignment) return { ...session, mentorName: 'Unknown', studentName: 'Unknown' };
+        
+        const mentor = await storage.getUser(assignment.mentorUserId);
+        const student = await storage.getUser(assignment.studentUserId);
+        return {
+          ...session,
+          mentorName: mentor?.fullName || 'Unknown Mentor',
+          studentName: student?.fullName || 'Unknown Student',
+          mentorId: assignment.mentorUserId,
+          studentId: assignment.studentUserId
+        };
+      }));
+      
+      res.json(enrichedSessions);
+    } catch (error) {
+      console.error("Error fetching cohort sessions:", error);
+      res.status(500).json({ error: "Failed to fetch cohort sessions" });
+    }
+  });
+
+  // Admin update session
+  app.patch("/api/sessions/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const session = await storage.updateSession(sessionId, req.body);
+      res.json(session);
+    } catch (error) {
+      console.error("Error updating session:", error);
+      res.status(500).json({ error: "Failed to update session" });
+    }
+  });
+
   // ============ MENTOR DASHBOARD ROUTES ============
   
   app.get("/api/mentor/assignments", isAuthenticated, isMentor, async (req: any, res) => {
