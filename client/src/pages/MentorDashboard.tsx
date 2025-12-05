@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Calendar, User, Clock, Video, Users, Plus, GraduationCap, Building, RefreshCw, Edit, Loader2, Phone, Linkedin, MapPin, Briefcase } from "lucide-react";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
@@ -26,9 +27,12 @@ export default function MentorDashboard() {
   const { user, isLoading: authLoading, isAuthenticated, refreshUser } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [location, setLocation] = useLocation();
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCohortSessionsDialogOpen, setIsCohortSessionsDialogOpen] = useState(false);
+  const [selectedCohortForSessions, setSelectedCohortForSessions] = useState<any>(null);
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [sessionForm, setSessionForm] = useState({
@@ -72,6 +76,14 @@ export default function MentorDashboard() {
       }, 500);
     }
   }, [authLoading, isAuthenticated, user, toast]);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('edit') === 'true' && isAuthenticated && !authLoading) {
+      setIsEditDialogOpen(true);
+      setLocation('/dashboard/mentor', { replace: true });
+    }
+  }, [isAuthenticated, authLoading, setLocation]);
 
   useEffect(() => {
     if (user && isEditDialogOpen) {
@@ -275,12 +287,6 @@ export default function MentorDashboard() {
               <h1 className="text-3xl font-bold text-foreground">Mentor Dashboard</h1>
             </div>
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" data-testid="button-edit-application">
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Application
-                </Button>
-              </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
@@ -453,7 +459,7 @@ export default function MentorDashboard() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -503,17 +509,23 @@ export default function MentorDashboard() {
         <Card className="mb-6">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Sessions Overview</CardTitle>
-            <CardDescription>Your mentoring activity this month</CardDescription>
+            <CardDescription>Your mentoring activity summary</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-48">
+            <div className="h-32">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={sessionData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                  <XAxis dataKey="name" stroke="#888" fontSize={12} />
-                  <YAxis stroke="#888" fontSize={12} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#2E86AB" radius={[4, 4, 0, 0]} name="Sessions" />
+                <BarChart data={sessionData} layout="horizontal" barCategoryGap="20%">
+                  <XAxis dataKey="name" stroke="#888" fontSize={11} axisLine={false} tickLine={false} />
+                  <YAxis hide />
+                  <Tooltip 
+                    contentStyle={{ 
+                      background: 'hsl(var(--background))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px',
+                      fontSize: '12px'
+                    }}
+                  />
+                  <Bar dataKey="value" fill="#2E86AB" radius={[4, 4, 4, 4]} name="Sessions" maxBarSize={40} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -740,33 +752,145 @@ export default function MentorDashboard() {
                 <p className="text-muted-foreground">Not part of any cohort yet</p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 gap-3">
-                {cohortList.map((cohort: any) => (
-                  <div 
-                    key={cohort.id} 
-                    className="p-3 rounded-lg bg-muted/50"
-                    data-testid={`card-cohort-${cohort.id}`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">{cohort.name}</span>
-                      <Badge className={cohort.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                        {cohort.isActive ? 'Active' : 'Inactive'}
-                      </Badge>
+              <div className="space-y-3">
+                {cohortList.map((cohort: any) => {
+                  const cohortSessions = assignmentList
+                    .filter((a: any) => a.cohortId === cohort.id)
+                    .flatMap((a: any) => (a.sessions || []).map((s: any) => ({
+                      ...s,
+                      studentName: a.student?.fullName || 'Student'
+                    })))
+                    .filter((s: any) => s.status === 'scheduled');
+                  
+                  return (
+                    <div 
+                      key={cohort.id} 
+                      className="p-4 rounded-lg border bg-background"
+                      data-testid={`card-cohort-${cohort.id}`}
+                    >
+                      <div className="flex items-center justify-between mb-2 gap-2">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-primary" />
+                          <span className="font-semibold">{cohort.name}</span>
+                        </div>
+                        <Badge className={cohort.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                          {cohort.isActive ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3 flex-wrap">
+                        <span className="flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {cohort.startDate ? format(new Date(cohort.startDate), 'MMM d, yyyy') : 'TBD'} -{' '}
+                          {cohort.endDate ? format(new Date(cohort.endDate), 'MMM d, yyyy') : 'TBD'}
+                        </span>
+                        {cohort.sessionsPerMonth && (
+                          <span className="flex items-center">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {cohort.sessionsPerMonth} sessions/month
+                          </span>
+                        )}
+                      </div>
+                      
+                      {cohortSessions.length > 0 && (
+                        <div className="mt-3 pt-3 border-t">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Video className="h-3 w-3" />
+                              Upcoming Sessions ({cohortSessions.length})
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs h-6"
+                              onClick={() => {
+                                setSelectedCohortForSessions({ ...cohort, sessions: cohortSessions });
+                                setIsCohortSessionsDialogOpen(true);
+                              }}
+                              data-testid={`button-view-cohort-sessions-${cohort.id}`}
+                            >
+                              View Details
+                            </Button>
+                          </div>
+                          <div className="space-y-1">
+                            {cohortSessions.slice(0, 2).map((session: any) => (
+                              <div key={session.id} className="text-xs flex justify-between items-center py-1">
+                                <span className="text-muted-foreground">{session.studentName}</span>
+                                <span className="text-foreground">
+                                  {session.scheduledDate ? format(new Date(session.scheduledDate), 'MMM d') : ''} at {session.scheduledTime || 'TBD'}
+                                </span>
+                              </div>
+                            ))}
+                            {cohortSessions.length > 2 && (
+                              <span className="text-xs text-muted-foreground">
+                                +{cohortSessions.length - 2} more sessions
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">{cohort.description}</p>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                      <span className="flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {cohort.startDate ? format(new Date(cohort.startDate), 'MMM d') : 'TBD'} - 
-                        {cohort.endDate ? format(new Date(cohort.endDate), 'MMM d') : 'TBD'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
         </Card>
+        
+        <Dialog open={isCohortSessionsDialogOpen} onOpenChange={setIsCohortSessionsDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-primary" />
+                {selectedCohortForSessions?.name} - Sessions
+              </DialogTitle>
+              <DialogDescription>
+                Scheduled mentoring sessions in this cohort
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 pt-2 max-h-[60vh] overflow-y-auto">
+              {selectedCohortForSessions?.sessions?.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  No scheduled sessions in this cohort
+                </div>
+              ) : (
+                selectedCohortForSessions?.sessions?.map((session: any) => (
+                  <div key={session.id} className="p-3 rounded-lg border bg-muted/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-sm">{session.studentName}</span>
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                        Scheduled
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                      <span className="flex items-center">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        {session.scheduledDate ? format(new Date(session.scheduledDate), 'MMM d, yyyy') : 'TBD'}
+                      </span>
+                      <span className="flex items-center">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {session.scheduledTime || 'TBD'}
+                      </span>
+                      {session.durationMinutes && (
+                        <span className="flex items-center">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {session.durationMinutes} mins
+                        </span>
+                      )}
+                    </div>
+                    {session.meetingLink && (
+                      <Button asChild size="sm" className="mt-2 w-full">
+                        <a href={session.meetingLink} target="_blank" rel="noopener noreferrer">
+                          <Video className="h-3 w-3 mr-1" />
+                          Join Meeting
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={isRescheduleDialogOpen} onOpenChange={setIsRescheduleDialogOpen}>
           <DialogContent>

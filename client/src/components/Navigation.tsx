@@ -35,8 +35,8 @@ export default function Navigation() {
 
   const getEditApplicationLink = () => {
     const userRole = user?.role;
-    if (userRole === 'mentor') return '/dashboard/mentor';
-    if (userRole === 'student') return '/dashboard/student';
+    if (userRole === 'mentor') return '/dashboard/mentor?edit=true';
+    if (userRole === 'student') return '/dashboard/student?edit=true';
     return null;
   };
 

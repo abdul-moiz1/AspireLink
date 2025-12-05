@@ -25,13 +25,14 @@ import {
   Calendar
 } from "lucide-react";
 import {
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Cell
 } from "recharts";
 
 interface DashboardStats {
@@ -40,6 +41,11 @@ interface DashboardStats {
   activeStudents: number;
   activeMentors: number;
   totalAssignments: number;
+  totalSessions: number;
+  scheduledSessions: number;
+  completedSessions: number;
+  totalCohorts: number;
+  activeCohorts: number;
 }
 
 interface Student {
@@ -172,12 +178,11 @@ export default function AdminDashboard() {
   };
 
   const chartData = [
-    { month: 'Jan', students: 12, mentors: 5 },
-    { month: 'Feb', students: 18, mentors: 7 },
-    { month: 'Mar', students: 25, mentors: 10 },
-    { month: 'Apr', students: 32, mentors: 12 },
-    { month: 'May', students: 45, mentors: 15 },
-    { month: 'Jun', students: stats?.totalStudents || 52, mentors: stats?.totalMentors || 18 },
+    { name: 'Students', count: stats?.totalStudents || 0, fill: '#2E86AB' },
+    { name: 'Mentors', count: stats?.totalMentors || 0, fill: '#A23B72' },
+    { name: 'Assignments', count: stats?.totalAssignments || 0, fill: '#4ECDC4' },
+    { name: 'Scheduled', count: stats?.scheduledSessions || 0, fill: '#F4A261' },
+    { name: 'Completed', count: stats?.completedSessions || 0, fill: '#2A9D8F' },
   ];
 
   return (
@@ -268,44 +273,26 @@ export default function AdminDashboard() {
 
         <Card className="mb-6">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Growth Overview</CardTitle>
-            <CardDescription>Monthly registration trends</CardDescription>
+            <CardTitle className="text-lg">Platform Overview</CardTitle>
+            <CardDescription>Current counts across the platform</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="studentGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2E86AB" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#2E86AB" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="mentorGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#A23B72" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#A23B72" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                  <XAxis dataKey="month" stroke="#888" fontSize={12} />
-                  <YAxis stroke="#888" fontSize={12} />
-                  <Tooltip />
-                  <Area 
-                    type="monotone" 
-                    dataKey="students" 
-                    stroke="#2E86AB" 
-                    strokeWidth={2}
-                    fill="url(#studentGradient)" 
-                    name="Students"
+                <BarChart data={chartData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" horizontal={true} vertical={false} />
+                  <XAxis type="number" stroke="#888" fontSize={12} />
+                  <YAxis type="category" dataKey="name" stroke="#888" fontSize={12} width={80} />
+                  <Tooltip 
+                    formatter={(value: number) => [value, 'Count']}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0' }}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="mentors" 
-                    stroke="#A23B72" 
-                    strokeWidth={2}
-                    fill="url(#mentorGradient)" 
-                    name="Mentors"
-                  />
-                </AreaChart>
+                  <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>

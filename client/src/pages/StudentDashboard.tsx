@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Calendar, User, Clock, Video, Mail, Building, MapPin, Target, BookOpen, TrendingUp, Edit, Loader2, GraduationCap, Phone, Linkedin } from "lucide-react";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
@@ -231,8 +232,8 @@ function LearningTopicsCard({ assignments }: { assignments: any[] }) {
   const uniqueTopics = Array.from(new Set(topics));
 
   return (
-    <Card className="card-hover">
-      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+    <Card className="card-hover h-full">
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
         <div>
           <CardTitle className="text-lg font-semibold">Focus Areas</CardTitle>
           <CardDescription>Topics covered in mentoring</CardDescription>
@@ -241,14 +242,17 @@ function LearningTopicsCard({ assignments }: { assignments: any[] }) {
       </CardHeader>
       <CardContent>
         {uniqueTopics.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">No topics assigned yet</p>
+          <div className="text-center py-8">
+            <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">No Topics Yet</h3>
+            <p className="text-sm text-muted-foreground">Topics will appear once you're matched with a mentor.</p>
+          </div>
         ) : (
           <div className="flex flex-wrap gap-2">
             {uniqueTopics.map((topic, index) => (
               <Badge 
                 key={index} 
-                variant="secondary" 
-                className="hover-lift"
+                className="bg-primary/10 text-primary border-primary/20 hover-lift"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 {topic}
@@ -271,6 +275,7 @@ export default function StudentDashboard() {
   const { user, isLoading: authLoading, isAuthenticated, refreshUser } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [location, setLocation] = useLocation();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState({
     fullName: '',
@@ -304,6 +309,14 @@ export default function StudentDashboard() {
       }, 500);
     }
   }, [authLoading, isAuthenticated, user, toast]);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('edit') === 'true' && isAuthenticated && !authLoading) {
+      setIsEditDialogOpen(true);
+      setLocation('/dashboard/student', { replace: true });
+    }
+  }, [isAuthenticated, authLoading, setLocation]);
 
   useEffect(() => {
     if (user && isEditDialogOpen) {
@@ -394,12 +407,6 @@ export default function StudentDashboard() {
               <h1 className="text-3xl font-bold text-foreground">Student Dashboard</h1>
             </div>
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" data-testid="button-edit-application">
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Application
-                </Button>
-              </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">

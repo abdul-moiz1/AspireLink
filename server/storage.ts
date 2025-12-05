@@ -70,6 +70,7 @@ export interface IStorage {
   
   // Session operations
   createSession(session: InsertMentoringSession): Promise<MentoringSession>;
+  getAllSessions(): Promise<MentoringSession[]>;
   getSessionsByAssignment(assignmentId: number): Promise<MentoringSession[]>;
   getSessionsByCohort(cohortId: number): Promise<MentoringSession[]>;
   updateSession(id: number, updates: Partial<MentoringSession>): Promise<MentoringSession>;

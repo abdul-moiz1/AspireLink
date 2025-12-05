@@ -822,13 +822,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const students = await storage.getUsersByRole('student');
       const mentors = await storage.getUsersByRole('mentor');
       const assignments = await storage.getAllAssignments();
+      const sessions = await storage.getAllSessions();
+      const cohorts = await storage.getAllCohorts();
       
       res.json({
         totalStudents: students.length,
         totalMentors: mentors.length,
         activeStudents: students.filter(s => s.isActive).length,
         activeMentors: mentors.filter(m => m.isActive).length,
-        totalAssignments: assignments.length
+        totalAssignments: assignments.length,
+        totalSessions: sessions.length,
+        scheduledSessions: sessions.filter(s => s.status === 'scheduled').length,
+        completedSessions: sessions.filter(s => s.status === 'completed').length,
+        totalCohorts: cohorts.length,
+        activeCohorts: cohorts.filter(c => c.isActive).length
       });
     } catch (error) {
       console.error("Error fetching admin stats:", error);
