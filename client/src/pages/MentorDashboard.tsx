@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, User, Clock, Video, Users, Plus, GraduationCap, Building, RefreshCw, Edit, Loader2, Phone, Linkedin, MapPin, Briefcase, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { useEffect, useState, useMemo } from "react";
@@ -40,7 +41,8 @@ export default function MentorDashboard() {
     scheduledTime: '',
     durationMinutes: 30,
     meetingLink: '',
-    notes: ''
+    notes: '',
+    selectedCohortId: ''
   });
   const [editForm, setEditForm] = useState({
     fullName: '',
@@ -166,7 +168,8 @@ export default function MentorDashboard() {
         scheduledTime: '',
         durationMinutes: 30,
         meetingLink: '',
-        notes: ''
+        notes: '',
+        selectedCohortId: ''
       });
       toast({
         title: "Session Scheduled",
@@ -195,7 +198,8 @@ export default function MentorDashboard() {
         scheduledTime: '',
         durationMinutes: 30,
         meetingLink: '',
-        notes: ''
+        notes: '',
+        selectedCohortId: ''
       });
       toast({
         title: "Session Rescheduled",
@@ -214,9 +218,12 @@ export default function MentorDashboard() {
   const handleScheduleSession = () => {
     if (!selectedAssignment) return;
     
+    const cohortId = sessionForm.selectedCohortId ? parseInt(sessionForm.selectedCohortId) : selectedAssignment.cohortId;
+    const matchingAssignment = selectedAssignment.assignments?.find((a: any) => a.cohortId === cohortId) || selectedAssignment;
+    
     createSessionMutation.mutate({
-      assignmentId: selectedAssignment.id,
-      cohortId: selectedAssignment.cohortId,
+      assignmentId: matchingAssignment.id || selectedAssignment.id,
+      cohortId: cohortId,
       scheduledDate: sessionForm.scheduledDate,
       scheduledTime: sessionForm.scheduledTime,
       durationMinutes: sessionForm.durationMinutes,
@@ -249,7 +256,8 @@ export default function MentorDashboard() {
       scheduledTime: session.scheduledTime || '',
       durationMinutes: session.durationMinutes || 30,
       meetingLink: session.meetingLink || '',
-      notes: session.notes || ''
+      notes: session.notes || '',
+      selectedCohortId: session.cohortId?.toString() || ''
     });
     setIsRescheduleDialogOpen(true);
   };
@@ -517,47 +525,55 @@ export default function MentorDashboard() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-blue-600" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Card className="overflow-visible">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30">
+                  <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Students</p>
-                  <p className="text-2xl font-bold">{assignmentList.length}</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Students</p>
+                  <p className="text-2xl font-bold mt-0.5">{deduplicatedStudents.length}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Calendar className="w-5 h-5 text-teal-600" />
+          <Card className="overflow-visible">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/30">
+                  <Calendar className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Cohorts</p>
-                  <p className="text-2xl font-bold">{cohortList.length}</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Cohorts</p>
+                  <p className="text-2xl font-bold mt-0.5">{cohortList.length}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Video className="w-5 h-5 text-purple-600" />
+          <Card className="overflow-visible">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30">
+                  <Video className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Scheduled</p>
-                  <p className="text-2xl font-bold">{scheduledSessions}</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Scheduled</p>
+                  <p className="text-2xl font-bold mt-0.5">{scheduledSessions}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Clock className="w-5 h-5 text-green-600" />
+          <Card className="overflow-visible">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-green-50 dark:bg-green-950/30">
+                  <Clock className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold">{completedSessions}</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Completed</p>
+                  <p className="text-2xl font-bold mt-0.5">{completedSessions}</p>
                 </div>
               </div>
             </CardContent>
@@ -565,54 +581,75 @@ export default function MentorDashboard() {
         </div>
 
         <Card className="mb-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Session Distribution</CardTitle>
-            <CardDescription>Your mentoring activity breakdown</CardDescription>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <CardTitle className="text-lg">Session Distribution</CardTitle>
+                <CardDescription>Your mentoring activity breakdown</CardDescription>
+              </div>
+              <div className="p-2 rounded-lg bg-muted">
+                <Video className="w-4 h-4 text-muted-foreground" />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="h-48 flex items-center justify-center">
-              {pieData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={70}
-                      paddingAngle={3}
-                      dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}`}
-                      labelLine={false}
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        background: 'hsl(var(--background))', 
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '6px',
-                        fontSize: '12px'
-                      }}
-                    />
-                    <Legend 
-                      verticalAlign="bottom"
-                      height={36}
-                      formatter={(value, entry: any) => (
-                        <span style={{ color: entry.color, fontSize: '12px' }}>{value}</span>
-                      )}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="text-center text-muted-foreground">
-                  <Video className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No sessions yet</p>
+            {pieData.length > 0 ? (
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <div className="w-32 h-32 flex-shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={30}
+                        outerRadius={50}
+                        paddingAngle={3}
+                        dataKey="value"
+                        strokeWidth={0}
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          background: 'hsl(var(--background))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                          padding: '8px 12px'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              )}
-            </div>
+                <div className="flex-1 grid grid-cols-3 gap-4 w-full">
+                  {pieData.map((item) => (
+                    <div key={item.name} className="text-center sm:text-left">
+                      <div className="flex items-center gap-2 justify-center sm:justify-start mb-1">
+                        <div 
+                          className="w-3 h-3 rounded-full flex-shrink-0" 
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="text-sm text-muted-foreground">{item.name}</span>
+                      </div>
+                      <p className="text-2xl font-bold">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-6">
+                <div className="text-center text-muted-foreground">
+                  <div className="p-3 rounded-full bg-muted/50 inline-block mb-3">
+                    <Video className="w-6 h-6 opacity-50" />
+                  </div>
+                  <p className="text-sm">No sessions yet</p>
+                  <p className="text-xs mt-1 text-muted-foreground/70">Schedule your first session to see stats</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -668,16 +705,22 @@ export default function MentorDashboard() {
                           {entry.student.universityName}
                         </p>
                       )}
-                      <Dialog open={isScheduleDialogOpen && selectedAssignment?.studentUserId === entry.student?.id} onOpenChange={(open) => {
+                      <Dialog open={isScheduleDialogOpen && selectedAssignment?.student?.id === entry.student?.id} onOpenChange={(open) => {
                         setIsScheduleDialogOpen(open);
                         if (open && entry.assignments.length > 0) {
-                          setSelectedAssignment(entry.assignments[0]);
+                          setSelectedAssignment({
+                            ...entry.assignments[0],
+                            student: entry.student,
+                            cohorts: entry.cohorts,
+                            assignments: entry.assignments
+                          });
                           setSessionForm({
                             scheduledDate: '',
                             scheduledTime: '',
                             durationMinutes: 30,
                             meetingLink: '',
-                            notes: ''
+                            notes: '',
+                            selectedCohortId: entry.cohorts.length > 1 ? '' : entry.assignments[0]?.cohortId?.toString() || ''
                           });
                         }
                       }}>
@@ -692,6 +735,26 @@ export default function MentorDashboard() {
                             <DialogTitle>Schedule Session with {entry.student?.fullName}</DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4 pt-4">
+                            {entry.cohorts.length > 1 && (
+                              <div>
+                                <Label htmlFor="cohort">Select Cohort</Label>
+                                <Select
+                                  value={sessionForm.selectedCohortId}
+                                  onValueChange={(value) => setSessionForm(prev => ({ ...prev, selectedCohortId: value }))}
+                                >
+                                  <SelectTrigger data-testid="select-cohort">
+                                    <SelectValue placeholder="Choose a cohort for this session" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {entry.cohorts.map((cohort: any) => (
+                                      <SelectItem key={cohort.id} value={cohort.id.toString()}>
+                                        {cohort.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
                             <div className="grid grid-cols-2 gap-4">
                               <div>
                                 <Label htmlFor="date">Date</Label>
@@ -738,7 +801,7 @@ export default function MentorDashboard() {
                             <Button 
                               className="w-full" 
                               onClick={handleScheduleSession}
-                              disabled={!sessionForm.scheduledDate || !sessionForm.scheduledTime || createSessionMutation.isPending}
+                              disabled={!sessionForm.scheduledDate || !sessionForm.scheduledTime || (entry.cohorts.length > 1 && !sessionForm.selectedCohortId) || createSessionMutation.isPending}
                               data-testid="button-confirm-schedule"
                             >
                               {createSessionMutation.isPending ? 'Scheduling...' : 'Schedule Session'}
