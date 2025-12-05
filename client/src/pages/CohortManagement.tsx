@@ -474,7 +474,7 @@ function CohortCard({ cohort, students, mentors, onDelete, onSelectForAssignment
                           )}
                         </div>
                         <div>
-                          <p className="font-medium text-sm">{member.registration?.fullName || member.user?.firstName || 'Unknown'}</p>
+                          <p className="font-medium text-sm">{member.user?.fullName || member.registration?.fullName || member.user?.firstName || 'Unknown'}</p>
                           <p className="text-xs text-gray-500">{member.role}</p>
                         </div>
                       </div>

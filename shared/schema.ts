@@ -354,7 +354,10 @@ export const insertMentoringSessionSchema = z.object({
   scheduledTime: z.string(),
   durationMinutes: z.number().nullable().optional(),
   status: z.enum(['scheduled', 'completed', 'cancelled']).nullable().optional(),
-  meetingLink: z.string().url().nullable().optional(),
+  meetingLink: z.string().optional().transform(val => {
+    if (!val || val.trim() === '') return null;
+    return val;
+  }).pipe(z.string().url().nullable().optional()),
   notes: z.string().nullable().optional(),
   createdBy: z.string().nullable().optional(),
 });

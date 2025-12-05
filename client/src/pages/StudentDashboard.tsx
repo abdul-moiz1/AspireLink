@@ -770,33 +770,135 @@ export default function StudentDashboard() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {cohortList.map((cohort: any, index: number) => (
-                    <div 
-                      key={cohort.id} 
-                      className="p-4 rounded-lg bg-muted/50 hover-lift"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                      data-testid={`card-cohort-${cohort.id}`}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-foreground">{cohort.name}</h3>
-                        <Badge className={cohort.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                          {cohort.isActive ? 'Active' : 'Inactive'}
-                        </Badge>
+                  {cohortList.map((cohort: any, index: number) => {
+                    const cohortSessions = assignmentList
+                      .filter((a: any) => a.cohortId === cohort.id)
+                      .flatMap((a: any) => (a.sessions || []).map((s: any) => ({ 
+                        ...s, 
+                        mentorName: a.mentor?.fullName || a.mentorName || 'Your Mentor' 
+                      })))
+                      .filter((s: any) => s.status === 'scheduled');
+                    
+                    return (
+                      <div 
+                        key={cohort.id} 
+                        className="p-4 rounded-lg bg-muted/50 hover-lift"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                        data-testid={`card-cohort-${cohort.id}`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="font-semibold text-foreground">{cohort.name}</h3>
+                          <Badge className={cohort.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                            {cohort.isActive ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">{cohort.description}</p>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                          <span className="flex items-center">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            {cohort.startDate ? format(new Date(cohort.startDate), 'MMM d, yyyy') : 'TBD'} - 
+                            {cohort.endDate ? format(new Date(cohort.endDate), 'MMM d, yyyy') : 'TBD'}
+                          </span>
+                          <span className="flex items-center">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {cohort.sessionsPerMonth || 2} sessions/month
+                          </span>
+                        </div>
+                        
+                        {cohortSessions.length > 0 && (
+                          <div className="mt-3 pt-3 border-t">
+                            <p className="text-xs font-medium text-foreground mb-2 flex items-center gap-1">
+                              <Video className="h-3 w-3" />
+                              Upcoming Sessions ({cohortSessions.length})
+                            </p>
+                            <div className="space-y-2">
+                              {cohortSessions.slice(0, 2).map((session: any) => (
+                                <Dialog key={session.id}>
+                                  <DialogTrigger asChild>
+                                    <div 
+                                      className="p-2 rounded bg-background/50 cursor-pointer hover:bg-background/80 transition-colors"
+                                      data-testid={`session-preview-${session.id}`}
+                                    >
+                                      <div className="flex items-center justify-between text-xs">
+                                        <span className="font-medium">{session.mentorName || 'Mentor'}</span>
+                                        <span className="text-muted-foreground">
+                                          {session.scheduledDate ? format(new Date(session.scheduledDate), 'MMM d') : 'TBD'} at {session.scheduledTime || 'TBD'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle className="flex items-center gap-2">
+                                        <Video className="h-5 w-5 text-primary" />
+                                        Session Details
+                                      </DialogTitle>
+                                      <DialogDescription>
+                                        Your scheduled mentoring session
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4 pt-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-blue-100 rounded-full">
+                                          <User className="h-4 w-4 text-blue-600" />
+                                        </div>
+                                        <div>
+                                          <p className="text-sm text-muted-foreground">Mentor</p>
+                                          <p className="font-medium">{session.mentorName || 'Your Mentor'}</p>
+                                        </div>
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <p className="text-sm text-muted-foreground">Date</p>
+                                          <p className="font-medium flex items-center gap-1">
+                                            <Calendar className="h-4 w-4" />
+                                            {session.scheduledDate ? format(new Date(session.scheduledDate), 'MMMM d, yyyy') : 'TBD'}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="text-sm text-muted-foreground">Time</p>
+                                          <p className="font-medium flex items-center gap-1">
+                                            <Clock className="h-4 w-4" />
+                                            {session.scheduledTime || 'TBD'}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">Duration</p>
+                                        <p className="font-medium">{session.durationMinutes || 30} minutes</p>
+                                      </div>
+                                      {session.meetingLink && (
+                                        <div>
+                                          <p className="text-sm text-muted-foreground mb-2">Meeting Link</p>
+                                          <Button asChild size="sm" className="w-full">
+                                            <a href={session.meetingLink} target="_blank" rel="noopener noreferrer">
+                                              <Video className="h-4 w-4 mr-2" />
+                                              Join Meeting
+                                            </a>
+                                          </Button>
+                                        </div>
+                                      )}
+                                      {session.notes && (
+                                        <div>
+                                          <p className="text-sm text-muted-foreground">Notes</p>
+                                          <p className="text-sm">{session.notes}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              ))}
+                              {cohortSessions.length > 2 && (
+                                <p className="text-xs text-muted-foreground text-center">
+                                  +{cohortSessions.length - 2} more sessions
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">{cohort.description}</p>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-                        <span className="flex items-center">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {cohort.startDate ? format(new Date(cohort.startDate), 'MMM d, yyyy') : 'TBD'} - 
-                          {cohort.endDate ? format(new Date(cohort.endDate), 'MMM d, yyyy') : 'TBD'}
-                        </span>
-                        <span className="flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {cohort.sessionsPerMonth || 2} sessions/month
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

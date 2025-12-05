@@ -630,6 +630,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Mentor or student not found" });
       }
       
+      // Auto-add mentor and student to cohort members if not already added
+      const existingMembers = await storage.getCohortMembers(cohortId);
+      const mentorExists = existingMembers.some(m => m.userId === mentorUserId);
+      const studentExists = existingMembers.some(m => m.userId === studentUserId);
+      
+      if (!mentorExists) {
+        await storage.addCohortMember({
+          cohortId,
+          userId: mentorUserId,
+          role: 'mentor',
+          isActive: true
+        });
+      }
+      
+      if (!studentExists) {
+        await storage.addCohortMember({
+          cohortId,
+          userId: studentUserId,
+          role: 'student',
+          isActive: true
+        });
+      }
+      
       const assignment = await storage.createAssignment({
         cohortId,
         mentorUserId,

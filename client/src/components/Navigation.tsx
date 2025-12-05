@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Menu, User, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, User, LogOut, LayoutDashboard, Edit } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import logoPath from "@assets/AspireLink-Favicon_1751236188567.png";
 
@@ -31,6 +31,25 @@ export default function Navigation() {
     if (userRole === 'mentor') return '/dashboard/mentor';
     if (userRole === 'student') return '/dashboard/student';
     return '/dashboard/student';
+  };
+
+  const getEditApplicationLink = () => {
+    const userRole = user?.role;
+    if (userRole === 'mentor') return '/dashboard/mentor';
+    if (userRole === 'student') return '/dashboard/student';
+    return null;
+  };
+
+  const getUserDisplayName = () => {
+    const userData = user as any;
+    if (userData?.fullName) return userData.fullName;
+    if (userData?.firstName && userData?.lastName) return `${userData.firstName} ${userData.lastName}`;
+    if (userData?.firstName) return userData.firstName;
+    const userRole = userData?.role;
+    if (userRole === 'admin') return 'Admin';
+    if (userRole === 'mentor') return 'Mentor';
+    if (userRole === 'student') return 'Student';
+    return 'Account';
   };
 
   const handleLogout = async () => {
@@ -93,7 +112,7 @@ export default function Navigation() {
                       </div>
                     )}
                     <span className="text-sm font-medium">
-                      {(user as any)?.firstName || 'Account'}
+                      {getUserDisplayName()}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -104,6 +123,16 @@ export default function Navigation() {
                       Dashboard
                     </Link>
                   </DropdownMenuItem>
+                  {getEditApplicationLink() && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href={getEditApplicationLink()!} className="flex items-center cursor-pointer">
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit Application
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="flex items-center cursor-pointer text-red-600">
                       <LogOut className="w-4 h-4 mr-2" />
@@ -151,6 +180,9 @@ export default function Navigation() {
                       </div>
                     ) : isAuthenticated ? (
                       <>
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          {getUserDisplayName()}
+                        </div>
                         <Link
                           href={getDashboardLink()}
                           onClick={() => setIsOpen(false)}
@@ -159,6 +191,16 @@ export default function Navigation() {
                           <LayoutDashboard className="w-4 h-4 inline mr-2" />
                           Dashboard
                         </Link>
+                        {getEditApplicationLink() && (
+                          <Link
+                            href={getEditApplicationLink()!}
+                            onClick={() => setIsOpen(false)}
+                            className="block px-3 py-2 text-base font-medium text-charcoal-custom hover:text-primary-custom"
+                          >
+                            <Edit className="w-4 h-4 inline mr-2" />
+                            Edit Application
+                          </Link>
+                        )}
                         <button
                           onClick={() => { handleLogout(); setIsOpen(false); }}
                           className="block w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:text-red-700"
