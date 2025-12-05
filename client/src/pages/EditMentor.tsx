@@ -35,7 +35,7 @@ export default function EditMentor() {
   const params = useParams();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const mentorId = parseInt(params.id as string);
+  const mentorId = params.id as string;
 
   const [formData, setFormData] = useState({
     linkedinUrl: "",

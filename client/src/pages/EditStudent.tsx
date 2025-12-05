@@ -36,7 +36,7 @@ export default function EditStudent() {
   const params = useParams();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const studentId = parseInt(params.id as string);
+  const studentId = params.id as string;
 
   const [formData, setFormData] = useState({
     fullName: "",
