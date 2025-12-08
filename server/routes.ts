@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, isMentor, isStudent } from "./firebaseAuth";
-import { insertContactSchema, insertCohortSchema, insertAssignmentSchema, insertMentoringSessionSchema, insertStudentRegistrationSchema, insertMentorRegistrationSchema } from "@shared/schema";
+import { insertContactSchema, insertCohortSchema, insertAssignmentSchema, insertMentoringSessionSchema, insertStudentRegistrationSchema, insertMentorRegistrationSchema, rescheduleRequestSchema, rescheduleResponseSchema } from "@shared/schema";
 import { z } from "zod";
 
 // Helper to normalize LinkedIn URLs - adds https:// if missing
@@ -776,6 +776,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating session:", error);
       res.status(500).json({ error: "Failed to update session" });
+    }
+  });
+
+  // ============ RESCHEDULE REQUEST ROUTES ============
+  
+  // Student creates a reschedule request
+  app.post("/api/sessions/:id/reschedule-request", isAuthenticated, isStudent, async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const userId = req.user.uid;
+      
+      // Validate the request body
+      const requestData = rescheduleRequestSchema.parse(req.body);
+      
+      // Get the session
+      const session = await storage.getSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+      
+      // Verify the session belongs to the student
+      const assignment = await storage.getAssignment(session.assignmentId);
+      if (!assignment || assignment.studentUserId !== userId) {
+        return res.status(403).json({ error: "You can only request reschedule for your own sessions" });
+      }
+      
+      // Check session status - can't reschedule completed or cancelled sessions
+      if (session.status === 'completed' || session.status === 'cancelled') {
+        return res.status(400).json({ error: "Cannot reschedule a completed or cancelled session" });
+      }
+      
+      // Check if there's already a pending request
+      if (session.rescheduleRequest?.status === 'pending') {
+        return res.status(400).json({ error: "There is already a pending reschedule request for this session" });
+      }
+      
+      // Create the reschedule request
+      const rescheduleRequest = {
+        status: 'pending' as const,
+        requestedByUserId: userId,
+        proposedDate: requestData.proposedDate,
+        proposedTime: requestData.proposedTime,
+        reason: requestData.reason || null,
+        requestedAt: new Date().toISOString(),
+        respondedAt: null,
+        responseNote: null
+      };
+      
+      const updatedSession = await storage.updateSession(sessionId, {
+        rescheduleRequest
+      });
+      
+      res.json({ success: true, session: updatedSession });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid request data", details: error.errors });
+      } else {
+        console.error("Error creating reschedule request:", error);
+        res.status(500).json({ error: "Failed to create reschedule request" });
+      }
+    }
+  });
+  
+  // Mentor responds to a reschedule request (approve or decline)
+  app.patch("/api/sessions/:id/reschedule-request", isAuthenticated, isMentor, async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const userId = req.user.uid;
+      
+      // Validate the request body
+      const responseData = rescheduleResponseSchema.parse(req.body);
+      
+      // Get the session
+      const session = await storage.getSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+      
+      // Verify the session belongs to the mentor
+      const assignment = await storage.getAssignment(session.assignmentId);
+      if (!assignment || assignment.mentorUserId !== userId) {
+        return res.status(403).json({ error: "You can only respond to reschedule requests for your own sessions" });
+      }
+      
+      // Check if there's a pending request
+      if (!session.rescheduleRequest || session.rescheduleRequest.status !== 'pending') {
+        return res.status(400).json({ error: "No pending reschedule request found for this session" });
+      }
+      
+      let updateData: any = {};
+      
+      if (responseData.action === 'approve') {
+        // Approve: update the session date/time to the proposed values
+        updateData = {
+          scheduledDate: new Date(session.rescheduleRequest.proposedDate!),
+          scheduledTime: session.rescheduleRequest.proposedTime,
+          rescheduleRequest: {
+            ...session.rescheduleRequest,
+            status: 'approved',
+            respondedAt: new Date().toISOString(),
+            responseNote: responseData.responseNote || null
+          }
+        };
+      } else {
+        // Decline: just update the request status
+        updateData = {
+          rescheduleRequest: {
+            ...session.rescheduleRequest,
+            status: 'declined',
+            respondedAt: new Date().toISOString(),
+            responseNote: responseData.responseNote || null
+          }
+        };
+      }
+      
+      const updatedSession = await storage.updateSession(sessionId, updateData);
+      
+      res.json({ 
+        success: true, 
+        action: responseData.action,
+        session: updatedSession 
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid response data", details: error.errors });
+      } else {
+        console.error("Error responding to reschedule request:", error);
+        res.status(500).json({ error: "Failed to respond to reschedule request" });
+      }
     }
   });
 

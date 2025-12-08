@@ -611,6 +611,18 @@ export class FirestoreStorage implements IStorage {
     });
   }
 
+  async getSession(id: number): Promise<MentoringSession | undefined> {
+    const doc = await this.getDb().collection('mentoringSessions').doc(id.toString()).get();
+    if (!doc.exists) return undefined;
+    const data = doc.data();
+    return {
+      ...data,
+      scheduledDate: data?.scheduledDate?.toDate?.() || data?.scheduledDate,
+      createdAt: data?.createdAt?.toDate?.() || data?.createdAt,
+      updatedAt: data?.updatedAt?.toDate?.() || data?.updatedAt
+    } as MentoringSession;
+  }
+
   async getSessionsByAssignment(assignmentId: number): Promise<MentoringSession[]> {
     const snapshot = await this.getDb().collection('mentoringSessions').where('assignmentId', '==', assignmentId).get();
     return snapshot.docs.map(doc => {

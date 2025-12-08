@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, User, Clock, Video, Users, Plus, GraduationCap, Building, RefreshCw, Edit, Loader2, Phone, Linkedin, MapPin, Briefcase, ChevronRight, CheckCircle } from "lucide-react";
+import { Calendar, User, Clock, Video, Users, Plus, GraduationCap, Building, RefreshCw, Edit, Loader2, Phone, Linkedin, MapPin, Briefcase, ChevronRight, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useEffect, useState, useMemo } from "react";
 import { useLocation } from "wouter";
@@ -230,6 +230,28 @@ export default function MentorDashboard() {
       toast({
         title: "Error",
         description: "Failed to mark session as completed. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const respondToRescheduleMutation = useMutation({
+    mutationFn: async ({ sessionId, response, reason }: { sessionId: number; response: 'approve' | 'decline'; reason?: string }) => {
+      return await apiRequest(`/api/sessions/${sessionId}/reschedule-request`, 'PATCH', { response, reason });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mentor/assignments"] });
+      toast({
+        title: variables.response === 'approve' ? "Reschedule Approved" : "Reschedule Declined",
+        description: variables.response === 'approve' 
+          ? "The session has been rescheduled to the requested time."
+          : "The student has been notified that the reschedule was declined.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to respond to reschedule request. Please try again.",
         variant: "destructive",
       });
     }
@@ -856,14 +878,22 @@ export default function MentorDashboard() {
                     (assignment.sessions || [])
                       .filter((s: any) => s.status === 'scheduled')
                       .map((session: any) => (
-                        <div key={session.id} className="p-3 rounded-lg bg-muted/50">
-                          <div className="flex items-center justify-between mb-2">
+                        <div key={session.id} className="p-3 rounded-lg bg-muted/50" data-testid={`card-session-${session.id}`}>
+                          <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
                             <span className="font-medium text-sm">
                               {assignment.student?.fullName}
                             </span>
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
-                              Scheduled
-                            </Badge>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {session.rescheduleRequest?.status === 'pending' && (
+                                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs">
+                                  <AlertCircle className="h-3 w-3 mr-1" />
+                                  Reschedule Requested
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                                Scheduled
+                              </Badge>
+                            </div>
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2 flex-wrap">
                             <span className="flex items-center">
@@ -875,7 +905,46 @@ export default function MentorDashboard() {
                               {session.scheduledTime || 'TBD'}
                             </span>
                           </div>
-                          <div className="flex gap-2">
+                          {session.rescheduleRequest?.status === 'pending' && (
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-2 mb-2">
+                              <p className="text-xs text-yellow-800 font-medium mb-1">
+                                Student requested reschedule:
+                              </p>
+                              <p className="text-xs text-yellow-700">
+                                {session.rescheduleRequest.proposedDate} at {session.rescheduleRequest.proposedTime}
+                              </p>
+                              {session.rescheduleRequest.reason && (
+                                <p className="text-xs text-yellow-600 mt-1">
+                                  Reason: {session.rescheduleRequest.reason}
+                                </p>
+                              )}
+                              <div className="flex gap-2 mt-2">
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  className="flex-1 bg-green-600 hover:bg-green-700"
+                                  onClick={() => respondToRescheduleMutation.mutate({ sessionId: session.id, response: 'approve' })}
+                                  disabled={respondToRescheduleMutation.isPending}
+                                  data-testid={`button-approve-reschedule-${session.id}`}
+                                >
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="flex-1 border-red-300 text-red-700"
+                                  onClick={() => respondToRescheduleMutation.mutate({ sessionId: session.id, response: 'decline' })}
+                                  disabled={respondToRescheduleMutation.isPending}
+                                  data-testid={`button-decline-reschedule-${session.id}`}
+                                >
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                  Decline
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                          <div className="flex gap-2 flex-wrap">
                             <Button 
                               size="sm" 
                               variant="outline"

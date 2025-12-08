@@ -251,6 +251,17 @@ export interface Assignment {
   assignedAt: Date;
 }
 
+export interface RescheduleRequest {
+  status: 'none' | 'pending' | 'approved' | 'declined';
+  requestedByUserId: string | null;
+  proposedDate: string | null;
+  proposedTime: string | null;
+  reason: string | null;
+  requestedAt: string | null;
+  respondedAt: string | null;
+  responseNote: string | null;
+}
+
 export interface MentoringSession {
   id: number;
   assignmentId: number;
@@ -264,6 +275,7 @@ export interface MentoringSession {
   createdBy: string | null;
   createdAt: Date;
   updatedAt: Date | null;
+  rescheduleRequest: RescheduleRequest | null;
 }
 
 // Zod schemas for validation
@@ -360,6 +372,17 @@ export const insertMentoringSessionSchema = z.object({
   }).pipe(z.string().url().nullable().optional()),
   notes: z.string().nullable().optional(),
   createdBy: z.string().nullable().optional(),
+});
+
+export const rescheduleRequestSchema = z.object({
+  proposedDate: z.string().min(1, "Proposed date is required"),
+  proposedTime: z.string().min(1, "Proposed time is required"),
+  reason: z.string().nullable().optional(),
+});
+
+export const rescheduleResponseSchema = z.object({
+  action: z.enum(['approve', 'decline']),
+  responseNote: z.string().nullable().optional(),
 });
 
 // Insert types derived from Zod schemas

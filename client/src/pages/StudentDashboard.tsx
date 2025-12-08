@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Calendar, User, Clock, Video, Building, MapPin, Edit, Loader2, GraduationCap, Phone, Linkedin, ChevronRight, Users, Briefcase } from "lucide-react";
+import { Calendar, User, Clock, Video, Building, MapPin, Edit, Loader2, GraduationCap, Phone, Linkedin, ChevronRight, Users, Briefcase, RefreshCw, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useEffect, useState, useMemo } from "react";
 import { useLocation } from "wouter";
@@ -36,6 +36,13 @@ export default function StudentDashboard() {
   const [location, setLocation] = useLocation();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedMentorForPreview, setSelectedMentorForPreview] = useState<any>(null);
+  const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
+  const [selectedSessionForReschedule, setSelectedSessionForReschedule] = useState<any>(null);
+  const [rescheduleForm, setRescheduleForm] = useState({
+    proposedDate: '',
+    proposedTime: '',
+    reason: ''
+  });
   const [editForm, setEditForm] = useState({
     fullName: '',
     phoneNumber: '',
@@ -125,6 +132,50 @@ export default function StudentDashboard() {
       return;
     }
     updateProfileMutation.mutate(editForm);
+  };
+
+  const rescheduleRequestMutation = useMutation({
+    mutationFn: async ({ sessionId, data }: { sessionId: number; data: any }) => {
+      return apiRequest(`/api/sessions/${sessionId}/reschedule-request`, "POST", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/student/assignments"] });
+      setIsRescheduleDialogOpen(false);
+      setSelectedSessionForReschedule(null);
+      setRescheduleForm({ proposedDate: '', proposedTime: '', reason: '' });
+      toast({
+        title: "Reschedule Request Sent",
+        description: "Your mentor will be notified of your request.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Request Failed",
+        description: error?.message || "Failed to submit reschedule request. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleOpenRescheduleDialog = (session: any) => {
+    setSelectedSessionForReschedule(session);
+    setRescheduleForm({ proposedDate: '', proposedTime: '', reason: '' });
+    setIsRescheduleDialogOpen(true);
+  };
+
+  const handleSubmitReschedule = () => {
+    if (!rescheduleForm.proposedDate || !rescheduleForm.proposedTime) {
+      toast({
+        title: "Missing Information",
+        description: "Please select both a date and time for your proposed reschedule.",
+        variant: "destructive",
+      });
+      return;
+    }
+    rescheduleRequestMutation.mutate({
+      sessionId: selectedSessionForReschedule.id,
+      data: rescheduleForm
+    });
   };
 
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({
@@ -548,14 +599,34 @@ export default function StudentDashboard() {
                     (assignment.sessions || [])
                       .filter((s: any) => s.status === 'scheduled')
                       .map((session: any) => (
-                        <div key={session.id} className="p-3 rounded-lg bg-muted/50">
-                          <div className="flex items-center justify-between mb-2">
+                        <div key={session.id} className="p-3 rounded-lg bg-muted/50" data-testid={`card-session-${session.id}`}>
+                          <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
                             <span className="font-medium text-sm">
                               {assignment.mentor?.fullName}
                             </span>
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
-                              Scheduled
-                            </Badge>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {session.rescheduleRequest?.status === 'pending' && (
+                                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs">
+                                  <AlertCircle className="h-3 w-3 mr-1" />
+                                  Reschedule Pending
+                                </Badge>
+                              )}
+                              {session.rescheduleRequest?.status === 'approved' && (
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Rescheduled
+                                </Badge>
+                              )}
+                              {session.rescheduleRequest?.status === 'declined' && (
+                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                  Reschedule Declined
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                                Scheduled
+                              </Badge>
+                            </div>
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2 flex-wrap">
                             <span className="flex items-center">
@@ -567,14 +638,32 @@ export default function StudentDashboard() {
                               {session.scheduledTime || 'TBD'}
                             </span>
                           </div>
-                          {session.meetingLink && (
-                            <Button asChild size="sm" className="w-full">
-                              <a href={session.meetingLink} target="_blank" rel="noopener noreferrer">
-                                <Video className="h-3 w-3 mr-1" />
-                                Join Meeting
-                              </a>
-                            </Button>
+                          {session.rescheduleRequest?.status === 'pending' && (
+                            <div className="text-xs text-yellow-700 bg-yellow-50 p-2 rounded mb-2">
+                              Proposed: {session.rescheduleRequest.proposedDate} at {session.rescheduleRequest.proposedTime}
+                            </div>
                           )}
+                          <div className="flex gap-2 flex-wrap">
+                            {session.meetingLink && (
+                              <Button asChild size="sm" className="flex-1">
+                                <a href={session.meetingLink} target="_blank" rel="noopener noreferrer">
+                                  <Video className="h-3 w-3 mr-1" />
+                                  Join Meeting
+                                </a>
+                              </Button>
+                            )}
+                            {session.rescheduleRequest?.status !== 'pending' && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => handleOpenRescheduleDialog(session)}
+                                data-testid={`button-reschedule-${session.id}`}
+                              >
+                                <RefreshCw className="h-3 w-3 mr-1" />
+                                Request Reschedule
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       ))
                   )}
@@ -713,6 +802,69 @@ export default function StudentDashboard() {
                 </div>
               ))}
             </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isRescheduleDialogOpen} onOpenChange={setIsRescheduleDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <RefreshCw className="w-5 h-5 text-primary" />
+                Request Reschedule
+              </DialogTitle>
+              <DialogDescription>
+                Propose a new date and time for this session. Your mentor will review and respond.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="reschedule-date">Proposed Date</Label>
+                <Input
+                  id="reschedule-date"
+                  type="date"
+                  value={rescheduleForm.proposedDate}
+                  onChange={(e) => setRescheduleForm(prev => ({ ...prev, proposedDate: e.target.value }))}
+                  data-testid="input-reschedule-date"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="reschedule-time">Proposed Time</Label>
+                <Input
+                  id="reschedule-time"
+                  type="time"
+                  value={rescheduleForm.proposedTime}
+                  onChange={(e) => setRescheduleForm(prev => ({ ...prev, proposedTime: e.target.value }))}
+                  data-testid="input-reschedule-time"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="reschedule-reason">Reason (optional)</Label>
+                <Textarea
+                  id="reschedule-reason"
+                  placeholder="Let your mentor know why you need to reschedule..."
+                  value={rescheduleForm.reason}
+                  onChange={(e) => setRescheduleForm(prev => ({ ...prev, reason: e.target.value }))}
+                  data-testid="input-reschedule-reason"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsRescheduleDialogOpen(false)}
+                data-testid="button-cancel-reschedule"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmitReschedule}
+                disabled={rescheduleRequestMutation.isPending}
+                data-testid="button-submit-reschedule"
+              >
+                {rescheduleRequestMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Submit Request
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
