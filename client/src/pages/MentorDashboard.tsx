@@ -237,7 +237,7 @@ export default function MentorDashboard() {
 
   const respondToRescheduleMutation = useMutation({
     mutationFn: async ({ sessionId, response, reason }: { sessionId: number; response: 'approve' | 'decline'; reason?: string }) => {
-      return await apiRequest(`/api/sessions/${sessionId}/reschedule-request`, 'PATCH', { response, reason });
+      return await apiRequest(`/api/sessions/${sessionId}/reschedule-request`, 'PATCH', { action: response, responseNote: reason });
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/mentor/assignments"] });
